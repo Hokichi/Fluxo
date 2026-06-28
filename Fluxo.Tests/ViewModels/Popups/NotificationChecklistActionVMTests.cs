@@ -70,6 +70,31 @@ public sealed class NotificationChecklistActionVMTests
     }
 
     [Fact]
+    public void RepaymentProcess_RequiresSourceAndAmount_AndIncludesBothInDecision()
+    {
+        var item = new NotificationChecklistActionItemVM
+        {
+            EntityId = 10,
+            Label = "Late Payment - Visa",
+            IsRepayment = true,
+            Amount = 80m,
+            SelectedSourceId = 4,
+            SelectedAction = NotificationChecklistItemActionType.Process
+        };
+        var vm = new NotificationChecklistActionVM([item]);
+
+        Assert.True(item.ShowRepaymentFields);
+        Assert.True(vm.CanProceed);
+        Assert.Equal(
+            new NotificationChecklistActionDecision(
+                10,
+                NotificationChecklistItemActionType.Process,
+                4,
+                80m),
+            Assert.Single(vm.ActionDecisions));
+    }
+
+    [Fact]
     public void PaidAction_DoesNotRequireSourceSelection()
     {
         var vm = new NotificationChecklistActionVM(

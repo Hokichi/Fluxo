@@ -95,6 +95,25 @@ public sealed class NotificationChecklistActionPopupLayoutTests
     }
 
     [Fact]
+    public void RepaymentActionFields_UseAmountAndCheckingSourceBindings()
+    {
+        var template = GetChecklistItemTemplate(LoadPopupXaml());
+        var repaymentGrid = Assert.Single(template.Descendants(), element =>
+            element.Name.LocalName == "Grid" &&
+            (string?)element.Attribute("Visibility") ==
+            "{Binding ShowRepaymentFields, Converter={StaticResource BoolToVisibilityConverter}}");
+        var amount = Assert.Single(repaymentGrid.Descendants(), element =>
+            element.Name.LocalName == "MoneyTextBox");
+        Assert.Equal(
+            "{Binding Amount, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}",
+            (string?)amount.Attribute("Text"));
+        var source = Assert.Single(repaymentGrid.Descendants(), element =>
+            element.Name.LocalName == "ComboBox");
+        Assert.Equal("{Binding AvailableSources}", (string?)source.Attribute("ItemsSource"));
+        Assert.Equal("{Binding SelectedSourceId, Mode=TwoWay}", (string?)source.Attribute("SelectedValue"));
+    }
+
+    [Fact]
     public void TagsComboBox_RendersColorDotBeforeTagName()
     {
         var document = LoadPopupXaml();

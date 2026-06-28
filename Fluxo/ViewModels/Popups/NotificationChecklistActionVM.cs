@@ -57,7 +57,7 @@ public partial class NotificationChecklistActionVM : ObservableObject
                 item.EntityId,
                 item.SelectedAction,
                 item.SelectedSourceId,
-                item.IsRecurringTransaction ? item.Amount : null,
+                item.IsRecurringTransaction || item.IsRepayment ? item.Amount : null,
                 item.IsRecurringExpense ? item.SelectedTagId : null,
                 item.IsRecurringGoalUpdate ? item.SelectedGoalId : null,
                 item.UpdateRecurringAmount))
@@ -181,6 +181,9 @@ public partial class NotificationChecklistActionVM : ObservableObject
 
         if ((item.RequiresSourceSelection || item.IsRecurringTransaction) && item.SelectedSourceId is null)
             return false;
+
+        if (item.IsRepayment)
+            return item.SelectedSourceId.HasValue && item.Amount > 0m;
 
         if (!item.IsRecurringTransaction)
             return true;

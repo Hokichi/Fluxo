@@ -627,6 +627,59 @@ public class NotificationPanelVMTests
     }
 
     [Fact]
+    public async Task OpenNotificationActionAsync_LatePayment_PopulatesRepaymentDefaults()
+    {
+        NotificationChecklistActionVM? captured = null;
+        var actionService = Substitute.For<INotificationActionService>();
+        var dialogService = Substitute.For<IDialogService>();
+        dialogService.ShowNotificationChecklistAction(
+                Arg.Any<NotificationChecklistActionVM>(),
+                Arg.Any<System.Windows.Window?>())
+            .Returns(call =>
+            {
+                captured = call.ArgAt<NotificationChecklistActionVM>(0);
+                return true;
+            });
+        var checking = new AccountVM
+        {
+            Id = 1,
+            Name = "Checking",
+            AccountType = AccountType.Checking,
+            IsEnabled = true,
+            Balance = 500m
+        };
+        var credit = new AccountVM
+        {
+            Id = 2,
+            Name = "Visa",
+            AccountType = AccountType.Credit,
+            IsEnabled = true,
+            SpentAmount = 125m,
+            DeductSource = checking.Id,
+            MonthlyDueDate = DateTime.Today.AddDays(-1).Day
+        };
+        var vm = CreateVm(
+            expenses: [],
+            expenseLogs: [],
+            accounts: [checking, credit],
+            out _,
+            actionService,
+            dialogService);
+
+        await vm.LoadAsync();
+        var lateCard = Assert.Single(vm.NotificationItems, item =>
+            item.Category == NotificationGroupCategory.LatePayment);
+
+        await vm.OpenNotificationActionCommand.ExecuteAsync(lateCard);
+
+        var item = Assert.Single(captured!.Items);
+        Assert.True(item.IsRepayment);
+        Assert.Equal(125m, item.Amount);
+        Assert.Equal(checking.Id, item.SelectedSourceId);
+        Assert.Equal(new[] { checking.Id }, item.AvailableSources.Select(account => account.Id));
+    }
+
+    [Fact]
     public async Task OpenNotificationActionAsync_AppUpdate_ParsesPayloadAndForwardsToInteractionService()
     {
         var interactionService = Substitute.For<IAppUpdateInteractionService>();

@@ -6,6 +6,7 @@ using Fluxo.Core.Interfaces.Operations;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell.Main;
+using Fluxo.Services.Transactions;
 
 namespace Fluxo.Services.Notifications;
 
@@ -70,7 +71,11 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
                         var rowProcessed = card.Category switch
                         {
                             NotificationGroupCategory.UpcomingPayment or NotificationGroupCategory.LatePayment =>
-                                await ProcessPaymentAsync(unitOfWork, decision.EntityId, ct),
+                                await ProcessPaymentAsync(
+                                    unitOfWork,
+                                    decision,
+                                    card.Category == NotificationGroupCategory.LatePayment,
+                                    ct),
                             NotificationGroupCategory.RecurringTransactionDue =>
                                 await ProcessRecurringTransactionAsync(unitOfWork, decision, ct),
                             _ => false
@@ -220,54 +225,41 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
 
     private static async Task<bool> ProcessPaymentAsync(
         IUnitOfWork unitOfWork,
-        int accountId,
+        NotificationChecklistActionDecision decision,
+        bool requireSelectedValues,
         CancellationToken cancellationToken)
     {
-        var targetSource = await unitOfWork.Accounts.GetByIdAsync(accountId, cancellationToken);
+        var targetSource = await unitOfWork.Accounts.GetByIdAsync(decision.EntityId, cancellationToken);
         if (targetSource is null ||
             targetSource.AccountType != AccountType.Credit ||
-            targetSource.DeductSource is not > 0 ||
             targetSource.SpentAmount <= 0m)
         {
             return false;
         }
 
-        var deductingSource = await unitOfWork.Accounts.GetByIdAsync(targetSource.DeductSource.Value, cancellationToken);
-        if (deductingSource is null)
+        var sourceId = decision.SelectedSourceId ?? (requireSelectedValues ? null : targetSource.DeductSource);
+        var amount = decision.Amount ?? (requireSelectedValues ? null : targetSource.SpentAmount);
+        if (sourceId is not > 0 || amount is not > 0m || amount > targetSource.SpentAmount)
             return false;
 
-        var paymentTag = await ResolvePaymentTagAsync(unitOfWork, cancellationToken);
+        var deductingSource = await unitOfWork.Accounts.GetByIdAsync(sourceId.Value, cancellationToken);
+        if (deductingSource is null || deductingSource.AccountType != AccountType.Checking)
+            return false;
+
+        var paymentTag = requireSelectedValues
+            ? await ResolveBalanceUpdateTagAsync(unitOfWork, cancellationToken)
+            : await ResolvePaymentTagAsync(unitOfWork, cancellationToken);
         if (paymentTag is null)
             return false;
 
-        var amount = targetSource.SpentAmount;
-        var processedOn = DateTime.Now;
-        var expense = new Transaction
-        {
-            Type = TransactionType.Expense,
-            Name = $"Payment to {targetSource.Name}",
-            Amount = amount,
-            OccurredOn = processedOn,
-            Notes = $"Payment to {targetSource.Name}",
-            ExpenseCategory = ExpenseCategory.Savings,
-            AccountId = deductingSource.Id,
-            TagId = paymentTag.Id
-        };
-        await unitOfWork.Transactions.AddAsync(expense, cancellationToken);
-
-        var income = new Transaction
-        {
-            Type = TransactionType.Income,
-            AccountId = targetSource.Id,
-            Name = $"Payment from {deductingSource.Name}",
-            Amount = amount,
-            OccurredOn = processedOn,
-            Notes = string.Empty
-        };
-        await unitOfWork.Transactions.AddAsync(income, cancellationToken);
-
-        ApplyExpenseToAccount(deductingSource, amount);
-        ApplyIncomeToAccount(targetSource, amount);
+        var pair = RepaymentTransactionSupport.Create(
+            deductingSource,
+            targetSource,
+            amount.Value,
+            DateTime.Now,
+            paymentTag);
+        await unitOfWork.Transactions.AddAsync(pair.Expense, cancellationToken);
+        await unitOfWork.Transactions.AddAsync(pair.Income, cancellationToken);
         unitOfWork.Accounts.Update(deductingSource);
         unitOfWork.Accounts.Update(targetSource);
 
@@ -401,6 +393,15 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
             .OrderByDescending(tag => string.Equals(tag.Name, "Transfer", StringComparison.OrdinalIgnoreCase))
             .ThenBy(tag => tag.Name, StringComparer.OrdinalIgnoreCase)
             .FirstOrDefault();
+    }
+
+    private static async Task<Tag?> ResolveBalanceUpdateTagAsync(
+        IUnitOfWork unitOfWork,
+        CancellationToken cancellationToken)
+    {
+        var tags = await unitOfWork.Tags.GetAllAsync(cancellationToken);
+        return tags.FirstOrDefault(tag =>
+            string.Equals(tag.Name, "Balance Update", StringComparison.OrdinalIgnoreCase));
     }
 
     private static void ApplyExpenseToAccount(Account account, decimal amount)

@@ -898,6 +898,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
             return;
 
         var isRecurringDue = card.Category == NotificationGroupCategory.RecurringTransactionDue;
+        var isLatePayment = card.Category == NotificationGroupCategory.LatePayment;
         var availableSources = _accounts
             .Where(source => source.IsEnabled)
             .OrderBy(source => source.AccountType)
@@ -924,6 +925,28 @@ public partial class NotificationPanelVM : ObservableRecipient,
                     EntityId = item.EntityId,
                     Label = item.Notification.Header
                 };
+
+                if (isLatePayment)
+                {
+                    var target = _accounts.FirstOrDefault(account => account.Id == item.EntityId);
+                    if (target is null)
+                        return checklistItem;
+
+                    var checkingSources = _accounts
+                        .Where(account => account.IsEnabled && account.AccountType == AccountType.Checking)
+                        .OrderBy(account => account.Name, StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+                    checklistItem.IsRepayment = true;
+                    checklistItem.RequiresSourceSelection = true;
+                    checklistItem.Amount = target.SpentAmount;
+                    checklistItem.OriginalAmount = target.SpentAmount;
+                    foreach (var source in checkingSources)
+                        checklistItem.AvailableSources.Add(source);
+                    checklistItem.SelectedSourceId = checkingSources.Any(source => source.Id == target.DeductSource)
+                        ? target.DeductSource
+                        : checkingSources.FirstOrDefault()?.Id;
+                    return checklistItem;
+                }
 
                 if (!isRecurringDue)
                     return checklistItem;

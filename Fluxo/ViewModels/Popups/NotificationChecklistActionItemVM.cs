@@ -18,6 +18,7 @@ public partial class NotificationChecklistActionItemVM : ObservableObject
     [ObservableProperty] private int? _selectedTagId;
     [ObservableProperty] private int? _selectedGoalId;
     [ObservableProperty] private bool _updateRecurringAmount;
+    [ObservableProperty] private bool _isRepayment;
 
     public ObservableCollection<AccountVM> AvailableSources { get; } = [];
     public ObservableCollection<TagVM> AvailableTags { get; } = [];
@@ -29,6 +30,7 @@ public partial class NotificationChecklistActionItemVM : ObservableObject
     public bool IsRecurringGoalUpdate => RecurringTransactionType == Core.Enums.RecurringTransactionType.GoalUpdate;
     public bool AreRecurringFieldsEnabled => SelectedAction == NotificationChecklistItemActionType.Process;
     public bool ShowRecurringFields => IsRecurringTransaction && SelectedAction == NotificationChecklistItemActionType.Process;
+    public bool ShowRepaymentFields => IsRepayment && SelectedAction == NotificationChecklistItemActionType.Process;
     public bool ShouldAskToUpdateAmount => AreRecurringFieldsEnabled && Amount != OriginalAmount;
 
     public bool IsIgnoreSelected
@@ -81,6 +83,7 @@ public partial class NotificationChecklistActionItemVM : ObservableObject
         OnPropertyChanged(nameof(IsSelected));
         OnPropertyChanged(nameof(AreRecurringFieldsEnabled));
         OnPropertyChanged(nameof(ShowRecurringFields));
+        OnPropertyChanged(nameof(ShowRepaymentFields));
         OnPropertyChanged(nameof(ShouldAskToUpdateAmount));
     }
 
@@ -101,4 +104,5 @@ public partial class NotificationChecklistActionItemVM : ObservableObject
 
     partial void OnAmountChanged(decimal value) => OnPropertyChanged(nameof(ShouldAskToUpdateAmount));
     partial void OnOriginalAmountChanged(decimal value) => OnPropertyChanged(nameof(ShouldAskToUpdateAmount));
+    partial void OnIsRepaymentChanged(bool value) => OnPropertyChanged(nameof(ShowRepaymentFields));
 }

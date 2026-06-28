@@ -219,6 +219,28 @@
                         Style="{StaticResource FluxoComboBoxStyle}"
                         Visibility="{Binding IsRecurringGoalUpdate, Converter={StaticResource BoolToVisibilityConverter}}" />
                 </Grid>
+
+                <Grid
+                    Grid.Row="1"
+                    Grid.ColumnSpan="2"
+                    Margin="0,8,0,0"
+                    Visibility="{Binding ShowRepaymentFields, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <customControls:MoneyTextBox
+                        Style="{StaticResource RoundedMoneyTextInputStyle}"
+                        Text="{Binding Amount, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                    <ComboBox
+                        Grid.Column="2"
+                        DisplayMemberPath="Name"
+                        ItemsSource="{Binding AvailableSources}"
+                        SelectedValue="{Binding SelectedSourceId, Mode=TwoWay}"
+                        SelectedValuePath="Id"
+                        Style="{StaticResource FluxoComboBoxStyle}" />
+                </Grid>
             </Grid>
         </DataTemplate>
     </customControls:BasePopup.Resources>

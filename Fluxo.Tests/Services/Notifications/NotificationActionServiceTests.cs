@@ -108,6 +108,48 @@ public sealed class NotificationActionServiceTests
     }
 
     [Fact]
+    public async Task ExecuteChecklistActionAsync_ProcessLatePayment_UsesSelectedAmountAndCheckingSource()
+    {
+        var persistedNotifications = new List<Notification>
+        {
+            new() { Id = 1, Type = "LatePayment-10_20260501", Message = "Card 10 late", IsCleared = false }
+        };
+        var accounts = new List<Account>
+        {
+            new() { Id = 1, Name = "Old Checking", AccountType = AccountType.Checking, Balance = 500m },
+            new() { Id = 4, Name = "Selected Checking", AccountType = AccountType.Checking, Balance = 300m },
+            new()
+            {
+                Id = 10,
+                Name = "Card 10",
+                AccountType = AccountType.Credit,
+                SpentAmount = 100m,
+                DeductSource = 1
+            }
+        };
+        var transactions = new List<Transaction>();
+        var sut = CreateSut(
+            persistedNotifications,
+            accounts: accounts,
+            transactions: transactions,
+            tags: [new Tag { Id = 9, Name = "Balance Update", HexCode = "#000000" }]);
+
+        var succeeded = await sut.ExecuteChecklistActionAsync(
+            BuildChecklistCard(NotificationGroupCategory.LatePayment, "LatePayment-10_20260501"),
+            [new NotificationChecklistActionDecision(10, NotificationChecklistItemActionType.Process, 4, 60m)]);
+
+        Assert.True(succeeded);
+        Assert.Equal(500m, accounts.Single(account => account.Id == 1).Balance);
+        Assert.Equal(240m, accounts.Single(account => account.Id == 4).Balance);
+        Assert.Equal(40m, accounts.Single(account => account.Id == 10).SpentAmount);
+        var expense = Assert.Single(transactions, transaction => transaction.Type == TransactionType.Expense);
+        Assert.Equal(60m, expense.Amount);
+        Assert.Equal(4, expense.AccountId);
+        Assert.Equal(9, expense.TagId);
+        Assert.True(expense.IsExcludedFromBudget);
+    }
+
+    [Fact]
     public async Task ExecuteChecklistActionAsync_ProcessRecurringExpense_UsesSelectedSource_AndClearsNotifications()
     {
         var persistedNotifications = new List<Notification>
