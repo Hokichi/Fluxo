@@ -33,6 +33,28 @@ public sealed class AddNewTransactionVMValidationTests
     }
 
     [Fact]
+    public void Constructor_WithCreditAccount_LeavesNameEmpty()
+    {
+        RunInSta(() =>
+        {
+            var checking = CreateCheckingSource(balance: 500m);
+            var credit = new AccountVM
+            {
+                Id = 2,
+                Name = "Visa",
+                AccountType = AccountType.Credit,
+                IsEnabled = true
+            };
+
+            var vm = new AddNewTransactionVM(
+                CreateMainViewModel([checking, credit]),
+                CreateAppData());
+
+            Assert.Empty(vm.NameText);
+        });
+    }
+
+    [Fact]
     public void InitializeRecurringMode_UsesRecurringCreatePurposeAndDisablesPin()
     {
         RunInSta(() =>
@@ -89,8 +111,68 @@ public sealed class AddNewTransactionVMValidationTests
             Assert.Equal("Repayment to Visa", vm.NameText);
             Assert.False(vm.CanToggleRecurring);
             Assert.False(vm.CanPinTransaction);
+            Assert.False(vm.CanEditTransactionName);
             Assert.False(vm.CanEditTags);
             Assert.False(vm.ShowNoteField);
+        });
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SwitchingToRepayment_GeneratesNameAndDisablesEditing(bool startFromGoalUpdate)
+    {
+        RunInSta(() =>
+        {
+            var checking = CreateCheckingSource(balance: 500m);
+            var credit = new AccountVM
+            {
+                Id = 2,
+                Name = "Visa",
+                AccountType = AccountType.Credit,
+                IsEnabled = true
+            };
+            var vm = new AddNewTransactionVM(
+                CreateMainViewModel([checking, credit]),
+                CreateAppData());
+            if (startFromGoalUpdate)
+                vm.IsGoal = true;
+
+            vm.IsRepayment = true;
+
+            Assert.Equal("Repayment to Visa", vm.NameText);
+            Assert.False(vm.CanEditTransactionName);
+        });
+    }
+
+    [Fact]
+    public void ChangingRepaymentAccount_RefreshesGeneratedName()
+    {
+        RunInSta(() =>
+        {
+            var checking = CreateCheckingSource(balance: 500m);
+            var visa = new AccountVM
+            {
+                Id = 2,
+                Name = "Visa",
+                AccountType = AccountType.Credit,
+                IsEnabled = true
+            };
+            var mastercard = new AccountVM
+            {
+                Id = 3,
+                Name = "Mastercard",
+                AccountType = AccountType.Credit,
+                IsEnabled = true
+            };
+            var vm = new AddNewTransactionVM(
+                CreateMainViewModel([checking, visa, mastercard]),
+                CreateAppData());
+            vm.IsRepayment = true;
+
+            vm.SelectedRepaymentAccount = mastercard;
+
+            Assert.Equal("Repayment to Mastercard", vm.NameText);
         });
     }
 
@@ -245,6 +327,50 @@ public sealed class AddNewTransactionVMValidationTests
             vm.SelectedGoal = new SavingGoalVM { Id = 2, Name = "Emergency Fund" };
 
             Assert.Equal("Goal Update for Emergency Fund", vm.NameText);
+        });
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void SwitchingFromGoalUpdateToRegularMode_ClearsName(bool switchToExpense)
+    {
+        RunInSta(() =>
+        {
+            var vm = new AddNewTransactionVM(
+                CreateMainViewModel([CreateCheckingSource(balance: 500m)]),
+                CreateAppData());
+            vm.IsGoal = true;
+
+            if (switchToExpense)
+                vm.IsExpense = true;
+            else
+                vm.IsIncome = true;
+
+            Assert.Empty(vm.NameText);
+        });
+    }
+
+    [Theory]
+    [InlineData(true, "Repayment to Visa")]
+    [InlineData(true, "Manually assigned")]
+    [InlineData(false, "Repayment to Visa")]
+    [InlineData(false, "Manually assigned")]
+    public void SwitchingFromRepaymentToRegularMode_ClearsName(
+        bool switchToExpense,
+        string repaymentName)
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateRepaymentVm(spentAmount: 50m);
+            vm.NameText = repaymentName;
+
+            if (switchToExpense)
+                vm.IsExpense = true;
+            else
+                vm.IsIncome = true;
+
+            Assert.Empty(vm.NameText);
         });
     }
 

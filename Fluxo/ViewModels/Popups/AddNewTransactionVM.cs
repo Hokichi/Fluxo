@@ -44,7 +44,6 @@ public partial class AddNewTransactionVM : ObservableValidator
     private TransactionPopupPurpose _popupPurpose = TransactionPopupPurpose.AddNewTransaction;
     private bool _isTransactionTypeLocked;
     private bool _isRepaymentAmountInvalid;
-    private string _generatedRepaymentName = string.Empty;
     private int _transactionNameSuggestionRequestVersion;
 
     [ObservableProperty]
@@ -190,7 +189,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     public string InstallmentSummaryText => BuildInstallmentSummaryText();
     public bool CanToggleRecurring => !IsRecurringModeLocked && !IsRepayment;
     public bool CanUseHistory => true;
-    public bool CanEditTransactionName => !IsGoal;
+    public bool CanEditTransactionName => !IsGoal && !IsRepayment;
     public bool CanEditCategory => IsExpense && !IsRepayment;
     public bool CanEditTags => !IsGoal && !IsRepayment;
     public bool CanChangeTransactionType => !_isTransactionTypeLocked;
@@ -610,6 +609,10 @@ public partial class AddNewTransactionVM : ObservableValidator
             IsExpense = false;
             IsRepayment = false;
         }
+        else if (IsIncome || IsExpense)
+        {
+            NameText = string.Empty;
+        }
 
         OnPropertyChanged(nameof(IsIncome));
         OnPropertyChanged(nameof(CanUseHistory));
@@ -651,6 +654,11 @@ public partial class AddNewTransactionVM : ObservableValidator
             ClearTransactionModes();
             IsPinned = false;
             SelectedRepaymentAccount ??= RepaymentAccounts.FirstOrDefault();
+            SyncRepaymentName();
+        }
+        else if (IsIncome || IsExpense)
+        {
+            NameText = string.Empty;
         }
 
         OnPropertyChanged(nameof(IsIncome));
@@ -658,6 +666,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(CanUseInstallments));
         OnPropertyChanged(nameof(CanUseIoU));
         OnPropertyChanged(nameof(CanPinTransaction));
+        OnPropertyChanged(nameof(CanEditTransactionName));
         OnPropertyChanged(nameof(CanEditCategory));
         OnPropertyChanged(nameof(CanEditTags));
         OnPropertyChanged(nameof(ShowNoteField));
@@ -671,10 +680,8 @@ public partial class AddNewTransactionVM : ObservableValidator
     partial void OnSelectedRepaymentAccountChanged(AccountVM? oldValue, AccountVM? newValue)
     {
         _isRepaymentAmountInvalid = false;
-        var nextGeneratedName = newValue is null ? string.Empty : $"Repayment to {newValue.Name}";
-        if (string.IsNullOrWhiteSpace(NameText) || NameText == _generatedRepaymentName)
-            NameText = nextGeneratedName;
-        _generatedRepaymentName = nextGeneratedName;
+        if (IsRepayment)
+            SyncRepaymentName();
         NotifyFormStateChanged();
     }
 
@@ -2656,5 +2663,12 @@ public partial class AddNewTransactionVM : ObservableValidator
             return;
 
         NameText = BuildGoalUpdateDisplayName(goal.Name);
+    }
+
+    private void SyncRepaymentName()
+    {
+        NameText = SelectedRepaymentAccount is { } account
+            ? $"Repayment to {account.Name}"
+            : string.Empty;
     }
 }
