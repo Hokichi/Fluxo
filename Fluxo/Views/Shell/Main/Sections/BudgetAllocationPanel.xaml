@@ -32,9 +32,13 @@
 
         <Style x:Key="BudgetAllocationExpensesListStyle" TargetType="components:ExpensesList">
             <Setter Property="IsEmptyActionVisible" Value="True" />
+            <Setter Property="MaxVisibleItems" Value="5" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding DataContext.IsSufficientFundsActionGateLocked, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" Value="True">
                     <Setter Property="IsEmptyActionVisible" Value="False" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsWindowLayoutMaximized, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" Value="True">
+                    <Setter Property="MaxVisibleItems" Value="8" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -189,12 +193,9 @@
                 DeleteCommand="{Binding DeleteExpenseLogCommand}"
                 DotColor="{StaticResource Brush.Category.Needs}"
                 EmptyActionText="No transaction found"
-                HasMoreItems="{Binding TransactionsHasMoreItems}"
                 IsEmptyActionVisible="False"
                 IsListEmpty="{Binding IsTransactionsEmpty}"
-                IsLoading="{Binding IsTransactionsLoading}"
                 ItemsSource="{Binding Transactions}"
-                LoadMoreCommand="{Binding LoadMoreTransactionsCommand}"
                 Style="{StaticResource BudgetAllocationExpensesListStyle}" />
         </Grid>
     </Grid>
