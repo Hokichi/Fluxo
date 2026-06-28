@@ -1,3 +1,4 @@
+using System.Collections;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,7 +19,19 @@ public partial class ExpensesList : UserControl
 
     public static readonly DependencyProperty ItemsSourceProperty = DependencyProperty.Register(
         nameof(ItemsSource), typeof(ICollectionView), typeof(ExpensesList),
-        new PropertyMetadata(default(ICollectionView)));
+        new PropertyMetadata(default(ICollectionView), OnItemsSourceChanged));
+
+    public static readonly DependencyProperty MaxVisibleItemsProperty = DependencyProperty.Register(
+        nameof(MaxVisibleItems), typeof(int), typeof(ExpensesList),
+        new PropertyMetadata(int.MaxValue, OnMaxVisibleItemsChanged));
+
+    private static readonly DependencyPropertyKey VisibleItemsSourcePropertyKey =
+        DependencyProperty.RegisterReadOnly(
+            nameof(VisibleItemsSource), typeof(IEnumerable), typeof(ExpensesList),
+            new PropertyMetadata(Array.Empty<object>()));
+
+    public static readonly DependencyProperty VisibleItemsSourceProperty =
+        VisibleItemsSourcePropertyKey.DependencyProperty;
 
     public static readonly DependencyProperty IsListEmptyProperty = DependencyProperty.Register(
         nameof(IsListEmpty), typeof(bool), typeof(ExpensesList), new PropertyMetadata(default(bool)));
@@ -71,6 +84,14 @@ public partial class ExpensesList : UserControl
         get => (bool)GetValue(IsListEmptyProperty);
         set => SetValue(IsListEmptyProperty, value);
     }
+
+    public int MaxVisibleItems
+    {
+        get => (int)GetValue(MaxVisibleItemsProperty);
+        set => SetValue(MaxVisibleItemsProperty, value);
+    }
+
+    public IEnumerable VisibleItemsSource => (IEnumerable)GetValue(VisibleItemsSourceProperty);
 
     public bool IsEmptyActionVisible
     {
@@ -151,6 +172,40 @@ public partial class ExpensesList : UserControl
     {
         if (command?.CanExecute(row) == true)
             command.Execute(row);
+    }
+
+    private static void OnItemsSourceChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
+    {
+        var control = (ExpensesList)dependencyObject;
+
+        if (e.OldValue is ICollectionView oldView)
+            oldView.CollectionChanged -= control.OnItemsSourceCollectionChanged;
+
+        if (e.NewValue is ICollectionView newView)
+            newView.CollectionChanged += control.OnItemsSourceCollectionChanged;
+
+        control.RefreshVisibleItems();
+    }
+
+    private static void OnMaxVisibleItemsChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
+    {
+        ((ExpensesList)dependencyObject).RefreshVisibleItems();
+    }
+
+    private void OnItemsSourceCollectionChanged(object? sender,
+        System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        RefreshVisibleItems();
+    }
+
+    private void RefreshVisibleItems()
+    {
+        SetValue(VisibleItemsSourcePropertyKey, LimitItems(ItemsSource, MaxVisibleItems));
+    }
+
+    internal static IReadOnlyList<object> LimitItems(IEnumerable? items, int limit)
+    {
+        return items?.Cast<object>().Take(Math.Max(0, limit)).ToArray() ?? [];
     }
 
     private void OnExpenseListPreviewMouseWheel(object sender, MouseWheelEventArgs e)

@@ -454,7 +454,7 @@
                         ClipToBounds="True"
                         ItemContainerStyle="{StaticResource ExpenseListViewItemStyle}"
                         ItemTemplate="{StaticResource ExpenseListItemTemplate}"
-                        ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
+                        ItemsSource="{Binding VisibleItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
                         PreviewMouseWheel="OnExpenseListPreviewMouseWheel"
                         ScrollViewer.CanContentScroll="False"
                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
