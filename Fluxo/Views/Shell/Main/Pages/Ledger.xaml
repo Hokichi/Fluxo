@@ -609,11 +609,13 @@
                         x:Name="ChildRowAccountCell"
                         Grid.Column="4"
                         MaxWidth="180"
-                        Padding="8,3"
+                        Padding="12,4"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"
-                        Background="{StaticResource Brush.Background.Hover}"
-                        CornerRadius="8"
+                        Background="{StaticResource Brush.Background.Deepened}"
+                        BorderBrush="{StaticResource Brush.Border.Accent.Muted}"
+                        BorderThickness="1"
+                        CornerRadius="12"
                         Cursor="Hand"
                         PreviewMouseLeftButtonDown="OnTransactionAccountPreviewMouseLeftButtonDown">
                         <Border.RenderTransform>
@@ -791,6 +793,23 @@
                                 Style="{StaticResource LedgerEditableTextBoxStyle}"
                                 Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             <Border
+                                x:Name="LedgerChildCountBadge"
+                                Width="20"
+                                Height="20"
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Center"
+                                Background="{StaticResource Brush.Mint}"
+                                CornerRadius="9"
+                                Visibility="{Binding HasChildTransactions, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Black}"
+                                    FontSize="12"
+                                    Foreground="{StaticResource Brush.Text.Primary.Dark}"
+                                    Text="{Binding ChildTransactions.Count}" />
+                            </Border>
+                            <Border
                                 Margin="8,4,0,0"
                                 Padding="8,3"
                                 VerticalAlignment="Center"
@@ -924,9 +943,11 @@
                             </Grid.RenderTransform>
                             <Border
                                 x:Name="LedgerTransactionAccountBadge"
-                                Padding="8,3"
-                                Background="{StaticResource Brush.Background.Hover}"
-                                CornerRadius="8"
+                                Padding="12,4"
+                                Background="{StaticResource Brush.Background.Deepened}"
+                                BorderBrush="{StaticResource Brush.Border.Accent.Muted}"
+                                BorderThickness="1"
+                                CornerRadius="12"
                                 Cursor="Hand"
                                 PreviewMouseLeftButtonDown="OnTransactionAccountPreviewMouseLeftButtonDown">
                                 <TextBlock

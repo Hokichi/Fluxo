@@ -395,6 +395,21 @@ public sealed class MainWindowPageRegressionTests
     }
 
     [Fact]
+    public void Ledger_ParentRowsShowChildTransactionCountImmediatelyAfterName()
+    {
+        var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
+        var rowTemplateSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerRowTemplate\"", "x:Key=\"LedgerGroupItemStyle\"");
+
+        var nameEditorIndex = rowTemplateSection.IndexOf("Text=\"{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}\"", StringComparison.Ordinal);
+        var countBadgeIndex = rowTemplateSection.IndexOf("x:Name=\"LedgerChildCountBadge\"", StringComparison.Ordinal);
+
+        Assert.True(nameEditorIndex >= 0);
+        Assert.True(countBadgeIndex > nameEditorIndex);
+        Assert.Contains("Text=\"{Binding ChildTransactions.Count}\"", rowTemplateSection);
+        Assert.Contains("Visibility=\"{Binding HasChildTransactions, Converter={StaticResource BoolToVisibilityConverter}}\"", rowTemplateSection);
+    }
+
+    [Fact]
     public void Ledger_ChildRowsKeepIndicatorIndentButAlignDataColumnsAndUseHoverAnimation()
     {
         var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
