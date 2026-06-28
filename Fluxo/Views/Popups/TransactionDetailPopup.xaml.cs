@@ -91,7 +91,7 @@ public partial class TransactionDetailPopup : BasePopup
         await _viewModel.BeginEditingAsync();
         RecalculateTagLayout();
         SyncMoreTagsPopupState();
-        ExpenseNameTextBox.Focus();
+        TransactionNameTextBox.Focus();
     }
 
     protected override async void OnSaveButtonClick()
@@ -126,8 +126,8 @@ public partial class TransactionDetailPopup : BasePopup
 
         var confirmation = FluxoMessageBox.Show(
             this,
-            "Delete this expense?",
-            "Expense Detail",
+            "Delete this transaction?",
+            "Transaction Detail",
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning);
 
@@ -150,7 +150,7 @@ public partial class TransactionDetailPopup : BasePopup
         await _viewModel.BeginSplitModeAsync();
         UpdateButtonStates();
         SyncMoreTagsPopupState();
-        SplitExpenseAmountTextBox.Focus();
+        SplitTransactionAmountTextBox.Focus();
     }
 
     protected override void OnCancelButtonClick()
@@ -198,7 +198,7 @@ public partial class TransactionDetailPopup : BasePopup
                 var closeWithoutSaving = FluxoMessageBox.Show(
                     this,
                     "Close and discard unsaved changes?",
-                    "Expense Detail",
+                    "Transaction Detail",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question);
 
@@ -227,7 +227,7 @@ public partial class TransactionDetailPopup : BasePopup
             var confirmation = FluxoMessageBox.Show(
                 this,
                 "Save your changes before closing?",
-                "Expense Detail",
+                "Transaction Detail",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
 
@@ -285,7 +285,7 @@ public partial class TransactionDetailPopup : BasePopup
         if (string.IsNullOrWhiteSpace(message))
             return;
 
-        FluxoMessageBox.Show(this, message, "Expense Detail", MessageBoxButton.OK, MessageBoxImage.Information);
+        FluxoMessageBox.Show(this, message, "Transaction Detail", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void SyncNoteDocumentFromViewModel()

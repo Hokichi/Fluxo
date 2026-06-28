@@ -291,7 +291,7 @@
             </Grid.RowDefinitions>
 
             <StackPanel
-                x:Name="NormalExpenseNamePinPanel"
+                x:Name="NormalTransactionNamePinPanel"
                 Grid.Row="0"
                 Visibility="{Binding ShowNormalTransactionFields, Converter={StaticResource BoolToVisibilityConverter}}">
                 <Grid Style="{StaticResource FieldHeaderGridStyle}">
@@ -305,31 +305,75 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="8" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <TextBox
-                        x:Name="ExpenseNameTextBox"
+                        x:Name="TransactionNameTextBox"
                         IsReadOnly="{Binding AreFieldsReadOnly}"
                         Style="{StaticResource RoundedTextInputStyle}"
                         Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                    <customControls:BalloonCheckBox
-                        x:Name="ExpensePinButton"
+                    <customControls:BalloonToggle
                         Grid.Column="2"
+                        ButtonSize="38"
+                        CornerRadius="12"
+                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                        IconSize="14"
+                        IsEnabled="{Binding CanToggleRecurring}"
+                        ToolTip="Transaction mode">
+                        <customControls:BalloonToggle.States>
+                            <customControls:BalloonToggleState
+                                ButtonIcon="{StaticResource RegularRepeat}"
+                                ButtonText="Set as Recurring"
+                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
+                                HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                OnChecked="{Binding HandleRecurringModeClickCommand}" />
+                            <customControls:BalloonToggleState
+                                ButtonIcon="{StaticResource CreditCardClockOutline}"
+                                ButtonText="Set as Installments"
+                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
+                                HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                OnChecked="{Binding HandleInstallmentsModeClickCommand}" />
+                            <customControls:BalloonToggleState
+                                ButtonIcon="{StaticResource CreditCardMinusSolid}"
+                                ButtonText="{Binding IoUTooltip}"
+                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
+                                HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                OnChecked="{Binding HandleIoUModeClickCommand}" />
+                            <customControls:BalloonToggleState
+                                ButtonIcon="{StaticResource CreditCardOff}"
+                                ButtonText="Exclude"
+                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
+                                HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                OnChecked="{Binding HandleExcludeModeClickCommand}" />
+                            <customControls:BalloonToggleState
+                                ButtonIcon="{StaticResource CreditCardXRegular}"
+                                ButtonText="Set as Debt and Exclude"
+                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
+                                HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                OnChecked="{Binding HandleExcludedIoUModeClickCommand}" />
+                        </customControls:BalloonToggle.States>
+                    </customControls:BalloonToggle>
+                    <customControls:BalloonCheckBox
+                        x:Name="TransactionPinButton"
+                        Grid.Column="4"
                         ButtonSize="38"
                         CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                         CornerRadius="12"
                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                         IconSize="14"
                         IsChecked="{Binding IsPinned, Mode=TwoWay}"
                         IsEnabled="{Binding CanEditFields}"
                         ToolTip="Pin transaction"
                         UncheckedIcon="{StaticResource Pin}"
-                        UncheckedText="Pinned"
-                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}" />
+                        UncheckedText="Pinned" />
                 </Grid>
             </StackPanel>
 
             <StackPanel
-                x:Name="SplitExpenseAmountPanel"
+                x:Name="SplitTransactionAmountPanel"
                 Grid.Row="0"
                 Visibility="{Binding IsSplitMode, Converter={StaticResource BoolToVisibilityConverter}}">
                 <Grid Style="{StaticResource FieldHeaderGridStyle}">
@@ -344,7 +388,7 @@
                 </Grid>
                 <Border Style="{StaticResource SplitParentAmountHighlightBorderStyle}">
                     <customControls:MoneyTextBox
-                        x:Name="SplitExpenseAmountTextBox"
+                        x:Name="SplitTransactionAmountTextBox"
                         IsReadOnly="{Binding AreFieldsReadOnly}"
                         Style="{StaticResource RoundedMoneyTextInputStyle}"
                         Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
@@ -360,7 +404,7 @@
                 </Grid.RowDefinitions>
 
                 <Grid
-                    x:Name="NormalExpenseNameDatePanel"
+                    x:Name="NormalTransactionNameDatePanel"
                     Grid.Row="0"
                     Visibility="{Binding ShowNormalTransactionFields, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Grid.ColumnDefinitions>
@@ -373,7 +417,7 @@
                         <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Amount" />
                         <Border Style="{StaticResource SplitParentAmountHighlightBorderStyle}">
                             <customControls:MoneyTextBox
-                                x:Name="ExpenseAmountTextBox"
+                                x:Name="TransactionAmountTextBox"
                                 IsReadOnly="{Binding AreFieldsReadOnly}"
                                 Style="{StaticResource RoundedMoneyTextInputStyle}"
                                 Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
@@ -382,12 +426,12 @@
 
                     <StackPanel Grid.Column="2">
                         <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" />
-                        <components:DateSelector x:Name="ExpenseTransactionDateSelector" SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
+                        <components:DateSelector x:Name="TransactionTransactionDateSelector" SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
                     </StackPanel>
                 </Grid>
 
                 <Grid
-                    x:Name="NormalExpenseCategorySourcePanel"
+                    x:Name="NormalTransactionCategorySourcePanel"
                     Grid.Row="1"
                     Margin="0,16,0,0"
                     Visibility="{Binding ShowNormalTransactionFields, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -400,11 +444,11 @@
                     <StackPanel Grid.Column="0">
                         <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Category" />
                         <ComboBox
-                            x:Name="ExpenseCategoryComboBox"
-                            IsEnabled="{Binding IsCategoryEnabled}"
+                            x:Name="TransactionCategoryComboBox"
                             DisplayMemberPath="Label"
-                            ItemsSource="{Binding ExpenseCategories}"
-                            SelectedValue="{Binding SelectedExpenseCategory, Mode=TwoWay}"
+                            IsEnabled="{Binding IsCategoryEnabled}"
+                            ItemsSource="{Binding TransactionCategories}"
+                            SelectedValue="{Binding SelectedTransactionCategory, Mode=TwoWay}"
                             SelectedValuePath="Value"
                             Style="{StaticResource FluxoComboBoxStyle}" />
                     </StackPanel>
@@ -412,7 +456,7 @@
                     <StackPanel Grid.Column="2">
                         <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Account" />
                         <ComboBox
-                            x:Name="ExpenseAccountComboBox"
+                            x:Name="TransactionAccountComboBox"
                             DisplayMemberPath="Name"
                             ItemsSource="{Binding AccountsView}"
                             SelectedItem="{Binding SelectedAccount, Mode=TwoWay}"
@@ -519,7 +563,7 @@
                     <StackPanel>
                         <Button
                             Click="OnAddSplitRowClick"
-                            Content="Add Sub-expense"
+                            Content="Add Sub-Transaction"
                             Style="{StaticResource PopupTagButtonStyle}" />
 
                         <Border
@@ -663,10 +707,10 @@
             </Grid>
 
             <StackPanel
-                x:Name="NormalExpenseNotePanel"
+                x:Name="NormalTransactionNotePanel"
                 Grid.Row="2"
                 Margin="0,16,0,0"
-                    Visibility="{Binding ShowNormalTransactionFields, Converter={StaticResource BoolToVisibilityConverter}}">
+                Visibility="{Binding ShowNormalTransactionFields, Converter={StaticResource BoolToVisibilityConverter}}">
                 <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Note" />
                 <Border Style="{StaticResource PopupFieldBorderStyle}">
                     <RichTextBox
