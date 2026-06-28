@@ -95,6 +95,100 @@ public sealed class AddNewTransactionVMValidationTests
     }
 
     [Fact]
+    public void RejectRepaymentOverpayment_MarksAmountInvalid()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateRepaymentVm(spentAmount: 50m);
+            vm.AmountText = 60m;
+
+            Assert.True(vm.TryGetRepaymentCorrection(out var corrected));
+            Assert.Equal(50m, corrected);
+
+            vm.RejectRepaymentCorrection();
+
+            Assert.Equal("Invalid Repayment", vm.AmountValidationHint);
+            Assert.False(vm.CanSave);
+        });
+    }
+
+    [Fact]
+    public void AcceptRepaymentOverpayment_UsesSpentAmountAndClearsError()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateRepaymentVm(spentAmount: 50m);
+            vm.AmountText = 60m;
+            vm.RejectRepaymentCorrection();
+
+            vm.AcceptRepaymentCorrection();
+
+            Assert.Equal(50m, vm.AmountText);
+            Assert.NotEqual("Invalid Repayment", vm.AmountValidationHint);
+        });
+    }
+
+    [Fact]
+    public void SaveAsync_Repayment_CreatesExcludedBalanceUpdatePair()
+    {
+        RunInSta(() =>
+        {
+            var checkingVm = CreateCheckingSource(balance: 500m);
+            var creditVm = new AccountVM
+            {
+                Id = 2,
+                Name = "Visa",
+                AccountType = AccountType.Credit,
+                IsEnabled = true,
+                SpentAmount = 200m,
+                DeductSource = checkingVm.Id
+            };
+            var checking = new Account
+            {
+                Id = checkingVm.Id,
+                Name = checkingVm.Name,
+                AccountType = AccountType.Checking,
+                Balance = checkingVm.Balance
+            };
+            var credit = new Account
+            {
+                Id = creditVm.Id,
+                Name = creditVm.Name,
+                AccountType = AccountType.Credit,
+                SpentAmount = creditVm.SpentAmount
+            };
+            var saved = new List<Transaction>();
+            var appData = CreateAppData();
+            appData.GetAccountByIdAsync(checking.Id, Arg.Any<CancellationToken>()).Returns(checking);
+            appData.GetAccountByIdAsync(credit.Id, Arg.Any<CancellationToken>()).Returns(credit);
+            appData.GetTagsAsync(Arg.Any<CancellationToken>()).Returns(
+            [
+                new Tag { Id = 9, Name = "Balance Update", HexCode = "#fff", IsSystemTag = true }
+            ]);
+            appData.AddTransactionAsync(
+                    Arg.Do<Transaction>(transaction => saved.Add(transaction)),
+                    Arg.Any<CancellationToken>())
+                .Returns(Task.CompletedTask);
+            var vm = new AddNewTransactionVM(
+                CreateMainViewModel([checkingVm, creditVm]),
+                appData);
+            vm.InitializeRepayment(creditVm);
+            vm.AmountText = 75m;
+
+            var result = vm.SaveAsync(false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess, result.ErrorMessage);
+            Assert.Equal(425m, checking.Balance);
+            Assert.Equal(125m, credit.SpentAmount);
+            Assert.Equal(2, saved.Count);
+            var expense = Assert.Single(saved, transaction => transaction.Type == TransactionType.Expense);
+            Assert.Equal(9, expense.TagId);
+            Assert.True(expense.IsExcludedFromBudget);
+            Assert.Single(saved, transaction => transaction.Type == TransactionType.Income);
+        });
+    }
+
+    [Fact]
     public void InitializeFromRecurringTransaction_UsesEditPurposeAndLocksTransactionType()
     {
         RunInSta(() =>
@@ -1834,6 +1928,25 @@ public sealed class AddNewTransactionVMValidationTests
         appData.GetBudgetAllocationAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(budgetAllocation ?? new BudgetAllocation()));
         return appData;
+    }
+
+    private static AddNewTransactionVM CreateRepaymentVm(decimal spentAmount)
+    {
+        var checking = CreateCheckingSource(balance: 500m);
+        var credit = new AccountVM
+        {
+            Id = 2,
+            Name = "Visa",
+            AccountType = AccountType.Credit,
+            IsEnabled = true,
+            SpentAmount = spentAmount,
+            DeductSource = checking.Id
+        };
+        var vm = new AddNewTransactionVM(
+            CreateMainViewModel([checking, credit]),
+            CreateAppData());
+        vm.InitializeRepayment(credit);
+        return vm;
     }
 
     private static MainVM CreateMainViewModel(IReadOnlyList<AccountVM> accounts)

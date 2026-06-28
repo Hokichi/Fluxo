@@ -113,6 +113,22 @@ public partial class AddNewTransaction : BasePopup
 
     private async Task<bool> ShouldSaveCurrentTransactionAsync()
     {
+        if (_viewModel.TryGetRepaymentCorrection(out var correctedAmount))
+        {
+            var useCorrectAmount = _dialogService.ShowWarning(
+                $"Repayment exceeds the credit account's spent amount. Use {correctedAmount:N2} instead?",
+                "Invalid Repayment",
+                this,
+                MessageBoxButton.YesNo) == MessageBoxResult.Yes;
+            if (!useCorrectAmount)
+            {
+                _viewModel.RejectRepaymentCorrection();
+                return false;
+            }
+
+            _viewModel.AcceptRepaymentCorrection();
+        }
+
         if (!await _viewModel.HasSimilarTransactionAsync())
             return true;
 

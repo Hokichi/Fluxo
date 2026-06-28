@@ -12,6 +12,7 @@ using Fluxo.Resources.CustomControls;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.Services.Logging;
+using Fluxo.Services.Transactions;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups.Helpers;
 using Fluxo.ViewModels.Shell;
@@ -42,6 +43,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     private bool _isNameValidationActive;
     private TransactionPopupPurpose _popupPurpose = TransactionPopupPurpose.AddNewTransaction;
     private bool _isTransactionTypeLocked;
+    private bool _isRepaymentAmountInvalid;
     private string _generatedRepaymentName = string.Empty;
     private int _transactionNameSuggestionRequestVersion;
 
@@ -287,8 +289,29 @@ public partial class AddNewTransactionVM : ObservableValidator
             AmountText = target.SpentAmount;
     }
 
+    public bool TryGetRepaymentCorrection(out decimal correctedAmount)
+    {
+        correctedAmount = SelectedRepaymentAccount?.SpentAmount ?? 0m;
+        return IsRepayment && correctedAmount > 0m && AmountText > correctedAmount;
+    }
+
+    public void AcceptRepaymentCorrection()
+    {
+        if (SelectedRepaymentAccount is not null)
+            AmountText = SelectedRepaymentAccount.SpentAmount;
+        _isRepaymentAmountInvalid = false;
+        ValidateProperty(AmountText, nameof(AmountText));
+    }
+
+    public void RejectRepaymentCorrection()
+    {
+        _isRepaymentAmountInvalid = true;
+        ValidateProperty(AmountText, nameof(AmountText));
+    }
+
     partial void OnAmountTextChanged(decimal value)
     {
+        _isRepaymentAmountInvalid = false;
         RefreshActiveValidation(nameof(AmountText));
         OnPropertyChanged(nameof(InstallmentSummaryText));
         NotifyFormStateChanged();
@@ -647,6 +670,7 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     partial void OnSelectedRepaymentAccountChanged(AccountVM? oldValue, AccountVM? newValue)
     {
+        _isRepaymentAmountInvalid = false;
         var nextGeneratedName = newValue is null ? string.Empty : $"Repayment to {newValue.Name}";
         if (string.IsNullOrWhiteSpace(NameText) || NameText == _generatedRepaymentName)
             NameText = nextGeneratedName;
@@ -768,12 +792,45 @@ public partial class AddNewTransactionVM : ObservableValidator
             if (!TryResolveRecurringSaveAmount(input, out var effectiveSaveAmount, out var recurringAmountMessage))
                 return AddNewTransactionSubmissionResult.Failure(recurringAmountMessage);
 
-            if (!TryValidateSpendingAmountAgainstSource(input.IsExpense, input.IsGoal, effectiveSaveAmount, account, out var spendingValidationMessage))
+            if (!TryValidateSpendingAmountAgainstSource(input.IsExpense || input.IsRepayment, input.IsGoal, effectiveSaveAmount, account, out var spendingValidationMessage))
                 return AddNewTransactionSubmissionResult.Failure(spendingValidationMessage);
 
             var invalidationScope = DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications;
 
-            if (input.IsRecurring)
+            if (input.IsRepayment)
+            {
+                var target = await _appData.GetAccountByIdAsync(input.RepaymentAccountId!.Value);
+                if (target is null || target.AccountType != AccountType.Credit)
+                    return AddNewTransactionSubmissionResult.Failure("Please select a valid credit account.");
+
+                var tag = (await _appData.GetTagsAsync()).FirstOrDefault(candidate =>
+                    string.Equals(candidate.Name, "Balance Update", StringComparison.OrdinalIgnoreCase));
+                if (tag is null)
+                    return AddNewTransactionSubmissionResult.Failure("Balance Update tag is unavailable.");
+                if (input.Amount > target.SpentAmount)
+                    return AddNewTransactionSubmissionResult.Failure("Invalid Repayment");
+
+                var pair = RepaymentTransactionSupport.Create(
+                    account,
+                    target,
+                    input.Amount,
+                    input.Date,
+                    tag,
+                    input.Name);
+                await _appData.AddTransactionAsync(pair.Expense);
+                await _appData.AddTransactionAsync(pair.Income);
+                _appData.UpdateAccount(account);
+                _appData.UpdateAccount(target);
+                await _appData.SaveChangesAsync();
+                WeakReferenceMessenger.Default.Send(new RecordLogMemoryMessage(
+                    new CompositeLogMemoryAction(
+                        "Repayment",
+                        [
+                            new AddTransactionMemoryAction(TransactionMemorySnapshot.Create(pair.Expense)),
+                            new AddTransactionMemoryAction(TransactionMemorySnapshot.Create(pair.Income))
+                        ])));
+            }
+            else if (input.IsRecurring)
             {
                 if (!TryNormalizeRecurringTime(input.RecurringPeriod, input.RecurringTimeText, out var recurringTime))
                     return AddNewTransactionSubmissionResult.Failure(GetRecurringTimeValidationMessage(input.RecurringPeriod));
@@ -1063,7 +1120,7 @@ public partial class AddNewTransactionVM : ObservableValidator
 
             goalId = SelectedGoal.Id;
         }
-        else if (!IsGoal)
+        else if (!IsGoal && !IsRepayment)
         {
             if (SelectedTag is null)
             {
@@ -1081,6 +1138,12 @@ public partial class AddNewTransactionVM : ObservableValidator
             return false;
         }
 
+        if (IsRepayment && SelectedRepaymentAccount is null)
+        {
+            validationMessage = "Please choose a credit account.";
+            return false;
+        }
+
         if (IsInstallments && !TryResolveInstallmentCount(
                 SelectedRecurringPeriod,
                 RecurringTimeText,
@@ -1095,11 +1158,12 @@ public partial class AddNewTransactionVM : ObservableValidator
         input = new QuickTransactionInput(
             IsExpense,
             IsGoal,
-            IsRecurringTransactionMode,
-            IsInstallments,
-            IsPinned,
-            IsIoU,
-            IsExcludedFromBudget,
+            IsRepayment,
+            !IsRepayment && IsRecurringTransactionMode,
+            !IsRepayment && IsInstallments,
+            !IsRepayment && IsPinned,
+            !IsRepayment && IsIoU,
+            IsRepayment || IsExcludedFromBudget,
             _editingRecurringTransactionId,
             SelectedRecurringPeriod,
             NameText.Trim(),
@@ -1111,7 +1175,8 @@ public partial class AddNewTransactionVM : ObservableValidator
             NoteText.Trim(),
             category,
             tagId,
-            goalId);
+            goalId,
+            SelectedRepaymentAccount?.Id);
 
         return true;
     }
@@ -1928,6 +1993,9 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     private static string GetAmountValidationHint(string message)
     {
+        if (message.Contains("Invalid Repayment", StringComparison.OrdinalIgnoreCase))
+            return "Invalid Repayment";
+
         if (message.Contains("available balance", StringComparison.OrdinalIgnoreCase))
             return "Insufficient Balance";
 
@@ -2002,6 +2070,9 @@ public partial class AddNewTransactionVM : ObservableValidator
     public static ValidationResult? ValidateAmountText(decimal value, ValidationContext validationContext)
     {
         var viewModel = (AddNewTransactionVM)validationContext.ObjectInstance;
+        if (viewModel._isRepaymentAmountInvalid)
+            return new ValidationResult("Invalid Repayment");
+
         if (value <= 0m)
             return new ValidationResult("Please enter a valid amount greater than zero.");
 
@@ -2025,7 +2096,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             amountToValidate = CalculateInstallmentAmount(value, installmentCount);
         }
 
-        if (!TryValidateSpendingAmountAgainstSource(viewModel.IsExpense, viewModel.IsGoal, amountToValidate, viewModel.SelectedAccount, out var validationMessage))
+        if (!TryValidateSpendingAmountAgainstSource(viewModel.IsExpense || viewModel.IsRepayment, viewModel.IsGoal, amountToValidate, viewModel.SelectedAccount, out var validationMessage))
             return new ValidationResult(validationMessage);
 
         if (!viewModel.TryValidateSpendingAmountAgainstTagLimit(amountToValidate, out var tagLimitValidationMessage))
@@ -2233,6 +2304,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     private readonly record struct QuickTransactionInput(
         bool IsExpense,
         bool IsGoal,
+        bool IsRepayment,
         bool IsRecurring,
         bool IsInstallments,
         bool IsPinned,
@@ -2249,7 +2321,8 @@ public partial class AddNewTransactionVM : ObservableValidator
         string Note,
         ExpenseCategory? Category,
         int? TagId,
-        int? GoalId);
+        int? GoalId,
+        int? RepaymentAccountId);
 
     private readonly record struct FormState(
         bool IsExpense,
