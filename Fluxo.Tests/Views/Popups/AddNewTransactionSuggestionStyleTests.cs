@@ -28,13 +28,15 @@ public sealed class AddNewTransactionSuggestionStyleTests
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml"));
 
         Assert.Contains("<customControls:SegmentedToggleGroup", xaml);
-        Assert.Equal(3, xaml.Split("<customControls:SegmentedToggleOption", StringSplitOptions.None).Length - 1);
+        Assert.Equal(4, xaml.Split("<customControls:SegmentedToggleOption", StringSplitOptions.None).Length - 1);
         Assert.Contains("Content=\"Expense\"", xaml);
         Assert.Contains("IsSelected=\"{Binding IsExpense, Mode=TwoWay}\"", xaml);
         Assert.Contains("Content=\"Income\"", xaml);
         Assert.Contains("IsSelected=\"{Binding IsIncome, Mode=TwoWay}\"", xaml);
         Assert.Contains("Content=\"Goal Update\"", xaml);
         Assert.Contains("IsSelected=\"{Binding IsGoal, Mode=TwoWay}\"", xaml);
+        Assert.Contains("Content=\"Repayment\"", xaml);
+        Assert.Contains("IsSelected=\"{Binding IsRepayment, Mode=TwoWay}\"", xaml);
         Assert.DoesNotContain("GroupName=\"TransactionType\"", xaml);
     }
 
