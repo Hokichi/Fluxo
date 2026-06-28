@@ -1,7 +1,8 @@
 <UserControl
     x:Class="Fluxo.Views.Shell.Main.Sections.AllocationData"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="clr-namespace:Fluxo.Resources.Components;assembly=Fluxo.Resources">
 
     <Border Style="{StaticResource CardBorderStyle}">
         <Grid VerticalAlignment="Center">
@@ -29,23 +30,31 @@
                                 Foreground="{StaticResource Brush.Category.Needs}"
                                 Text="NEEDS" />
                         </StackPanel>
-                        <Border
-                            Height="24"
-                            Margin="12,0,0,0"
-                            Padding="12,0"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center"
-                            Background="{StaticResource Brush.Background.Deepened}"
-                            BorderBrush="{StaticResource Brush.Border.Subtle}"
-                            BorderThickness="2"
-                            CornerRadius="4">
-                            <TextBlock
-                                HorizontalAlignment="Center"
+                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                            <components:Icon
+                                Width="14"
+                                Height="14"
+                                Margin="0,0,8,0"
                                 VerticalAlignment="Center"
-                                FontFamily="{StaticResource Light}"
-                                Foreground="{StaticResource Brush.Text.Secondary}"
-                                Text="{Binding NeedsAllocationPercentage, Mode=OneWay, StringFormat={}{0}%}" />
-                        </Border>
+                                Path="{StaticResource ExclamationTriangle}"
+                                Visibility="{Binding IsNeedsOverflowing, Converter={StaticResource BoolToVisibilityConverter}}"
+                                Color="{StaticResource Brush.Danger}" />
+                            <Border
+                                Height="24"
+                                Padding="12,0"
+                                VerticalAlignment="Center"
+                                Background="{StaticResource Brush.Background.Deepened}"
+                                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                                BorderThickness="2"
+                                CornerRadius="4">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Light}"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="{Binding NeedsAllocationPercentage, Mode=OneWay, StringFormat={}{0}%}" />
+                            </Border>
+                        </StackPanel>
                     </Grid>
 
                     <TextBlock Margin="0,0,0,-8">
@@ -69,19 +78,28 @@
                     <ProgressBar
                         Height="4"
                         Margin="0,16,0,0"
-                        Foreground="{StaticResource Brush.Category.Needs}"
                         Maximum="100"
                         Minimum="0"
-                        Style="{StaticResource RoundedProgressBarStyle}"
-                        Value="{Binding NeedsPercentage, Mode=OneWay}" />
+                        Value="{Binding NeedsPercentage, Mode=OneWay}">
+                        <ProgressBar.Style>
+                            <Style BasedOn="{StaticResource RoundedProgressBarStyle}" TargetType="ProgressBar">
+                                <Setter Property="Foreground" Value="{StaticResource Brush.Category.Needs}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsNeedsOverflowing}" Value="True">
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ProgressBar.Style>
+                    </ProgressBar>
 
                     <Grid Margin="0,4,0,0">
                         <TextBlock
                             FontFamily="{StaticResource Light}"
                             FontSize="12"
                             Foreground="{StaticResource Brush.Text.Muted}">
-                            <Run Text="{Binding NeedsRemaining, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
-                            <Run Text="remaining" />
+                            <Run Text="{Binding NeedsRemainingDisplay, Mode=OneWay, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                            <Run Text="{Binding NeedsRemainingLabel, Mode=OneWay}" />
                         </TextBlock>
 
                         <TextBlock
@@ -112,22 +130,30 @@
                                 Foreground="{StaticResource Brush.Category.Wants}"
                                 Text="WANTS" />
                         </StackPanel>
-                        <Border
-                            Height="24"
-                            Margin="12,0,0,0"
-                            Padding="12,0"
-                            HorizontalAlignment="Right"
-                            Background="{StaticResource Brush.Background.Deepened}"
-                            BorderBrush="{StaticResource Brush.Border.Subtle}"
-                            BorderThickness="2"
-                            CornerRadius="4">
-                            <TextBlock
-                                HorizontalAlignment="Center"
+                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                            <components:Icon
+                                Width="14"
+                                Height="14"
+                                Margin="0,0,8,0"
                                 VerticalAlignment="Center"
-                                FontFamily="{StaticResource Light}"
-                                Foreground="{StaticResource Brush.Text.Secondary}"
-                                Text="{Binding WantsAllocationPercentage, Mode=OneWay, StringFormat={}{0}%}" />
-                        </Border>
+                                Path="{StaticResource ExclamationTriangle}"
+                                Visibility="{Binding IsWantsOverflowing, Converter={StaticResource BoolToVisibilityConverter}}"
+                                Color="{StaticResource Brush.Danger}" />
+                            <Border
+                                Height="24"
+                                Padding="12,0"
+                                Background="{StaticResource Brush.Background.Deepened}"
+                                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                                BorderThickness="2"
+                                CornerRadius="4">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Light}"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="{Binding WantsAllocationPercentage, Mode=OneWay, StringFormat={}{0}%}" />
+                            </Border>
+                        </StackPanel>
                     </Grid>
 
                     <TextBlock Margin="0,0,0,-8">
@@ -151,19 +177,28 @@
                     <ProgressBar
                         Height="4"
                         Margin="0,16,0,0"
-                        Foreground="{StaticResource Brush.Category.Wants}"
                         Maximum="100"
                         Minimum="0"
-                        Style="{StaticResource RoundedProgressBarStyle}"
-                        Value="{Binding WantsPercentage, Mode=OneWay}" />
+                        Value="{Binding WantsPercentage, Mode=OneWay}">
+                        <ProgressBar.Style>
+                            <Style BasedOn="{StaticResource RoundedProgressBarStyle}" TargetType="ProgressBar">
+                                <Setter Property="Foreground" Value="{StaticResource Brush.Category.Wants}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsWantsOverflowing}" Value="True">
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ProgressBar.Style>
+                    </ProgressBar>
 
                     <Grid Margin="0,4,0,0">
                         <TextBlock
                             FontFamily="{StaticResource Light}"
                             FontSize="12"
                             Foreground="{StaticResource Brush.Text.Muted}">
-                            <Run Text="{Binding WantsRemaining, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
-                            <Run Text="remaining" />
+                            <Run Text="{Binding WantsRemainingDisplay, Mode=OneWay, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                            <Run Text="{Binding WantsRemainingLabel, Mode=OneWay}" />
                         </TextBlock>
 
                         <TextBlock
@@ -194,23 +229,31 @@
                                 Foreground="{StaticResource Brush.Category.Investments}"
                                 Text="INVEST" />
                         </StackPanel>
-                        <Border
-                            Height="24"
-                            Margin="12,0,0,0"
-                            Padding="12,0"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center"
-                            Background="{StaticResource Brush.Background.Deepened}"
-                            BorderBrush="{StaticResource Brush.Border.Subtle}"
-                            BorderThickness="2"
-                            CornerRadius="4">
-                            <TextBlock
-                                HorizontalAlignment="Center"
+                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                            <components:Icon
+                                Width="14"
+                                Height="14"
+                                Margin="0,0,8,0"
                                 VerticalAlignment="Center"
-                                FontFamily="{StaticResource Light}"
-                                Foreground="{StaticResource Brush.Text.Secondary}"
-                                Text="{Binding InvestAllocationPercentage, Mode=OneWay, StringFormat={}{0}%}" />
-                        </Border>
+                                Path="{StaticResource ExclamationTriangle}"
+                                Visibility="{Binding IsInvestOverflowing, Converter={StaticResource BoolToVisibilityConverter}}"
+                                Color="{StaticResource Brush.Danger}" />
+                            <Border
+                                Height="24"
+                                Padding="12,0"
+                                VerticalAlignment="Center"
+                                Background="{StaticResource Brush.Background.Deepened}"
+                                BorderBrush="{StaticResource Brush.Border.Subtle}"
+                                BorderThickness="2"
+                                CornerRadius="4">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{StaticResource Light}"
+                                    Foreground="{StaticResource Brush.Text.Secondary}"
+                                    Text="{Binding InvestAllocationPercentage, Mode=OneWay, StringFormat={}{0}%}" />
+                            </Border>
+                        </StackPanel>
                     </Grid>
 
                     <TextBlock Margin="0,0,0,-8">
@@ -234,19 +277,28 @@
                     <ProgressBar
                         Height="4"
                         Margin="0,16,0,0"
-                        Foreground="{StaticResource Brush.Category.Investments}"
                         Maximum="100"
                         Minimum="0"
-                        Style="{StaticResource RoundedProgressBarStyle}"
-                        Value="{Binding InvestPercentage, Mode=OneWay}" />
+                        Value="{Binding InvestPercentage, Mode=OneWay}">
+                        <ProgressBar.Style>
+                            <Style BasedOn="{StaticResource RoundedProgressBarStyle}" TargetType="ProgressBar">
+                                <Setter Property="Foreground" Value="{StaticResource Brush.Category.Investments}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsInvestOverflowing}" Value="True">
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ProgressBar.Style>
+                    </ProgressBar>
 
                     <Grid Margin="0,4,0,0">
                         <TextBlock
                             FontFamily="{StaticResource Light}"
                             FontSize="12"
                             Foreground="{StaticResource Brush.Text.Muted}">
-                            <Run Text="{Binding InvestRemaining, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
-                            <Run Text="remaining" />
+                            <Run Text="{Binding InvestRemainingDisplay, Mode=OneWay, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
+                            <Run Text="{Binding InvestRemainingLabel, Mode=OneWay}" />
                         </TextBlock>
 
                         <TextBlock

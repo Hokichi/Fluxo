@@ -81,6 +81,18 @@ public partial class AllocationDataVM : ObservableRecipient,
     [ObservableProperty]
     private decimal _investRemaining;
 
+    public bool IsNeedsOverflowing => NeedsRemaining < 0m;
+    public bool IsWantsOverflowing => WantsRemaining < 0m;
+    public bool IsInvestOverflowing => InvestRemaining < 0m;
+
+    public decimal NeedsRemainingDisplay => Math.Abs(NeedsRemaining);
+    public decimal WantsRemainingDisplay => Math.Abs(WantsRemaining);
+    public decimal InvestRemainingDisplay => Math.Abs(InvestRemaining);
+
+    public string NeedsRemainingLabel => IsNeedsOverflowing ? "overflowing" : "remaining";
+    public string WantsRemainingLabel => IsWantsOverflowing ? "overflowing" : "remaining";
+    public string InvestRemainingLabel => IsInvestOverflowing ? "overflowing" : "remaining";
+
     [ObservableProperty]
     private int _needsPercentage;
 
@@ -163,6 +175,27 @@ public partial class AllocationDataVM : ObservableRecipient,
     partial void OnInvestThresholdChanged(decimal value)
     {
         OnPropertyChanged(nameof(InvestAllocationPercentage));
+    }
+
+    partial void OnNeedsRemainingChanged(decimal value)
+    {
+        OnPropertyChanged(nameof(IsNeedsOverflowing));
+        OnPropertyChanged(nameof(NeedsRemainingDisplay));
+        OnPropertyChanged(nameof(NeedsRemainingLabel));
+    }
+
+    partial void OnWantsRemainingChanged(decimal value)
+    {
+        OnPropertyChanged(nameof(IsWantsOverflowing));
+        OnPropertyChanged(nameof(WantsRemainingDisplay));
+        OnPropertyChanged(nameof(WantsRemainingLabel));
+    }
+
+    partial void OnInvestRemainingChanged(decimal value)
+    {
+        OnPropertyChanged(nameof(IsInvestOverflowing));
+        OnPropertyChanged(nameof(InvestRemainingDisplay));
+        OnPropertyChanged(nameof(InvestRemainingLabel));
     }
 
     private async Task ReloadFromServicesAsync()
