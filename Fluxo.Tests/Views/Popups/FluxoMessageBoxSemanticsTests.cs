@@ -18,14 +18,14 @@ public sealed class FluxoMessageBoxSemanticsTests
     }
 
     [Fact]
-    public void ExpenseDetailDirtyClosePrompt_DescribesYesAsDiscardAndNoAsReturn()
+    public void TransactionDetailDirtyClosePrompt_DescribesYesAsDiscardAndNoAsReturn()
     {
         var code = File.ReadAllText(Path.Combine(
             RepositoryPaths.Root,
             "Fluxo",
             "Views",
             "Popups",
-            "ExpenseDetailPopup.xaml.cs"));
+            "TransactionDetailPopup.xaml.cs"));
 
         Assert.Contains("Close and discard unsaved changes?", code);
         Assert.DoesNotContain("keep editing", code, StringComparison.OrdinalIgnoreCase);

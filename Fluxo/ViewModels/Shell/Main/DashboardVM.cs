@@ -100,7 +100,7 @@ public partial class DashboardVM : ObservableObject
 
     public static bool ShouldLockDashboardForSpendingAmount(
         IEnumerable<AccountVM> accounts,
-        IEnumerable<ExpenseLogVM> expenseLogs)
+        IEnumerable<TransactionVM> expenseLogs)
     {
         ArgumentNullException.ThrowIfNull(accounts);
         ArgumentNullException.ThrowIfNull(expenseLogs);
@@ -110,7 +110,7 @@ public partial class DashboardVM : ObservableObject
 
     public static bool ShouldLockActionsForSufficientFunds(
         IEnumerable<AccountVM> accounts,
-        IEnumerable<ExpenseLogVM> expenseLogs)
+        IEnumerable<TransactionVM> expenseLogs)
     {
         ArgumentNullException.ThrowIfNull(accounts);
         ArgumentNullException.ThrowIfNull(expenseLogs);
@@ -118,7 +118,7 @@ public partial class DashboardVM : ObservableObject
         var hasUsableFunds = accounts
             .Where(source => source.IsEnabled)
             .Any(HasUsableFunds);
-        var hasActiveExpenseLogs = expenseLogs.Any(log => !log.IsForDeletion && log.ParentLogId is null);
+        var hasActiveExpenseLogs = expenseLogs.Any(log => !log.IsForDeletion && log.ParentTransactionId is null);
 
         return !hasUsableFunds && !hasActiveExpenseLogs;
     }

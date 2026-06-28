@@ -39,14 +39,11 @@ public sealed class ModelSchemaTests
         Assert.Equal(false, transaction.FindProperty(nameof(Transaction.IsIoU))!.GetDefaultValue());
         Assert.Equal(false, transaction.FindProperty(nameof(Transaction.IsExcludedFromBudget))!.GetDefaultValue());
         Assert.True(transaction.FindProperty(nameof(Transaction.ParentTransactionId))!.IsNullable);
+        Assert.NotNull(transaction.FindProperty(nameof(Transaction.LoggedOn)));
         Assert.Contains(transaction.GetForeignKeys(), foreignKey =>
             foreignKey.Properties.Any(property => property.Name == nameof(Transaction.ParentTransactionId)) &&
             foreignKey.PrincipalEntityType.ClrType == typeof(Transaction) &&
             foreignKey.DeleteBehavior == DeleteBehavior.Restrict);
-        Assert.Null(model.FindEntityType(typeof(Expense)));
-        Assert.Null(model.FindEntityType(typeof(ExpenseLog)));
-        Assert.Null(model.FindEntityType(typeof(IncomeLog)));
-
         var savingGoal = model.FindEntityType(typeof(SavingGoal))!;
         Assert.True(savingGoal.FindProperty(nameof(SavingGoal.SavingEndDate))!.IsNullable);
 
@@ -83,6 +80,36 @@ public sealed class ModelSchemaTests
             string.Equals(index.Properties[0].Name, "SingletonKey", StringComparison.Ordinal));
     }
 
+    [Theory]
+    [InlineData(TransactionType.Expense)]
+    [InlineData(TransactionType.Income)]
+    public async Task SaveChanges_NormalizesOccurredOnAndStampsLoggedOn(TransactionType type)
+    {
+        await using var dbContext = CreateDbContext();
+        await dbContext.Database.OpenConnectionAsync();
+        await dbContext.Database.EnsureCreatedAsync();
+        var account = new Account { Name = "Checking" };
+        dbContext.Accounts.Add(account);
+        await dbContext.SaveChangesAsync();
+
+        var transaction = new Transaction
+        {
+            Type = type,
+            Account = account,
+            Name = "Test",
+            Amount = 1m,
+            OccurredOn = new DateTime(2026, 6, 27, 14, 30, 0)
+        };
+        dbContext.Transactions.Add(transaction);
+
+        var before = DateTime.Now;
+        await dbContext.SaveChangesAsync();
+        var after = DateTime.Now;
+
+        Assert.Equal(new DateTime(2026, 6, 27), transaction.OccurredOn);
+        Assert.InRange(transaction.LoggedOn, before, after);
+    }
+
     [Fact]
     public void EntitiesAndViewModels_ExposeRequestedProperties()
     {
@@ -110,49 +137,25 @@ public sealed class ModelSchemaTests
         var tagVm = new TagVM { SpendingLimit = tag.SpendingLimit };
         Assert.Equal(250m, tagVm.SpendingLimit);
 
-        var expense = new Expense { IsIoU = true };
-        var expenseDto = new ExpenseDto { IsIoU = expense.IsIoU };
-        var expenseVm = new ExpenseVM { IsIoU = expenseDto.IsIoU };
-        Assert.True(expenseDto.IsIoU);
-        Assert.True(expenseVm.IsIoU);
-
-        var expenseLog = new ExpenseLog { IsPinned = true, ParentLogId = 10, IsIoU = true };
-        var expenseLogDto = new ExpenseLogDto
+        var transaction = new Transaction { IsPinned = true, ParentTransactionId = 10, IsIoU = true };
+        var transactionDto = new TransactionDto
         {
-            IsPinned = expenseLog.IsPinned,
-            ParentLogId = expenseLog.ParentLogId,
-            IsIoU = expenseLog.IsIoU
+            IsPinned = transaction.IsPinned,
+            ParentTransactionId = transaction.ParentTransactionId,
+            IsIoU = transaction.IsIoU
         };
-        var expenseLogVm = new ExpenseLogVM
+        var transactionVm = new TransactionVM
         {
-            IsPinned = expenseLog.IsPinned,
-            ParentLogId = expenseLogDto.ParentLogId,
-            IsIoU = expenseLogDto.IsIoU
+            IsPinned = transaction.IsPinned,
+            ParentTransactionId = transactionDto.ParentTransactionId,
+            IsIoU = transactionDto.IsIoU
         };
-        Assert.True(expenseLogDto.IsPinned);
-        Assert.True(expenseLogVm.IsPinned);
-        Assert.True(expenseLogDto.IsIoU);
-        Assert.True(expenseLogVm.IsIoU);
-        Assert.Equal(10, expenseLogDto.ParentLogId);
-        Assert.Equal(10, expenseLogVm.ParentLogId);
-
-        var incomeLog = new IncomeLog { IsForDeletion = true, IsPinned = true, IsIoU = true };
-        var incomeLogDto = new IncomeLogDto
-        {
-            IsForDeletion = incomeLog.IsForDeletion,
-            IsPinned = incomeLog.IsPinned,
-            IsIoU = incomeLog.IsIoU
-        };
-        var incomeLogVm = new IncomeLogVM
-        {
-            IsPinned = incomeLog.IsPinned,
-            IsIoU = incomeLogDto.IsIoU
-        };
-        Assert.True(incomeLogDto.IsForDeletion);
-        Assert.True(incomeLogDto.IsPinned);
-        Assert.True(incomeLogVm.IsPinned);
-        Assert.True(incomeLogDto.IsIoU);
-        Assert.True(incomeLogVm.IsIoU);
+        Assert.True(transactionDto.IsPinned);
+        Assert.True(transactionVm.IsPinned);
+        Assert.True(transactionDto.IsIoU);
+        Assert.True(transactionVm.IsIoU);
+        Assert.Equal(10, transactionDto.ParentTransactionId);
+        Assert.Equal(10, transactionVm.ParentTransactionId);
 
         var goal = new SavingGoal { SavingEndDate = null };
         var goalVm = new SavingGoalVM

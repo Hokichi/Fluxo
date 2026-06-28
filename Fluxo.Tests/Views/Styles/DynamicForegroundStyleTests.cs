@@ -83,9 +83,9 @@ public sealed class DynamicForegroundStyleTests
     }
 
     [Fact]
-    public void ExpenseDetailSplitTagToggle_BindsSelectedForegroundToSelectedBackgroundBrightness()
+    public void TransactionDetailSplitTagToggle_BindsSelectedForegroundToSelectedBackgroundBrightness()
     {
-        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "ExpenseDetailPopup.xaml"));
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "TransactionDetailPopup.xaml"));
         var style = ExtractSection(xaml, "x:Key=\"SplitRowTagToggleStyle\"", "</Style>");
 
         Assert.Contains("Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\"", style);

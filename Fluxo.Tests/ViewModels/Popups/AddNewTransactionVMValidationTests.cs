@@ -238,7 +238,7 @@ public sealed class AddNewTransactionVMValidationTests
             var source = CreateCheckingSource(balance: 500m);
             var appData = CreateAppData(expenseLogs:
             [
-                CreateExpenseLog("Groceries", 90m, tagId: 1, sourceId: source.Id)
+                CreateTransaction("Groceries", 90m, tagId: 1, sourceId: source.Id)
             ]);
             var vm = CreateVm(TransactionKind.Expense, source, isRecurring: false, amount: 5m, appData: appData);
             vm.SelectedTag = new TagVM
@@ -266,7 +266,7 @@ public sealed class AddNewTransactionVMValidationTests
             var source = CreateCheckingSource(balance: 500m);
             var appData = CreateAppData(expenseLogs:
             [
-                CreateExpenseLog("Groceries", 90m, tagId: 1, sourceId: source.Id)
+                CreateTransaction("Groceries", 90m, tagId: 1, sourceId: source.Id)
             ]);
             var vm = CreateVm(TransactionKind.Expense, source, isRecurring: false, amount: 15m, appData: appData);
             vm.SelectedTag = new TagVM
@@ -634,7 +634,7 @@ public sealed class AddNewTransactionVMValidationTests
         RunInSta(() =>
         {
             var appData = CreateAppData(expenseLogs: [
-                CreateExpenseLog("Valid name", 10.50m, sourceId: 1)
+                CreateTransaction("Valid name", 10.50m, sourceId: 1)
             ]);
             var vm = CreateVm(
                 TransactionKind.Expense,
@@ -655,7 +655,7 @@ public sealed class AddNewTransactionVMValidationTests
         RunInSta(() =>
         {
             var appData = CreateAppData(expenseLogs: [
-                CreateExpenseLog("Valid name", 10.51m, sourceId: 1)
+                CreateTransaction("Valid name", 10.51m, sourceId: 1)
             ]);
             var vm = CreateVm(
                 TransactionKind.Expense,
@@ -676,7 +676,7 @@ public sealed class AddNewTransactionVMValidationTests
         RunInSta(() =>
         {
             var appData = CreateAppData(expenseLogs: [
-                CreateExpenseLog("Valid name", 10m, sourceId: 2)
+                CreateTransaction("Valid name", 10m, sourceId: 2)
             ]);
             var vm = CreateVm(
                 TransactionKind.Expense,
@@ -697,8 +697,9 @@ public sealed class AddNewTransactionVMValidationTests
         RunInSta(() =>
         {
             var appData = CreateAppData(incomeLogs: [
-                new IncomeLog
+                new Transaction
                 {
+                    Type = TransactionType.Income,
                     Name = "Valid name",
                     Amount = 10.25m,
                     AccountId = 1
@@ -724,7 +725,7 @@ public sealed class AddNewTransactionVMValidationTests
         {
             var appData = CreateAppData(expenseLogs:
             [
-                CreateExpenseLog("Goal Update: Goal", 10m, sourceId: 1, tagId: 1, tagName: "General")
+                CreateTransaction("Goal Update: Goal", 10m, sourceId: 1, tagId: 1, tagName: "General")
             ]);
             var vm = CreateVm(
                 TransactionKind.Goal,
@@ -746,7 +747,7 @@ public sealed class AddNewTransactionVMValidationTests
         {
             var appData = CreateAppData(expenseLogs:
             [
-                CreateExpenseLog(
+                CreateTransaction(
                     "Goal Update: Goal",
                     10.25m,
                     sourceId: 1,
@@ -856,7 +857,7 @@ public sealed class AddNewTransactionVMValidationTests
                 InvestThreshold = 20,
                 OverspendPolicy = OverspendPolicy.HardStop
             };
-            var appData = CreateAppData(allocation, CreateExpenseLogsForBudget(ExpenseCategory.Wants, 30m));
+            var appData = CreateAppData(allocation, CreateTransactionsForBudget(ExpenseCategory.Wants, 30m));
             AddNewTransactionVM.RecurringDraftSaveInput? captured = null;
             var vm = new AddNewTransactionVM(
                 CreateMainViewModel([source]),
@@ -899,7 +900,7 @@ public sealed class AddNewTransactionVMValidationTests
                 InvestThreshold = 20,
                 OverspendPolicy = OverspendPolicy.SoftDebt
             };
-            var appData = CreateAppData(allocation, CreateExpenseLogsForBudget(ExpenseCategory.Wants, 30m));
+            var appData = CreateAppData(allocation, CreateTransactionsForBudget(ExpenseCategory.Wants, 30m));
             var vm = new AddNewTransactionVM(
                 CreateMainViewModel([source]),
                 appData,
@@ -935,7 +936,7 @@ public sealed class AddNewTransactionVMValidationTests
                 InvestThreshold = 20,
                 OverspendPolicy = OverspendPolicy.HardStop
             };
-            var appData = CreateAppData(allocation, CreateExpenseLogsForBudget(ExpenseCategory.Wants, 25m));
+            var appData = CreateAppData(allocation, CreateTransactionsForBudget(ExpenseCategory.Wants, 25m));
             var vm = CreateVm(TransactionKind.Expense, source, isRecurring: false, amount: 6m, appData: appData);
             vm.SelectedExpenseCategory = ExpenseCategory.Wants;
 
@@ -943,7 +944,7 @@ public sealed class AddNewTransactionVMValidationTests
 
             Assert.False(result.IsSuccess);
             Assert.Equal("Wants budget is exhausted for this allocation period.", result.ErrorMessage);
-            appData.DidNotReceiveWithAnyArgs().AddExpenseAsync(default!, default);
+            appData.DidNotReceiveWithAnyArgs().AddTransactionAsync(default!, default);
         });
     }
 
@@ -965,7 +966,7 @@ public sealed class AddNewTransactionVMValidationTests
             var expenseDate = new DateTime(2026, 5, 15);
             var appData = CreateAppData(
                 allocation,
-                CreateExpenseLogsForBudget(ExpenseCategory.Wants, 29m, new DateTime(2026, 5, 1)));
+                CreateTransactionsForBudget(ExpenseCategory.Wants, 29m, new DateTime(2026, 5, 1)));
             var vm = CreateVm(TransactionKind.Expense, source, isRecurring: false, amount: 2m, appData: appData);
             vm.SelectedExpenseCategory = ExpenseCategory.Wants;
             vm.SelectedDate = expenseDate;
@@ -992,7 +993,7 @@ public sealed class AddNewTransactionVMValidationTests
                 InvestThreshold = 20,
                 OverspendPolicy = OverspendPolicy.SoftDebt
             };
-            var appData = CreateAppData(allocation, CreateExpenseLogsForBudget(ExpenseCategory.Wants, 25m));
+            var appData = CreateAppData(allocation, CreateTransactionsForBudget(ExpenseCategory.Wants, 25m));
             var vm = CreateVm(TransactionKind.Expense, source, isRecurring: false, amount: 12m, appData: appData);
             vm.SelectedExpenseCategory = ExpenseCategory.Wants;
 
@@ -1019,14 +1020,14 @@ public sealed class AddNewTransactionVMValidationTests
                 InvestThreshold = 20,
                 OverspendPolicy = OverspendPolicy.HardStop
             };
-            var appData = CreateAppData(allocation, CreateExpenseLogsForBudget(ExpenseCategory.Savings, 20m));
+            var appData = CreateAppData(allocation, CreateTransactionsForBudget(ExpenseCategory.Savings, 20m));
             var vm = CreateVm(TransactionKind.Goal, source, isRecurring: false, amount: 1m, appData: appData);
 
             var result = vm.SaveAsync(resetAfterSave: false).GetAwaiter().GetResult();
 
             Assert.False(result.IsSuccess);
             Assert.Equal("Invest budget is exhausted for this allocation period.", result.ErrorMessage);
-            appData.DidNotReceiveWithAnyArgs().AddExpenseAsync(default!, default);
+            appData.DidNotReceiveWithAnyArgs().AddTransactionAsync(default!, default);
         });
     }
 
@@ -1600,8 +1601,8 @@ public sealed class AddNewTransactionVMValidationTests
         {
             var appData = CreateAppData(expenseLogs:
             [
-                CreateExpenseLog("Goal Update: Goal", 25m, sourceId: 1, tagId: 99, tagName: "Goal Update"),
-                CreateExpenseLog("Goal Update: Other", 30m, sourceId: 1, tagId: 99, tagName: "Goal Update")
+                CreateTransaction("Goal Update: Goal", 25m, sourceId: 1, tagId: 99, tagName: "Goal Update"),
+                CreateTransaction("Goal Update: Other", 30m, sourceId: 1, tagId: 99, tagName: "Goal Update")
             ]);
             var vm = CreateVm(
                 TransactionKind.Goal,
@@ -1689,14 +1690,13 @@ public sealed class AddNewTransactionVMValidationTests
 
     private static IAppDataService CreateAppData(
         BudgetAllocation? budgetAllocation = null,
-        IReadOnlyList<ExpenseLog>? expenseLogs = null,
-        IReadOnlyList<IncomeLog>? incomeLogs = null)
+        IReadOnlyList<Transaction>? expenseLogs = null,
+        IReadOnlyList<Transaction>? incomeLogs = null)
     {
         var appData = Substitute.For<IAppDataService>();
-        appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<ExpenseLog>>(expenseLogs ?? []));
-        appData.GetIncomeLogsAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<IncomeLog>>(incomeLogs ?? []));
+        appData.GetTransactionsAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Transaction>>(
+                (expenseLogs ?? []).Concat(incomeLogs ?? []).ToList()));
         appData.GetAccountByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
             .Returns(callInfo => Task.FromResult<Account?>(new Account
             {
@@ -1736,11 +1736,9 @@ public sealed class AddNewTransactionVMValidationTests
                     IsSystemTag = false
                 }
             ]));
-        appData.AddExpenseAsync(Arg.Any<Expense>(), Arg.Any<CancellationToken>())
+        appData.AddTransactionAsync(Arg.Any<Transaction>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
-        appData.AddExpenseLogAsync(Arg.Any<ExpenseLog>(), Arg.Any<CancellationToken>())
-            .Returns(Task.CompletedTask);
-        appData.AddIncomeLogAsync(Arg.Any<IncomeLog>(), Arg.Any<CancellationToken>())
+        appData.AddTransactionAsync(Arg.Any<Transaction>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
         appData.AddTransactionAsync(Arg.Any<Transaction>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
@@ -1759,7 +1757,7 @@ public sealed class AddNewTransactionVMValidationTests
         var mapper = Substitute.For<IMapper>();
         var unitOfWork = CreateUnitOfWork();
         var dataOperationRunner = new InlineDataOperationRunner(unitOfWork);
-        mapper.Map<IReadOnlyList<ExpenseLogVM>>(Arg.Any<object>()).Returns([]);
+        mapper.Map<IReadOnlyList<TransactionVM>>(Arg.Any<object>()).Returns([]);
         mapper.Map<IReadOnlyList<AccountVM>>(Arg.Any<object>()).Returns([]);
         mapper.Map<IReadOnlyList<TagVM>>(Arg.Any<object>()).Returns([]);
         mapper.Map<IReadOnlyList<Fluxo.Core.DTO.RecurringTransactionDto>>(Arg.Any<object>()).Returns([]);
@@ -1767,9 +1765,6 @@ public sealed class AddNewTransactionVMValidationTests
         mapper.Map<IReadOnlyList<Fluxo.Core.DTO.SavingGoalDto>>(Arg.Any<object>()).Returns([]);
         mapper.Map<IReadOnlyList<SavingGoalVM>>(Arg.Any<object>()).Returns([]);
 
-        var expenseLogService = Substitute.For<IExpenseLogService>();
-        expenseLogService.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.DTO.ExpenseLogDto>>([]));
         var transactionService = Substitute.For<ITransactionService>();
         transactionService.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.DTO.TransactionDto>>([]));
@@ -1779,9 +1774,6 @@ public sealed class AddNewTransactionVMValidationTests
         var tagService = Substitute.For<ITagService>();
         tagService.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.DTO.TagDto>>([]));
-        var expenseService = Substitute.For<IExpenseService>();
-        expenseService.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.DTO.ExpenseDto>>([]));
 
         var dashboard = new DashboardVM(
             new NotificationPanelVM(
@@ -1846,10 +1838,10 @@ public sealed class AddNewTransactionVMValidationTests
             .Returns(Task.FromResult<IReadOnlyList<UserSettings>>([]));
         unitOfWork.UserSettings.Returns(userSettings);
 
-        var incomeLogs = Substitute.For<IIncomeLogRepository>();
+        var incomeLogs = Substitute.For<ITransactionRepository>();
         incomeLogs.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<IncomeLog>>([]));
-        unitOfWork.IncomeLogs.Returns(incomeLogs);
+            .Returns(Task.FromResult<IReadOnlyList<Transaction>>([]));
+        unitOfWork.Transactions.Returns(incomeLogs);
 
         var budgetAllocation = Substitute.For<IBudgetAllocationRepository>();
         budgetAllocation.GetAsync(Arg.Any<CancellationToken>())
@@ -1859,55 +1851,47 @@ public sealed class AddNewTransactionVMValidationTests
         return unitOfWork;
     }
 
-    private static IReadOnlyList<ExpenseLog> CreateExpenseLogsForBudget(
+    private static IReadOnlyList<Transaction> CreateTransactionsForBudget(
         ExpenseCategory category,
         decimal amount,
         DateTime? deductedOn = null)
     {
         return
         [
-            new ExpenseLog
+            new Transaction
             {
                 Id = 10,
                 Amount = amount,
-                DeductedOn = deductedOn ?? DateTime.Today,
+                OccurredOn = deductedOn ?? DateTime.Today,
                 IsForDeletion = false,
-                Expense = new Expense
-                {
-                    Id = 20,
-                    Name = "Existing",
-                    ExpenseCategory = category
-                }
+                Type = TransactionType.Expense,
+                Name = "Existing",
+                ExpenseCategory = category
             }
         ];
     }
 
-    private static ExpenseLog CreateExpenseLog(
+    private static Transaction CreateTransaction(
         string name,
         decimal amount,
         int sourceId,
         int tagId = 1,
         string tagName = "General")
     {
-        return new ExpenseLog
+        return new Transaction
         {
             Id = 10,
             Amount = amount,
             AccountId = sourceId,
-            DeductedOn = DateTime.Today,
+            OccurredOn = DateTime.Today,
             IsForDeletion = false,
-            Expense = new Expense
+            Type = TransactionType.Expense,
+            Name = name,
+            TagId = tagId,
+            Tag = new Tag
             {
-                Id = 20,
-                Name = name,
-                Amount = amount,
-                AccountId = sourceId,
-                TagId = tagId,
-                Tag = new Tag
-                {
-                    Id = tagId,
-                    Name = tagName
-                }
+                Id = tagId,
+                Name = tagName
             }
         };
     }

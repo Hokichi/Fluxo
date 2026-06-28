@@ -185,7 +185,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     public bool CanUseHistory => true;
     public bool CanEditTransactionName => !IsGoal;
     public bool CanEditCategory => IsExpense;
-    public bool CanEditTags => IsExpense;
+    public bool CanEditTags => !IsGoal;
     public bool CanChangeTransactionType => !_isTransactionTypeLocked;
     public bool CanPinTransaction => _popupPurpose == TransactionPopupPurpose.AddNewTransaction && !IsRecurringTransactionMode;
     public string IoUTooltip => IsExpense ? "Set as lend" : "Set as debt";
@@ -730,7 +730,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                 recurring.Type = recurringType;
                 recurring.Category = input.IsExpense ? input.Category : null;
                 recurring.SourceId = input.AccountId;
-                recurring.TagId = input.IsExpense ? input.TagId : null;
+                recurring.TagId = input.IsGoal ? null : input.TagId;
                 recurring.GoalId = input.IsGoal ? input.GoalId : null;
                 recurring.IsEnabled = true;
 
@@ -835,6 +835,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                     OccurredOn = input.Date,
                     Notes = input.Note,
                     AccountId = account.Id,
+                    TagId = input.TagId,
                     IsPinned = input.IsPinned,
                     IsIoU = input.IsIoU,
                     IsExcludedFromBudget = input.IsExcludedFromBudget
@@ -984,7 +985,7 @@ public partial class AddNewTransactionVM : ObservableValidator
 
             goalId = SelectedGoal.Id;
         }
-        else if (IsExpense)
+        else if (!IsGoal)
         {
             if (SelectedTag is null)
             {
@@ -992,7 +993,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                 return false;
             }
 
-            category = SelectedExpenseCategory;
+            category = IsExpense ? SelectedExpenseCategory : null;
             tagId = SelectedTag.Id;
         }
 
@@ -1435,6 +1436,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             .Where(log => log.Type == TransactionType.Expense && !string.IsNullOrWhiteSpace(log.Name))
             .Where(log => log.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
             .OrderByDescending(log => log.OccurredOn)
+            .ThenByDescending(log => log.LoggedOn)
             .Select(log => new AddNewTransactionSuggestion(
                 log.Name,
                 log.Amount,
@@ -1454,6 +1456,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             .Where(log => log.Type == TransactionType.Income && !string.IsNullOrWhiteSpace(log.Name))
             .Where(log => log.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
             .OrderByDescending(log => log.OccurredOn)
+            .ThenByDescending(log => log.LoggedOn)
             .Select(log => new AddNewTransactionSuggestion(
                 log.Name,
                 log.Amount,

@@ -1,83 +1,39 @@
+using Fluxo.Core.Enums;
 using Fluxo.ViewModels.Entities;
 
 namespace Fluxo.Views.Shell.Main;
 
-public enum HeaderQuickSearchResultKind
+public sealed record HeaderQuickSearchResult(TransactionVM Transaction)
 {
-    Expense,
-    Income
-}
-
-public sealed record HeaderQuickSearchResult(
-    HeaderQuickSearchResultKind Kind,
-    int Id,
-    string Name,
-    decimal Amount,
-    DateTime Date,
-    string AccountName,
-    string? TagName,
-    string? TagBrush,
-    ExpenseLogVM? ExpenseLog,
-    IncomeLogVM? IncomeLog)
-{
-    public bool IsExpense => Kind == HeaderQuickSearchResultKind.Expense;
-    public bool IsIncome => Kind == HeaderQuickSearchResultKind.Income;
+    public int Id => Transaction.Id;
+    public string Name => Transaction.Name.Trim();
+    public decimal Amount => Transaction.Amount;
+    public DateTime Date => Transaction.OccurredOn;
+    public string AccountName => Transaction.Account?.Name?.Trim() ?? string.Empty;
+    public string? TagName => Transaction.Tag?.Name;
+    public string? TagBrush => Transaction.Tag?.HexCode;
+    public bool IsExpense => Transaction.Type == TransactionType.Expense;
+    public bool IsIncome => Transaction.Type == TransactionType.Income;
     public string IconResourceKey => IsIncome ? "BanknoteArrowUp" : "BanknoteArrowDown";
     public string IconBrushKey => IsIncome ? "Brush.Success" : "Brush.Danger";
 }
 
 public static class HeaderQuickSearchEngine
 {
-    public static IEnumerable<ExpenseLogVM> Search(IEnumerable<ExpenseLogVM> logs, string? query)
-    {
-        return Search(logs, [], query)
-            .Where(result => result.ExpenseLog is not null)
-            .Select(result => result.ExpenseLog!);
-    }
-
     public static IEnumerable<HeaderQuickSearchResult> Search(
-        IEnumerable<ExpenseLogVM> expenseLogs,
-        IEnumerable<IncomeLogVM> incomeLogs,
+        IEnumerable<TransactionVM> transactions,
         string? query)
     {
-        ArgumentNullException.ThrowIfNull(expenseLogs);
-        ArgumentNullException.ThrowIfNull(incomeLogs);
-
+        ArgumentNullException.ThrowIfNull(transactions);
         var normalizedQuery = query?.Trim();
         if (string.IsNullOrEmpty(normalizedQuery) || normalizedQuery.Length <= 3)
             return [];
 
-        var expenseResults = expenseLogs
-            .Where(log => log.Expense?.Name?.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase) == true)
-            .Select(log => new HeaderQuickSearchResult(
-                HeaderQuickSearchResultKind.Expense,
-                log.Id,
-                log.Expense?.Name?.Trim() ?? string.Empty,
-                log.Amount,
-                log.DeductedOn,
-                log.Account?.Name?.Trim() ?? string.Empty,
-                log.Expense?.Tag?.Name,
-                log.Expense?.Tag?.HexCode,
-                log,
-                null));
-
-        var incomeResults = incomeLogs
-            .Where(log => log.Name?.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase) == true)
-            .Select(log => new HeaderQuickSearchResult(
-                HeaderQuickSearchResultKind.Income,
-                log.Id,
-                log.Name?.Trim() ?? string.Empty,
-                log.Amount,
-                log.AddedOn,
-                log.Account?.Name?.Trim() ?? string.Empty,
-                null,
-                null,
-                null,
-                log));
-
-        return expenseResults
-            .Concat(incomeResults)
-            .OrderByDescending(result => result.Date)
-            .Take(5);
+        return transactions
+            .Where(transaction => transaction.Name.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(transaction => transaction.OccurredOn)
+            .ThenByDescending(transaction => transaction.LoggedOn)
+            .Take(5)
+            .Select(transaction => new HeaderQuickSearchResult(transaction));
     }
 }

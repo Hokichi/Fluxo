@@ -11,6 +11,7 @@ public partial class TransactionVM : ObservableObject
     [ObservableProperty] private string _name = string.Empty;
     [ObservableProperty] private decimal _amount;
     [ObservableProperty] private DateTime _occurredOn;
+    [ObservableProperty] private DateTime _loggedOn;
     [ObservableProperty] private string _notes = string.Empty;
     [ObservableProperty] private ExpenseCategory? _expenseCategory;
     [ObservableProperty] private TagVM? _tag;

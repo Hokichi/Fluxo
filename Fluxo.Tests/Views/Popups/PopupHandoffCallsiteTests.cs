@@ -7,7 +7,7 @@ public sealed class PopupHandoffCallsiteTests
 {
     [Theory]
     [InlineData("Fluxo", "Views", "Popups", "QuickAddPopup.xaml.cs")]
-    [InlineData("Fluxo", "Views", "Popups", "ExpenseDetailPopup.xaml.cs")]
+    [InlineData("Fluxo", "Views", "Popups", "TransactionDetailPopup.xaml.cs")]
     [InlineData("Fluxo", "Views", "Popups", "AccountsListPopup.xaml.cs")]
     [InlineData("Fluxo", "Views", "Popups", "AccountDetailPopup.xaml.cs")]
     public void PopupHandoffCallsites_UseCloseForPopupHandoff(params string[] relativePathSegments)

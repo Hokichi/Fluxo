@@ -109,9 +109,9 @@ public sealed class DataRestorationTagMigrationTests
         });
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
-        services.AddScoped<IExpenseRepository, ExpenseRepository>();
-        services.AddScoped<IExpenseLogRepository, ExpenseLogRepository>();
-        services.AddScoped<IIncomeLogRepository, IncomeLogRepository>();
+        services.AddScoped<ITransactionRepository, TransactionRepository>();
+        services.AddScoped<ITransactionRepository, TransactionRepository>();
+        services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<ISavingGoalRepository, SavingGoalRepository>();
         services.AddScoped<IAccountRepository, AccountRepository>();

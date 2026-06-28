@@ -483,7 +483,7 @@
                             Style="{StaticResource AddTileButtonStyle}"
                             Visibility="{Binding IsStep2Active, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <Button
-                            Click="OnAddFixedExpenseClick"
+                            Click="OnAddRecurringTransactionClick"
                             Style="{StaticResource AddTileButtonStyle}"
                             Visibility="{Binding IsStep3Active, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <Button
@@ -498,7 +498,7 @@
                         VerticalScrollBarVisibility="Auto">
                         <Grid>
                             <steps:Accounts DataContext="{Binding Accounts}" />
-                            <steps:FixedExpenses DataContext="{Binding FixedExpenses}" />
+                            <steps:RecurringTransactions DataContext="{Binding RecurringTransactions}" />
                             <steps:SavingGoals DataContext="{Binding SavingGoals}" />
                             <steps:BudgetAllocation DataContext="{Binding BudgetAllocation}" />
                             <steps:Personalization DataContext="{Binding Personalization}" />

@@ -395,18 +395,19 @@ public partial class LedgerVM : ObservableRecipient,
             .Where(log => !log.IsForDeletion)
             .ToList();
         var childExpenseRowsByParentId = activeExpenseLogs
-            .Where(log => log.ParentLogId is not null)
-            .GroupBy(log => log.ParentLogId!.Value)
+            .Where(log => log.ParentTransactionId is not null)
+            .GroupBy(log => log.ParentTransactionId!.Value)
             .ToDictionary(
                 group => group.Key,
                 group => group
-                    .OrderByDescending(log => log.DeductedOn)
-                    .ThenBy(log => log.Expense?.Name ?? "Expense", StringComparer.OrdinalIgnoreCase)
+                    .OrderByDescending(log => log.OccurredOn)
+                    .ThenByDescending(log => log.LoggedOn)
+                    .ThenBy(log => log.Name ?? "Expense", StringComparer.OrdinalIgnoreCase)
                     .Select(log => ProjectExpense(log, isChildTransaction: true))
                     .ToList());
 
         var projectedExpenses = activeExpenseLogs
-            .Where(log => log.ParentLogId is null)
+            .Where(log => log.ParentTransactionId is null)
             .Where(IsInSelectedRange)
             .Select(log => ProjectExpense(log))
             .ToList();
@@ -427,6 +428,7 @@ public partial class LedgerVM : ObservableRecipient,
         var projected = projectedExpenses
             .Concat(incomeLogs.Where(IsInSelectedRange).Select(ProjectIncome))
             .OrderByDescending(item => item.OccurredOn)
+            .ThenByDescending(item => item.LoggedOn)
             .ThenBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
@@ -474,44 +476,10 @@ public partial class LedgerVM : ObservableRecipient,
         }
     }
 
-    private static ExpenseLogVM ToExpenseLogVm(TransactionVM transaction)
-    {
-        return new ExpenseLogVM
-        {
-            Id = transaction.Id,
-            Amount = transaction.Amount,
-            DeductedOn = transaction.OccurredOn,
-            Notes = transaction.Notes,
-            Account = transaction.Account,
-            ParentLogId = transaction.ParentTransactionId,
-            IsPinned = transaction.IsPinned,
-            IsForDeletion = transaction.IsForDeletion,
-            IsIoU = transaction.IsIoU,
-            IsExcludedFromBudget = transaction.IsExcludedFromBudget,
-            Expense = new ExpenseVM
-            {
-                Id = transaction.Id,
-                Name = transaction.Name,
-                Amount = transaction.Amount,
-                ExpenseCategory = transaction.ExpenseCategory ?? ExpenseCategory.Needs,
-                Account = transaction.Account,
-                Tag = transaction.Tag ?? new TagVM()
-            }
-        };
-    }
+    private static TransactionVM ToExpenseLogVm(TransactionVM transaction)
+        => transaction;
 
-    private static IncomeLogVM ToIncomeLogVm(TransactionVM transaction) => new()
-    {
-        Id = transaction.Id,
-        Name = transaction.Name,
-        Amount = transaction.Amount,
-        AddedOn = transaction.OccurredOn,
-        Notes = transaction.Notes,
-        Account = transaction.Account,
-        IsPinned = transaction.IsPinned,
-        IsIoU = transaction.IsIoU,
-        IsExcludedFromBudget = transaction.IsExcludedFromBudget
-    };
+    private static TransactionVM ToIncomeLogVm(TransactionVM transaction) => transaction;
 
     private void RebuildFilters(IReadOnlyList<AccountVM> accounts, IReadOnlyList<TagVM> tags)
     {
@@ -1007,42 +975,37 @@ public partial class LedgerVM : ObservableRecipient,
                selectedOptions.Any(option => EqualityComparer<T>.Default.Equals(option.Value, value));
     }
 
-    private bool IsInSelectedRange(ExpenseLogVM log)
+    private bool IsInSelectedRange(TransactionVM log)
     {
         return _selectedRange is not { } range ||
-               log.DeductedOn.Date >= range.From.Date && log.DeductedOn.Date <= range.To.Date;
+               log.OccurredOn.Date >= range.From.Date && log.OccurredOn.Date <= range.To.Date;
     }
 
-    private bool IsInSelectedRange(IncomeLogVM log)
+    private static LedgerTransactionItemVM ProjectExpense(TransactionVM log, bool isChildTransaction = false)
     {
-        return _selectedRange is not { } range ||
-               log.AddedOn.Date >= range.From.Date && log.AddedOn.Date <= range.To.Date;
-    }
-
-    private static LedgerTransactionItemVM ProjectExpense(ExpenseLogVM log, bool isChildTransaction = false)
-    {
-        var tagName = log.Expense?.Tag?.Name ?? string.Empty;
+        var tagName = log.Tag?.Name ?? string.Empty;
         return new LedgerTransactionItemVM
         {
             Id = log.Id,
             Kind = LedgerTransactionKind.Expense,
-            Name = log.Expense?.Name ?? "Expense",
+            Name = log.Name,
             Amount = log.Amount,
-            OccurredOn = log.DeductedOn,
-            Category = log.Expense?.ExpenseCategory ?? ExpenseCategory.Needs,
-            ParentLogId = log.ParentLogId,
+            OccurredOn = log.OccurredOn,
+            LoggedOn = log.LoggedOn,
+            Category = log.ExpenseCategory ?? ExpenseCategory.Needs,
+            ParentTransactionId = log.ParentTransactionId,
             IsChildTransaction = isChildTransaction,
             AccountId = log.Account?.Id ?? 0,
             AccountName = log.Account?.Name ?? string.Empty,
-            TagId = log.Expense?.Tag?.Id ?? 0,
+            TagId = log.Tag?.Id ?? 0,
             TagName = tagName,
-            TagHexCode = log.Expense?.Tag?.HexCode ?? string.Empty,
+            TagHexCode = log.Tag?.HexCode ?? string.Empty,
             IsGoal = string.Equals(tagName, "Goal Update", StringComparison.OrdinalIgnoreCase),
             IsRecurring = log.Notes.Contains("recurring", StringComparison.OrdinalIgnoreCase)
         };
     }
 
-    private static LedgerTransactionItemVM ProjectIncome(IncomeLogVM log)
+    private static LedgerTransactionItemVM ProjectIncome(TransactionVM log)
     {
         return new LedgerTransactionItemVM
         {
@@ -1050,7 +1013,8 @@ public partial class LedgerVM : ObservableRecipient,
             Kind = LedgerTransactionKind.Income,
             Name = log.Name,
             Amount = log.Amount,
-            OccurredOn = log.AddedOn,
+            OccurredOn = log.OccurredOn,
+            LoggedOn = log.LoggedOn,
             AccountId = log.Account?.Id ?? 0,
             AccountName = log.Account?.Name ?? string.Empty
         };

@@ -6,24 +6,18 @@ namespace Fluxo.Data;
 
 public sealed class UnitOfWork(
     FluxoDbContext dbContext,
-    IExpenseRepository expenses,
-    IExpenseLogRepository expenseLogs,
-    IIncomeLogRepository incomeLogs,
+    ITransactionRepository transactions,
     ITagRepository tags,
     ISavingGoalRepository savingGoals,
     IAccountRepository accounts,
     IRecurringTransactionRepository recurringTransactions,
     INotificationRepository notifications,
     IUserSettingsRepository userSettings,
-    IBudgetAllocationRepository budgetAllocation,
-    ITransactionRepository? transactions = null) : IUnitOfWork
+    IBudgetAllocationRepository budgetAllocation) : IUnitOfWork
 {
     private readonly FluxoDbContext _dbContext = dbContext;
 
-    public IExpenseRepository Expenses { get; } = expenses;
-    public IExpenseLogRepository ExpenseLogs { get; } = expenseLogs;
-    public IIncomeLogRepository IncomeLogs { get; } = incomeLogs;
-    public ITransactionRepository Transactions => transactions ?? throw new NotSupportedException();
+    public ITransactionRepository Transactions { get; } = transactions;
     public ITagRepository Tags { get; } = tags;
     public ISavingGoalRepository SavingGoals { get; } = savingGoals;
     public IAccountRepository Accounts { get; } = accounts;

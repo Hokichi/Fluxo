@@ -75,7 +75,7 @@ public class MainVMSpendingAmountGateTests
     {
         var logs = new[]
         {
-            new ExpenseLogVM { IsForDeletion = false, Amount = 10m }
+            new TransactionVM { IsForDeletion = false, Amount = 10m }
         };
 
         var isLocked = DashboardVM.ShouldLockDashboardForSpendingAmount([], logs);
@@ -92,7 +92,7 @@ public class MainVMSpendingAmountGateTests
         };
         var logs = new[]
         {
-            new ExpenseLogVM { IsForDeletion = false, Amount = 50m }
+            new TransactionVM { IsForDeletion = false, Amount = 50m }
         };
 
         var isLocked = DashboardVM.ShouldLockDashboardForSpendingAmount(sources, logs);
@@ -109,7 +109,7 @@ public class MainVMSpendingAmountGateTests
         };
         var logs = new[]
         {
-            new ExpenseLogVM { IsForDeletion = true, Amount = 50m }
+            new TransactionVM { IsForDeletion = true, Amount = 50m }
         };
 
         var isLocked = DashboardVM.ShouldLockDashboardForSpendingAmount(sources, logs);
@@ -213,7 +213,7 @@ public class MainVMSpendingAmountGateTests
         };
         var logs = new[]
         {
-            new ExpenseLogVM { IsForDeletion = false, Amount = 50m }
+            new TransactionVM { IsForDeletion = false, Amount = 50m }
         };
 
         var isLocked = DashboardVM.ShouldLockActionsForSufficientFunds(sources, logs);
@@ -230,7 +230,7 @@ public class MainVMSpendingAmountGateTests
         };
         var logs = new[]
         {
-            new ExpenseLogVM { IsForDeletion = true, Amount = 50m }
+            new TransactionVM { IsForDeletion = true, Amount = 50m }
         };
 
         var isLocked = DashboardVM.ShouldLockActionsForSufficientFunds(sources, logs);

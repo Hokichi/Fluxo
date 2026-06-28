@@ -23,14 +23,11 @@ public sealed class DataOperationRunnerTests
             var unitOfWorkFromScope = scope.UnitOfWork;
             var unitOfWorkFromResolver = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-            var expensesFromScope = scope.ServiceProvider.GetRequiredService<IExpenseRepository>();
-            var expenseLogsFromScope = scope.ServiceProvider.GetRequiredService<IExpenseLogRepository>();
-            var expensesFromUnitOfWork = unitOfWorkFromScope.Expenses;
-            var expenseLogsFromUnitOfWork = unitOfWorkFromScope.ExpenseLogs;
+            var transactionsFromScope = scope.ServiceProvider.GetRequiredService<ITransactionRepository>();
+            var transactionsFromUnitOfWork = unitOfWorkFromScope.Transactions;
 
             Assert.Same(unitOfWorkFromScope, unitOfWorkFromResolver);
-            Assert.Same(expensesFromScope, expensesFromUnitOfWork);
-            Assert.Same(expenseLogsFromScope, expenseLogsFromUnitOfWork);
+            Assert.Same(transactionsFromScope, transactionsFromUnitOfWork);
 
             return Task.CompletedTask;
         });
@@ -60,7 +57,7 @@ public sealed class DataOperationRunnerTests
         Assert.NotNull(first);
         Assert.NotNull(second);
         Assert.NotSame(first, second);
-        Assert.NotSame(first!.Expenses, second!.Expenses);
+        Assert.NotSame(first!.Transactions, second!.Transactions);
     }
 
     private static ServiceProvider CreateServiceProvider()

@@ -10,29 +10,6 @@ public interface IAppDataService
     void UpdateTransaction(Transaction entity);
     void RemoveTransaction(Transaction entity);
 
-    Task<IReadOnlyList<Expense>> GetExpensesAsync(CancellationToken cancellationToken = default);
-    Task<Expense?> GetExpenseByIdAsync(int id, CancellationToken cancellationToken = default);
-    Task<Expense?> GetExpenseByExpenseIdAsync(int id, CancellationToken cancellationToken = default);
-    Task AddExpenseAsync(Expense entity, CancellationToken cancellationToken = default);
-    void UpdateExpense(Expense entity);
-    void RemoveExpense(Expense entity);
-
-    Task<IReadOnlyList<ExpenseLog>> GetExpenseLogsAsync(CancellationToken cancellationToken = default);
-    Task<ExpenseLog?> GetExpenseLogByIdAsync(int id, CancellationToken cancellationToken = default);
-    Task<ExpenseLog?> GetExpenseLogByLogIdAsync(int id, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<ExpenseLog>> GetExpenseLogsByExpenseIdAsync(int expenseId,
-        CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<ExpenseLog>> GetMarkedExpenseLogsAsync(CancellationToken cancellationToken = default);
-    Task AddExpenseLogAsync(ExpenseLog entity, CancellationToken cancellationToken = default);
-    void UpdateExpenseLog(ExpenseLog entity);
-    void RemoveExpenseLog(ExpenseLog entity);
-
-    Task<IReadOnlyList<IncomeLog>> GetIncomeLogsAsync(CancellationToken cancellationToken = default);
-    Task<IncomeLog?> GetIncomeLogByIdAsync(int id, CancellationToken cancellationToken = default);
-    Task AddIncomeLogAsync(IncomeLog entity, CancellationToken cancellationToken = default);
-    void UpdateIncomeLog(IncomeLog entity);
-    void RemoveIncomeLog(IncomeLog entity);
-
     Task<IReadOnlyList<Tag>> GetTagsAsync(CancellationToken cancellationToken = default);
     Task<Tag?> GetTagByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<(Tag Tag, int Count)>> GetTagsByCountDescendingAsync(

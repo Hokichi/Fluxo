@@ -47,7 +47,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     private static readonly IReadOnlyDictionary<string, string> SettingsDefaultsAfterDeletion =
         new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            [UserSettingNames.IsFixedExpensesDeductionNotifEnabled] = bool.TrueString,
+            [UserSettingNames.IsRecurringTransactionsDeductionNotifEnabled] = bool.TrueString,
             [UserSettingNames.IsCreditDeadlineNotifEnabled] = bool.TrueString,
             [UserSettingNames.IsGoalDeadlineNotifEnabled] = bool.FalseString,
             [UserSettingNames.IsLatePaymentNotifEnabled] = bool.FalseString,
@@ -74,7 +74,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         IUiSettleAwaiter uiSettleAwaiter,
         SettingsBudgetTabVM budgetTab,
         SettingsSourcesTabVM sourcesTab,
-        SettingsFixedExpensesTabVM fixedExpensesTab,
+        SettingsRecurringTransactionsTabVM fixedExpensesTab,
         SettingsGoalsTabVM goalsTab,
         SettingsIoUsTabVM debtIousTab,
         SettingsTagsTabVM tagsTab,
@@ -88,7 +88,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         _uiSettleAwaiter = uiSettleAwaiter;
         BudgetTab = budgetTab;
         SourcesTab = sourcesTab;
-        FixedExpensesTab = fixedExpensesTab;
+        RecurringTransactionsTab = fixedExpensesTab;
         GoalsTab = goalsTab;
         IoUsTab = debtIousTab;
         TagsTab = tagsTab;
@@ -98,7 +98,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
 
     public SettingsBudgetTabVM BudgetTab { get; }
     public SettingsSourcesTabVM SourcesTab { get; }
-    public SettingsFixedExpensesTabVM FixedExpensesTab { get; }
+    public SettingsRecurringTransactionsTabVM RecurringTransactionsTab { get; }
     public SettingsGoalsTabVM GoalsTab { get; }
     public SettingsIoUsTabVM IoUsTab { get; }
     public SettingsTagsTabVM TagsTab { get; }
@@ -165,7 +165,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         // Tab VMs share the same unit of work, so loads must be sequenced.
         await BudgetTab.LoadAsync();
         await SourcesTab.LoadAsync();
-        await FixedExpensesTab.LoadAsync();
+        await RecurringTransactionsTab.LoadAsync();
         await GoalsTab.LoadAsync();
         await IoUsTab.LoadAsync();
         await TagsTab.LoadAsync();
@@ -173,7 +173,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         ApplyDashboardSpendingAmountGateState();
 
         OnPropertyChanged(nameof(IsAccountChecksEnabled));
-        OnPropertyChanged(nameof(IsFixedExpenseChecksEnabled));
+        OnPropertyChanged(nameof(IsRecurringTransactionChecksEnabled));
         OnPropertyChanged(nameof(IsGoalChecksEnabled));
         OnPropertyChanged(nameof(HasPendingBudgetConfigurationChanges));
         OnPropertyChanged(nameof(HasPendingPersonalizationConfigurationChanges));
@@ -274,8 +274,8 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
                 SourcesTab.ClearSelections();
                 break;
 
-            case SettingsBatchTarget.FixedExpenses:
-                FixedExpensesTab.ClearSelections();
+            case SettingsBatchTarget.RecurringTransactions:
+                RecurringTransactionsTab.ClearSelections();
                 break;
 
             case SettingsBatchTarget.Goals:
@@ -292,8 +292,8 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
                 SourcesTab.SetSelections(isChecked);
                 break;
 
-            case SettingsBatchTarget.FixedExpenses:
-                FixedExpensesTab.SetSelections(isChecked);
+            case SettingsBatchTarget.RecurringTransactions:
+                RecurringTransactionsTab.SetSelections(isChecked);
                 break;
 
             case SettingsBatchTarget.Goals:
@@ -307,7 +307,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         return target switch
         {
             SettingsBatchTarget.Accounts => SourcesTab.ShouldWarnBeforeApplyingToAll(action),
-            SettingsBatchTarget.FixedExpenses => FixedExpensesTab.ShouldWarnBeforeApplyingToAll(action),
+            SettingsBatchTarget.RecurringTransactions => RecurringTransactionsTab.ShouldWarnBeforeApplyingToAll(action),
             SettingsBatchTarget.Goals => GoalsTab.ShouldWarnBeforeApplyingToAll(action),
             _ => false
         };
@@ -319,10 +319,10 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         return SourcesTab.ExecuteActionAsync(action, selectedIdsOverride);
     }
 
-    public Task<SettingsOperationResult> ExecuteFixedExpenseActionAsync(SettingsBatchAction action,
+    public Task<SettingsOperationResult> ExecuteRecurringTransactionActionAsync(SettingsBatchAction action,
         IReadOnlyCollection<int>? selectedIdsOverride = null)
     {
-        return FixedExpensesTab.ExecuteActionAsync(action, selectedIdsOverride);
+        return RecurringTransactionsTab.ExecuteActionAsync(action, selectedIdsOverride);
     }
 
     public Task<SettingsOperationResult> ExecuteGoalActionAsync(SettingsBatchAction action,
@@ -336,9 +336,9 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         return SourcesTab.ExecuteItemActionAsync(itemId, action);
     }
 
-    public Task<SettingsOperationResult> ExecuteFixedExpenseItemActionAsync(int itemId, SettingsBatchAction action)
+    public Task<SettingsOperationResult> ExecuteRecurringTransactionItemActionAsync(int itemId, SettingsBatchAction action)
     {
-        return FixedExpensesTab.ExecuteItemActionAsync(itemId, action);
+        return RecurringTransactionsTab.ExecuteItemActionAsync(itemId, action);
     }
 
     public Task<SettingsOperationResult> ExecuteGoalItemActionAsync(int itemId, SettingsBatchAction action)
@@ -442,9 +442,9 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         return SourcesTab.CreateAddAccountViewModel();
     }
 
-    public AddNewTransactionVM CreateAddFixedExpenseViewModel()
+    public AddNewTransactionVM CreateAddRecurringTransactionViewModel()
     {
-        return FixedExpensesTab.CreateAddFixedExpenseViewModel();
+        return RecurringTransactionsTab.CreateAddRecurringTransactionViewModel();
     }
 
     public AddSavingGoalVM CreateAddSavingGoalViewModel()
@@ -465,8 +465,8 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
                 SourcesTab.SelectSingleItem(itemId);
                 break;
 
-            case SettingsBatchTarget.FixedExpenses:
-                FixedExpensesTab.SelectSingleItem(itemId);
+            case SettingsBatchTarget.RecurringTransactions:
+                RecurringTransactionsTab.SelectSingleItem(itemId);
                 break;
 
             case SettingsBatchTarget.Goals:
@@ -480,9 +480,9 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         return SourcesTab.RefreshAccountsAsync();
     }
 
-    public Task RefreshFixedExpensesAsync()
+    public Task RefreshRecurringTransactionsAsync()
     {
-        return FixedExpensesTab.RefreshFixedExpensesAsync();
+        return RecurringTransactionsTab.RefreshRecurringTransactionsAsync();
     }
 
     public Task RefreshSavingGoalsAsync()
@@ -510,12 +510,12 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         }
     }
 
-    public bool IsFixedExpenseChecksEnabled
+    public bool IsRecurringTransactionChecksEnabled
     {
-        get => FixedExpensesTab.IsFixedExpenseChecksEnabled;
+        get => RecurringTransactionsTab.IsRecurringTransactionChecksEnabled;
         set
         {
-            FixedExpensesTab.IsFixedExpenseChecksEnabled = value;
+            RecurringTransactionsTab.IsRecurringTransactionChecksEnabled = value;
             OnPropertyChanged();
         }
     }
@@ -758,7 +758,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     private void ApplyDashboardSpendingAmountGateState()
     {
         var isLocked = IsSufficientFundsActionGateLocked;
-        FixedExpensesTab.IsDashboardSpendingAmountGateLocked = isLocked;
+        RecurringTransactionsTab.IsDashboardSpendingAmountGateLocked = isLocked;
         GoalsTab.IsDashboardSpendingAmountGateLocked = isLocked;
         OnPropertyChanged(nameof(IsDashboardSpendingAmountGateLocked));
         OnPropertyChanged(nameof(IsSufficientFundsActionGateLocked));

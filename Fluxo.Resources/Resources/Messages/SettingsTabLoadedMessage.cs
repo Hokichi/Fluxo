@@ -5,7 +5,7 @@ public enum SettingsTabKey
 {
     Budget = 1 << 0,
     Sources = 1 << 1,
-    FixedExpenses = 1 << 2,
+    RecurringTransactions = 1 << 2,
     Goals = 1 << 3,
     Tags = 1 << 4,
     DebtIous = 1 << 5,

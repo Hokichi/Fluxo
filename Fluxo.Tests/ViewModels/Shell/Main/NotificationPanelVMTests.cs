@@ -165,7 +165,7 @@ public class NotificationPanelVMTests
             ],
             userSettings:
             [
-                new UserSettings { Name = UserSettingNames.IsFixedExpensesDeductionNotifEnabled, Value = "true" }
+                new UserSettings { Name = UserSettingNames.IsRecurringTransactionsDeductionNotifEnabled, Value = "true" }
             ]);
 
         persistedNotifications.Add(new Notification
@@ -234,7 +234,7 @@ public class NotificationPanelVMTests
             ],
             userSettings:
             [
-                new UserSettings { Name = UserSettingNames.IsFixedExpensesDeductionNotifEnabled, Value = "true" }
+                new UserSettings { Name = UserSettingNames.IsRecurringTransactionsDeductionNotifEnabled, Value = "true" }
             ]);
 
         await vm.LoadAsync();
@@ -254,17 +254,14 @@ public class NotificationPanelVMTests
             expenses: [],
             expenseLogs:
             [
-                new ExpenseLogVM
+                new TransactionVM
                 {
                     Id = 1,
                     Amount = 380m,
-                    DeductedOn = DateTime.Today,
-                    Expense = new ExpenseVM
-                    {
-                        Id = 1,
-                        Name = "Rent",
-                        ExpenseCategory = ExpenseCategory.Needs
-                    }
+                    OccurredOn = DateTime.Today,
+                    Type = TransactionType.Expense,
+                    Name = "Rent",
+                    ExpenseCategory = ExpenseCategory.Needs
                 }
             ],
             accounts:
@@ -294,7 +291,7 @@ public class NotificationPanelVMTests
             ],
             userSettings:
             [
-                new UserSettings { Name = UserSettingNames.IsFixedExpensesDeductionNotifEnabled, Value = "true" }
+                new UserSettings { Name = UserSettingNames.IsRecurringTransactionsDeductionNotifEnabled, Value = "true" }
             ],
             budgetAllocation: new BudgetAllocation
             {
@@ -326,31 +323,25 @@ public class NotificationPanelVMTests
             expenses: [],
             expenseLogs:
             [
-                new ExpenseLogVM
+                new TransactionVM
                 {
                     Id = 1,
                     Amount = 80m,
-                    DeductedOn = DateTime.Today,
-                    Expense = new ExpenseVM
-                    {
-                        Id = 1,
-                        Name = "Market",
-                        ExpenseCategory = ExpenseCategory.Needs,
-                        Tag = groceriesTag
-                    }
+                    OccurredOn = DateTime.Today,
+                    Type = TransactionType.Expense,
+                    Name = "Market",
+                    ExpenseCategory = ExpenseCategory.Needs,
+                    Tag = groceriesTag
                 },
-                new ExpenseLogVM
+                new TransactionVM
                 {
                     Id = 2,
                     Amount = 25m,
-                    DeductedOn = DateTime.Today,
-                    Expense = new ExpenseVM
-                    {
-                        Id = 2,
-                        Name = "Snacks",
-                        ExpenseCategory = ExpenseCategory.Wants,
-                        Tag = groceriesTag
-                    }
+                    OccurredOn = DateTime.Today,
+                    Type = TransactionType.Expense,
+                    Name = "Snacks",
+                    ExpenseCategory = ExpenseCategory.Wants,
+                    Tag = groceriesTag
                 }
             ],
             accounts: [],
@@ -397,7 +388,7 @@ public class NotificationPanelVMTests
         };
         var userSettings = new[]
         {
-            new UserSettings { Name = UserSettingNames.IsFixedExpensesDeductionNotifEnabled, Value = "true" },
+            new UserSettings { Name = UserSettingNames.IsRecurringTransactionsDeductionNotifEnabled, Value = "true" },
             new UserSettings { Name = UserSettingNames.DeadlineReminderDays, Value = "7" }
         };
         var vm = CreateVm(
@@ -615,7 +606,7 @@ public class NotificationPanelVMTests
             ],
             userSettings:
             [
-                new UserSettings { Name = UserSettingNames.IsFixedExpensesDeductionNotifEnabled, Value = "true" }
+                new UserSettings { Name = UserSettingNames.IsRecurringTransactionsDeductionNotifEnabled, Value = "true" }
             ]);
 
         await vm.LoadAsync();
@@ -928,7 +919,7 @@ public class NotificationPanelVMTests
             recurringTransactions: [],
             userSettings:
             [
-                new UserSettings { Name = UserSettingNames.IsFixedExpensesDeductionNotifEnabled, Value = "true" }
+                new UserSettings { Name = UserSettingNames.IsRecurringTransactionsDeductionNotifEnabled, Value = "true" }
             ]);
 
         persistedNotifications.Add(new Notification
@@ -972,7 +963,7 @@ public class NotificationPanelVMTests
             ],
             userSettings:
             [
-                new UserSettings { Name = UserSettingNames.IsFixedExpensesDeductionNotifEnabled, Value = "true" }
+                new UserSettings { Name = UserSettingNames.IsRecurringTransactionsDeductionNotifEnabled, Value = "true" }
             ]);
 
         persistedNotifications.Add(new Notification
@@ -1099,8 +1090,8 @@ public class NotificationPanelVMTests
     }
 
     private static NotificationPanelVM CreateVm(
-        IReadOnlyList<ExpenseVM> expenses,
-        IReadOnlyList<ExpenseLogVM> expenseLogs,
+        IReadOnlyList<TransactionVM> expenses,
+        IReadOnlyList<TransactionVM> expenseLogs,
         IReadOnlyList<AccountVM> accounts,
         out List<Notification> persistedNotifications,
         INotificationActionService? notificationActionService = null,
@@ -1211,20 +1202,20 @@ public class NotificationPanelVMTests
                 IsEnabled = transaction.IsEnabled
             })
             .ToList();
-        mapper.Map<IReadOnlyList<ExpenseVM>>(Arg.Any<object>()).Returns(expenses);
-        mapper.Map<IReadOnlyList<ExpenseLogVM>>(Arg.Any<object>()).Returns(expenseLogs);
+        mapper.Map<IReadOnlyList<TransactionVM>>(Arg.Any<object>()).Returns(expenses);
+        mapper.Map<IReadOnlyList<TransactionVM>>(Arg.Any<object>()).Returns(expenseLogs);
         mapper.Map<IReadOnlyList<TransactionVM>>(Arg.Any<object>()).Returns(expenseLogs.Select(log => new TransactionVM
         {
             Id = log.Id,
             Type = TransactionType.Expense,
             Account = log.Account,
-            Name = log.Expense.Name,
+            Name = log.Name,
             Amount = log.Amount,
-            OccurredOn = log.DeductedOn,
+            OccurredOn = log.OccurredOn,
             Notes = log.Notes,
-            ExpenseCategory = log.Expense.ExpenseCategory,
-            Tag = log.Expense.Tag,
-            ParentTransactionId = log.ParentLogId,
+            ExpenseCategory = log.ExpenseCategory,
+            Tag = log.Tag,
+            ParentTransactionId = log.ParentTransactionId,
             IsForDeletion = log.IsForDeletion,
             IsExcludedFromBudget = log.IsExcludedFromBudget
         }).ToList());

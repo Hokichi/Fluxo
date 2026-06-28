@@ -218,7 +218,7 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         [
             SourcesTabButton,
             BudgetTabButton,
-            FixedExpensesTabButton,
+            RecurringTransactionsTabButton,
             GoalsTabButton,
             IoUsTabButton,
             TagsTabButton,
@@ -271,8 +271,8 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         if (BudgetTabButton.IsChecked.GetValueOrDefault())
             return BudgetTabButton;
 
-        if (FixedExpensesTabButton.IsChecked.GetValueOrDefault())
-            return FixedExpensesTabButton;
+        if (RecurringTransactionsTabButton.IsChecked.GetValueOrDefault())
+            return RecurringTransactionsTabButton;
 
         if (GoalsTabButton.IsChecked.GetValueOrDefault())
             return GoalsTabButton;
@@ -300,8 +300,8 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         if (ReferenceEquals(tabButton, BudgetTabButton))
             return BudgetTabContent;
 
-        if (ReferenceEquals(tabButton, FixedExpensesTabButton))
-            return FixedExpensesTabContent;
+        if (ReferenceEquals(tabButton, RecurringTransactionsTabButton))
+            return RecurringTransactionsTabContent;
 
         if (ReferenceEquals(tabButton, GoalsTabButton))
             return GoalsTabContent;

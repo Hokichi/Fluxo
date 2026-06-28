@@ -37,7 +37,7 @@ public sealed class SettingsVMMaintenancePolicyTests
         Assert.DoesNotContain(UserSettingNames.IsGoalDeadlineNotifEnabled, removedSettingNames);
 
         Assert.Equal(10, upsertSettingValues.Count);
-        Assert.Equal("True", upsertSettingValues[UserSettingNames.IsFixedExpensesDeductionNotifEnabled]);
+        Assert.Equal("True", upsertSettingValues[UserSettingNames.IsRecurringTransactionsDeductionNotifEnabled]);
         Assert.Equal("True", upsertSettingValues[UserSettingNames.IsCreditDeadlineNotifEnabled]);
         Assert.Equal("False", upsertSettingValues[UserSettingNames.IsGoalDeadlineNotifEnabled]);
         Assert.Equal("False", upsertSettingValues[UserSettingNames.IsLatePaymentNotifEnabled]);

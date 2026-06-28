@@ -72,9 +72,8 @@ public sealed class BudgetAllocationPeriodSyncServiceTests
 
     private sealed class TestUnitOfWork : IUnitOfWork
     {
-        public IExpenseRepository Expenses => throw new NotSupportedException();
-        public IExpenseLogRepository ExpenseLogs => throw new NotSupportedException();
-        public IIncomeLogRepository IncomeLogs => throw new NotSupportedException();
+        public ITransactionRepository Expenses => throw new NotSupportedException();
+        public ITransactionRepository Transactions => throw new NotSupportedException();
         public ITagRepository Tags => throw new NotSupportedException();
         public ISavingGoalRepository SavingGoals => throw new NotSupportedException();
         public IAccountRepository Accounts => throw new NotSupportedException();

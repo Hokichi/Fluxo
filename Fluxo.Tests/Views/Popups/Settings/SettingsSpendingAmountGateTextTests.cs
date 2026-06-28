@@ -11,11 +11,11 @@ public sealed class SettingsSpendingAmountGateTextTests
     private static readonly XNamespace PresentationNamespace = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
 
     [Fact]
-    public void FixedExpensesEmptyState_DoesNotShowSpendingAmountGateAction()
+    public void RecurringTransactionsEmptyState_DoesNotShowSpendingAmountGateAction()
     {
-        var xaml = ReadXaml("SettingsFixedExpensesTab.xaml");
+        var xaml = ReadXaml("SettingsRecurringTransactionsTab.xaml");
         Assert.DoesNotContain("Add a spending amount to start using fluxo", xaml);
-        Assert.DoesNotContain("Content=\"{Binding FixedExpensesEmptyStateText}\"", xaml);
+        Assert.DoesNotContain("Content=\"{Binding RecurringTransactionsEmptyStateText}\"", xaml);
     }
 
     [Fact]
@@ -102,7 +102,7 @@ public sealed class SettingsSpendingAmountGateTextTests
 
     [Theory]
     [InlineData("BudgetTabButton")]
-    [InlineData("FixedExpensesTabButton")]
+    [InlineData("RecurringTransactionsTabButton")]
     [InlineData("GoalsTabButton")]
     public void SettingsPopup_GatedTabsUseLockedTabStyle(string buttonName)
     {

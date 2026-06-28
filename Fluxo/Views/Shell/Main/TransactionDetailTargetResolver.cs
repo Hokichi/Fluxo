@@ -1,0 +1,63 @@
+using Fluxo.Core.Entities;
+using Fluxo.Core.Interfaces.Services;
+using Fluxo.ViewModels.Entities;
+
+namespace Fluxo.Views.Shell.Main;
+
+internal static class TransactionDetailTargetResolver
+{
+    public static async Task<TransactionVM> ResolveAsync(
+        TransactionVM expenseLog,
+        IAppDataService appData,
+        CancellationToken cancellationToken = default)
+    {
+        if (expenseLog.ParentTransactionId is not { } parentLogId)
+            return expenseLog;
+
+        var parentLog = await appData.GetTransactionByIdAsync(parentLogId, cancellationToken);
+        return parentLog is null ? expenseLog : ToViewModel(parentLog);
+    }
+
+    private static TransactionVM ToViewModel(Transaction transaction)
+    {
+        return new TransactionVM
+        {
+            Id = transaction.Id,
+            Type = transaction.Type,
+            Name = transaction.Name,
+            Amount = transaction.Amount,
+            OccurredOn = transaction.OccurredOn,
+            LoggedOn = transaction.LoggedOn,
+            Notes = transaction.Notes,
+            IsForDeletion = transaction.IsForDeletion,
+            IsPinned = transaction.IsPinned,
+            IsIoU = transaction.IsIoU,
+            ExpenseCategory = transaction.ExpenseCategory,
+            ParentTransactionId = transaction.ParentTransactionId,
+            Account = new AccountVM
+            {
+                Id = transaction.Account?.Id ?? transaction.AccountId,
+                Name = transaction.Account?.Name ?? string.Empty,
+                AccountType = transaction.Account?.AccountType ?? default,
+                AccountLimit = transaction.Account?.AccountLimit ?? 0m,
+                MaximumSpending = transaction.Account?.MaximumSpending ?? 0m,
+                MinimumPayment = transaction.Account?.MinimumPayment,
+                SpentAmount = transaction.Account?.SpentAmount ?? 0m,
+                Balance = transaction.Account?.Balance ?? 0m,
+                MonthlyDueDate = transaction.Account?.MonthlyDueDate,
+                DeductSource = transaction.Account?.DeductSource,
+                InterestRate = transaction.Account?.InterestRate,
+                PinnedOnUI = transaction.Account?.PinnedOnUI ?? false,
+                IsEnabled = transaction.Account?.IsEnabled ?? false
+            },
+            Tag = transaction.Tag is null ? null : new TagVM
+            {
+                Id = transaction.Tag.Id,
+                Name = transaction.Tag.Name,
+                HexCode = transaction.Tag.HexCode,
+                IsSystemTag = transaction.Tag.IsSystemTag,
+                SpendingLimit = transaction.Tag.SpendingLimit
+            }
+        };
+    }
+}

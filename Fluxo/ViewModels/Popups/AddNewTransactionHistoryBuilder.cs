@@ -85,6 +85,7 @@ public static class AddNewTransactionHistoryBuilder
             .Where(log => IsGoalUpdateLog(log))
             .Where(log => string.Equals(log.Name, expectedName, StringComparison.OrdinalIgnoreCase))
             .OrderByDescending(log => log.OccurredOn)
+            .ThenByDescending(log => log.LoggedOn)
             .ThenByDescending(log => log.Id)
             .Take(pageSize)
             .Select(log => new AddNewTransactionHistoryItemVM

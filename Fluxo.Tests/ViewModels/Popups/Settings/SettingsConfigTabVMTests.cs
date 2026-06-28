@@ -598,9 +598,8 @@ public sealed class SettingsConfigTabVMTests
                 setting => new UserSettings { Name = setting.Name, Value = setting.Value },
                 StringComparer.Ordinal);
 
-        public IExpenseRepository Expenses => throw new NotSupportedException();
-        public IExpenseLogRepository ExpenseLogs => throw new NotSupportedException();
-        public IIncomeLogRepository IncomeLogs => throw new NotSupportedException();
+        public ITransactionRepository Expenses => throw new NotSupportedException();
+        public ITransactionRepository Transactions => throw new NotSupportedException();
         public ITagRepository Tags => throw new NotSupportedException();
         public ISavingGoalRepository SavingGoals => throw new NotSupportedException();
         public IAccountRepository Accounts { get; } = new TestAccountRepository();
@@ -670,9 +669,8 @@ public sealed class SettingsConfigTabVMTests
 
     private sealed class NullUnitOfWork : IUnitOfWork
     {
-        public IExpenseRepository Expenses => throw new NotSupportedException();
-        public IExpenseLogRepository ExpenseLogs => throw new NotSupportedException();
-        public IIncomeLogRepository IncomeLogs => throw new NotSupportedException();
+        public ITransactionRepository Expenses => throw new NotSupportedException();
+        public ITransactionRepository Transactions => throw new NotSupportedException();
         public ITagRepository Tags => throw new NotSupportedException();
         public ISavingGoalRepository SavingGoals => throw new NotSupportedException();
         public IAccountRepository Accounts { get; } = new TestAccountRepository();

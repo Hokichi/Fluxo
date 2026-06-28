@@ -9,7 +9,7 @@ public sealed class SettingsTabCrossfadeTests
     [
         "BudgetTabContent",
         "SourcesTabContent",
-        "FixedExpensesTabContent",
+        "RecurringTransactionsTabContent",
         "GoalsTabContent",
         "TagsTabContent",
         "PersonalizationTabContent",

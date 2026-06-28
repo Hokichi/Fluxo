@@ -105,6 +105,7 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
         _allTransactions = transactions
             .Where(transaction => !transaction.IsForDeletion)
             .OrderByDescending(transaction => transaction.OccurredOn)
+            .ThenByDescending(transaction => transaction.LoggedOn)
             .ToList();
         _accounts = accounts.ToList();
 

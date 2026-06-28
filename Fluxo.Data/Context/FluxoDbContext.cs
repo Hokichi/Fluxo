@@ -6,9 +6,6 @@ namespace Fluxo.Data.Context;
 
 public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : DbContext(options)
 {
-    public DbSet<Expense> Expenses => Set<Expense>();
-    public DbSet<ExpenseLog> ExpenseLogs => Set<ExpenseLog>();
-    public DbSet<IncomeLog> IncomeLogs => Set<IncomeLog>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<SavingGoal> SavingGoals => Set<SavingGoal>();
@@ -18,11 +15,22 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
     public DbSet<UserSettings> UserSettings => Set<UserSettings>();
     public DbSet<BudgetAllocation> BudgetAllocation => Set<BudgetAllocation>();
 
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        PrepareTransactions();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(
+        bool acceptAllChangesOnSuccess,
+        CancellationToken cancellationToken = default)
+    {
+        PrepareTransactions();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Ignore<Expense>();
-        modelBuilder.Ignore<ExpenseLog>();
-        modelBuilder.Ignore<IncomeLog>();
         ConfigureTransaction(modelBuilder.Entity<Transaction>());
         ConfigureTag(modelBuilder.Entity<Tag>());
         ConfigureSavingGoal(modelBuilder.Entity<SavingGoal>());
@@ -32,77 +40,6 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         ConfigureUserSettings(modelBuilder.Entity<UserSettings>());
         ConfigureBudgetAllocation(modelBuilder.Entity<BudgetAllocation>());
         ConfigureReferenceAutoIncludes(modelBuilder);
-    }
-
-    private static void ConfigureExpense(EntityTypeBuilder<Expense> entity)
-    {
-        entity.ToTable("Expenses");
-        entity.Property(expense => expense.Id).ValueGeneratedOnAdd();
-        entity.HasKey(expense => expense.Id);
-
-        entity.Property(expense => expense.Name).IsRequired();
-        entity.Property(expense => expense.Amount).HasColumnType("NUMERIC");
-        entity.Property(expense => expense.IsIoU).HasDefaultValue(false);
-
-        entity.HasOne(expense => expense.Account)
-            .WithMany()
-            .HasForeignKey(expense => expense.AccountId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        entity.HasOne(expense => expense.Tag)
-            .WithMany()
-            .HasForeignKey(expense => expense.TagId)
-            .OnDelete(DeleteBehavior.Restrict);
-    }
-
-    private static void ConfigureExpenseLog(EntityTypeBuilder<ExpenseLog> entity)
-    {
-        entity.ToTable("ExpenseLogs");
-        entity.Property(log => log.Id).ValueGeneratedOnAdd();
-        entity.HasKey(log => log.Id);
-
-        entity.Property(log => log.Amount).HasColumnType("NUMERIC");
-        entity.Property(log => log.IsForDeletion);
-        entity.Property(log => log.IsPinned).HasDefaultValue(false);
-        entity.Property(log => log.IsIoU).HasDefaultValue(false);
-        entity.Property(log => log.IsExcludedFromBudget).HasDefaultValue(false);
-        entity.Property(log => log.Notes).IsRequired();
-        entity.Property(log => log.ParentLogId);
-
-        entity.HasOne(log => log.Expense)
-            .WithMany()
-            .HasForeignKey(log => log.ExpenseId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        entity.HasOne(log => log.Account)
-            .WithMany()
-            .HasForeignKey(log => log.AccountId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        entity.HasOne(log => log.ParentLog)
-            .WithMany()
-            .HasForeignKey(log => log.ParentLogId)
-            .OnDelete(DeleteBehavior.Restrict);
-    }
-
-    private static void ConfigureIncomeLog(EntityTypeBuilder<IncomeLog> entity)
-    {
-        entity.ToTable("IncomeLogs");
-        entity.Property(log => log.Id).ValueGeneratedOnAdd();
-        entity.HasKey(log => log.Id);
-
-        entity.Property(log => log.Name).IsRequired();
-        entity.Property(log => log.Amount).HasColumnType("NUMERIC");
-        entity.Property(log => log.Notes).IsRequired();
-        entity.Property(log => log.IsForDeletion);
-        entity.Property(log => log.IsPinned).HasDefaultValue(false);
-        entity.Property(log => log.IsIoU).HasDefaultValue(false);
-        entity.Property(log => log.IsExcludedFromBudget).HasDefaultValue(false);
-
-        entity.HasOne(log => log.Account)
-            .WithMany()
-            .HasForeignKey(log => log.AccountId)
-            .OnDelete(DeleteBehavior.Restrict);
     }
 
     private static void ConfigureTag(EntityTypeBuilder<Tag> entity)
@@ -214,6 +151,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(transaction => transaction.Name).IsRequired();
         entity.Property(transaction => transaction.Amount).HasColumnType("NUMERIC");
         entity.Property(transaction => transaction.Notes).IsRequired();
+        entity.Property(transaction => transaction.LoggedOn);
         entity.Property(transaction => transaction.IsPinned).HasDefaultValue(false);
         entity.Property(transaction => transaction.IsForDeletion).HasDefaultValue(false);
         entity.Property(transaction => transaction.IsIoU).HasDefaultValue(false);
@@ -221,6 +159,17 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.HasOne(transaction => transaction.Account).WithMany().HasForeignKey(transaction => transaction.AccountId).OnDelete(DeleteBehavior.Restrict);
         entity.HasOne(transaction => transaction.Tag).WithMany().HasForeignKey(transaction => transaction.TagId).OnDelete(DeleteBehavior.Restrict);
         entity.HasOne(transaction => transaction.ParentTransaction).WithMany().HasForeignKey(transaction => transaction.ParentTransactionId).OnDelete(DeleteBehavior.Restrict);
+    }
+
+    private void PrepareTransactions()
+    {
+        foreach (var entry in ChangeTracker.Entries<Transaction>()
+                     .Where(entry => entry.State is EntityState.Added or EntityState.Modified))
+        {
+            entry.Entity.OccurredOn = entry.Entity.OccurredOn.Date;
+            if (entry.State == EntityState.Added)
+                entry.Entity.LoggedOn = DateTime.Now;
+        }
     }
 
     private static void ConfigureBudgetAllocation(EntityTypeBuilder<BudgetAllocation> entity)

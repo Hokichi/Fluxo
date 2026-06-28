@@ -39,10 +39,10 @@ public partial class QuickSetupWizardMiddlePage : UserControl
             FindPopup(source)?.OnAddAccountClick(sender, e);
     }
 
-    private void OnAddFixedExpenseClick(object sender, RoutedEventArgs e)
+    private void OnAddRecurringTransactionClick(object sender, RoutedEventArgs e)
     {
         if (sender is DependencyObject source)
-            FindPopup(source)?.OnAddFixedExpenseClick(sender, e);
+            FindPopup(source)?.OnAddRecurringTransactionClick(sender, e);
     }
 
     private void OnAddSavingGoalClick(object sender, RoutedEventArgs e)

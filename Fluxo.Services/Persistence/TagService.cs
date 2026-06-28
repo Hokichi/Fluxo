@@ -18,25 +18,6 @@ public sealed class TagService(IDataOperationRunner dataOperationRunner, IMapper
         }, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<TagDto>> GetTagsOrderedByExpenseCountAsync(ExpenseFilter filter,
-        CancellationToken cancellationToken = default)
-    {
-        return await dataOperationRunner.RunAsync("load tags ordered by expense count", async (scope, ct) =>
-        {
-            // Repository aggregation methods do not accept ExpenseFilter, so we group in memory.
-            var expenses = await scope.UnitOfWork.Expenses.SearchAsync(filter, ct);
-
-            var tags = expenses
-                .Where(e => e.Tag is not null)
-                .GroupBy(e => e.TagId)
-                .OrderByDescending(g => g.Count())
-                .Select(g => g.First().Tag!)
-                .ToList();
-
-            return mapper.Map<IReadOnlyList<TagDto>>(tags);
-        }, cancellationToken);
-    }
-
     public async Task AddAsync(TagDto dto, CancellationToken cancellationToken = default)
     {
         await dataOperationRunner.RunAsync("create tag", async (scope, ct) =>

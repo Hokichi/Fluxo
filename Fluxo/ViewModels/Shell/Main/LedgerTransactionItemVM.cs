@@ -26,8 +26,9 @@ public sealed partial class LedgerTransactionItemVM : ObservableObject
     public int Id { get; init; }
     public LedgerTransactionKind Kind { get; init; }
     public DateTime OccurredOn { get; init; }
+    public DateTime LoggedOn { get; init; }
     public ExpenseCategory? Category { get; init; }
-    public int? ParentLogId { get; init; }
+    public int? ParentTransactionId { get; init; }
     public bool IsChildTransaction { get; init; }
     public bool IsGoal { get; init; }
     public bool IsRecurring { get; init; }

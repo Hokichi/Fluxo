@@ -24,8 +24,8 @@ public partial class AllocationDataVM : ObservableRecipient,
     private readonly IAccountService _accountService;
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
 
-    private List<ExpenseLogVM> _allExpenseLogs = [];
-    private List<IncomeLogVM> _allIncomeLogs = [];
+    private List<TransactionVM> _allExpenseLogs = [];
+    private List<TransactionVM> _allIncomeLogs = [];
     private List<AccountVM> _accounts = [];
     private BudgetAllocation _budgetAllocation = new();
 
@@ -116,13 +116,13 @@ public partial class AllocationDataVM : ObservableRecipient,
             await _transactionService.GetAllAsync(cancellationToken));
         _allExpenseLogs = transactions
             .Where(transaction => transaction.Type == TransactionType.Expense && !transaction.IsForDeletion)
-            .Select(ToExpenseLogVm)
-            .OrderByDescending(log => log.DeductedOn)
+            .OrderByDescending(log => log.OccurredOn)
+            .ThenByDescending(log => log.LoggedOn)
             .ToList();
         _allIncomeLogs = transactions
             .Where(transaction => transaction.Type == TransactionType.Income && !transaction.IsForDeletion)
-            .Select(ToIncomeLogVm)
-            .OrderByDescending(log => log.AddedOn)
+            .OrderByDescending(log => log.OccurredOn)
+            .ThenByDescending(log => log.LoggedOn)
             .ToList();
         _accounts = _mapper.Map<IReadOnlyList<AccountVM>>(
                 await _accountService.GetAllAsync(cancellationToken))
@@ -179,48 +179,6 @@ public partial class AllocationDataVM : ObservableRecipient,
         }
     }
 
-    private static ExpenseLogVM ToExpenseLogVm(TransactionVM transaction)
-    {
-        return new ExpenseLogVM
-        {
-            Id = transaction.Id,
-            Amount = transaction.Amount,
-            DeductedOn = transaction.OccurredOn,
-            Notes = transaction.Notes,
-            Account = transaction.Account,
-            ParentLogId = transaction.ParentTransactionId,
-            IsPinned = transaction.IsPinned,
-            IsForDeletion = transaction.IsForDeletion,
-            IsIoU = transaction.IsIoU,
-            IsExcludedFromBudget = transaction.IsExcludedFromBudget,
-            Expense = new ExpenseVM
-            {
-                Id = transaction.Id,
-                Name = transaction.Name,
-                Amount = transaction.Amount,
-                ExpenseCategory = transaction.ExpenseCategory ?? ExpenseCategory.Needs,
-                Account = transaction.Account,
-                Tag = transaction.Tag ?? new TagVM()
-            }
-        };
-    }
-
-    private static IncomeLogVM ToIncomeLogVm(TransactionVM transaction)
-    {
-        return new IncomeLogVM
-        {
-            Id = transaction.Id,
-            Name = transaction.Name,
-            Amount = transaction.Amount,
-            AddedOn = transaction.OccurredOn,
-            Notes = transaction.Notes,
-            Account = transaction.Account,
-            IsPinned = transaction.IsPinned,
-            IsIoU = transaction.IsIoU,
-            IsExcludedFromBudget = transaction.IsExcludedFromBudget
-        };
-    }
-
     private async Task<BudgetAllocation> LoadBudgetAllocationAsync(CancellationToken cancellationToken)
     {
         return await _dataOperationRunner.RunAsync(async (scope, ct) =>
@@ -264,10 +222,10 @@ public partial class AllocationDataVM : ObservableRecipient,
 
     private IReadOnlyDictionary<ExpenseCategory, decimal> CalculateSpentByCategory(BudgetAllocationPeriod snapshotPeriod)
     {
-        return BudgetEffectiveExpenseLogFilter.SelectBudgetEffectiveLogs(_allExpenseLogs)
-            .Where(log => log.DeductedOn.Date >= snapshotPeriod.Start && log.DeductedOn.Date <= snapshotPeriod.End)
-            .Where(log => log.Expense is not null)
-            .GroupBy(log => log.Expense!.ExpenseCategory)
+        return BudgetEffectiveTransactionFilter.Select(_allExpenseLogs)
+            .Where(log => log.OccurredOn.Date >= snapshotPeriod.Start && log.OccurredOn.Date <= snapshotPeriod.End)
+            .Where(log => log.ExpenseCategory.HasValue)
+            .GroupBy(log => log.ExpenseCategory!.Value)
             .ToDictionary(group => group.Key, group => group.Sum(log => log.Amount));
     }
 
@@ -281,7 +239,7 @@ public partial class AllocationDataVM : ObservableRecipient,
             .Select(source => source.Id)
             .ToHashSet();
 
-        var balanceBackedExpenseAmount = BudgetEffectiveExpenseLogFilter.SelectBudgetEffectiveLogs(_allExpenseLogs)
+        var balanceBackedExpenseAmount = BudgetEffectiveTransactionFilter.Select(_allExpenseLogs)
             .Where(log => log.Account is { } source && balanceBackedSourceIds.Contains(source.Id))
             .Sum(log => log.Amount);
 
@@ -290,241 +248,16 @@ public partial class AllocationDataVM : ObservableRecipient,
 
     private void ApplyLogMemoryAction(CoreILogMemoryAction action, LogMemoryApplyDirection direction)
     {
-        switch (action)
+        if (action is CompositeLogMemoryAction composite)
         {
-            case CompositeLogMemoryAction compositeAction:
-                foreach (var childAction in compositeAction.Actions)
-                    ApplyLogMemoryAction(childAction, direction);
-                break;
-            case AddExpenseLogMemoryAction addExpenseAction:
-                ApplyExpenseAction(addExpenseAction.Snapshot, direction);
-                break;
-            case AddIncomeLogMemoryAction addIncomeAction:
-                ApplyIncomeAction(addIncomeAction.Snapshot, direction);
-                break;
-            case EditExpenseLogMemoryAction editExpenseAction:
-                ApplyEditedExpenseAction(editExpenseAction, direction);
-                break;
-            case EditIncomeLogMemoryAction editIncomeAction:
-                ApplyEditedIncomeAction(editIncomeAction, direction);
-                break;
-            case DeleteExpenseLogMemoryAction deleteExpenseAction:
-                ApplyDeletedExpenseAction(deleteExpenseAction, direction);
-                break;
-            case DeleteIncomeLogMemoryAction deleteIncomeAction:
-                ApplyDeletedIncomeAction(deleteIncomeAction, direction);
-                break;
-        }
-    }
-
-    private void ApplyExpenseAction(ExpenseLogMemorySnapshot snapshot, LogMemoryApplyDirection direction)
-    {
-        if (direction == LogMemoryApplyDirection.Redo)
-        {
-            UpsertExpenseLog(snapshot);
-            ApplyExpenseToTrackedSource(snapshot);
-        }
-        else
-        {
-            RemoveExpenseLog(snapshot.ExpenseLogId);
-            RestoreExpenseFromTrackedSource(snapshot);
-        }
-
-        RefreshBudgetMetrics();
-    }
-
-    private void ApplyIncomeAction(IncomeLogMemorySnapshot snapshot, LogMemoryApplyDirection direction)
-    {
-        if (direction == LogMemoryApplyDirection.Redo)
-        {
-            UpsertIncomeLog(snapshot);
-            ApplyIncomeToTrackedSource(snapshot);
-        }
-        else
-        {
-            RemoveIncomeLog(snapshot.IncomeLogId);
-            RestoreIncomeFromTrackedSource(snapshot);
-        }
-
-        RefreshBudgetMetrics();
-    }
-
-    private void ApplyEditedExpenseAction(EditExpenseLogMemoryAction action, LogMemoryApplyDirection direction)
-    {
-        var previous = direction == LogMemoryApplyDirection.Redo ? action.Before : action.After;
-        var target = direction == LogMemoryApplyDirection.Redo ? action.After : action.Before;
-
-        UpsertExpenseLog(target);
-        RestoreExpenseFromTrackedSource(previous);
-        ApplyExpenseToTrackedSource(target);
-        RefreshBudgetMetrics();
-    }
-
-    private void ApplyEditedIncomeAction(EditIncomeLogMemoryAction action, LogMemoryApplyDirection direction)
-    {
-        var previous = direction == LogMemoryApplyDirection.Redo ? action.Before : action.After;
-        var target = direction == LogMemoryApplyDirection.Redo ? action.After : action.Before;
-
-        UpsertIncomeLog(target);
-        RestoreIncomeFromTrackedSource(previous);
-        ApplyIncomeToTrackedSource(target);
-        RefreshBudgetMetrics();
-    }
-
-    private void ApplyDeletedExpenseAction(DeleteExpenseLogMemoryAction action, LogMemoryApplyDirection direction)
-    {
-        if (action.Snapshot is not { } snapshot)
-            return;
-
-        if (direction == LogMemoryApplyDirection.Redo)
-        {
-            RemoveExpenseLog(snapshot.ExpenseLogId);
-            RestoreExpenseFromTrackedSource(snapshot);
-        }
-        else
-        {
-            UpsertExpenseLog(snapshot);
-            ApplyExpenseToTrackedSource(snapshot);
-        }
-
-        RefreshBudgetMetrics();
-    }
-
-    private void ApplyDeletedIncomeAction(DeleteIncomeLogMemoryAction action, LogMemoryApplyDirection direction)
-    {
-        if (direction == LogMemoryApplyDirection.Redo)
-        {
-            RemoveIncomeLog(action.Snapshot.IncomeLogId);
-            RestoreIncomeFromTrackedSource(action.Snapshot);
-        }
-        else
-        {
-            UpsertIncomeLog(action.Snapshot);
-            ApplyIncomeToTrackedSource(action.Snapshot);
-        }
-
-        RefreshBudgetMetrics();
-    }
-
-    private void ApplyExpenseToTrackedSource(ExpenseLogMemorySnapshot snapshot)
-    {
-        var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.AccountId);
-        if (source is null)
-            return;
-
-        if (source.AccountType == AccountType.Credit)
-        {
-            source.SpentAmount += snapshot.Amount;
+            foreach (var child in composite.Actions)
+                ApplyLogMemoryAction(child, direction);
             return;
         }
 
-        source.Balance -= snapshot.Amount;
+        if (action is AddTransactionMemoryAction or EditTransactionMemoryAction or DeleteTransactionMemoryAction)
+            _ = ReloadFromServicesAsync();
     }
-
-    private void RestoreExpenseFromTrackedSource(ExpenseLogMemorySnapshot snapshot)
-    {
-        var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.AccountId);
-        if (source is null)
-            return;
-
-        if (source.AccountType == AccountType.Credit)
-        {
-            source.SpentAmount = Math.Max(0m, source.SpentAmount - snapshot.Amount);
-            return;
-        }
-
-        source.Balance += snapshot.Amount;
-    }
-
-    private void ApplyIncomeToTrackedSource(IncomeLogMemorySnapshot snapshot)
-    {
-        var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.AccountId);
-        if (source is null)
-            return;
-
-        if (source.AccountType == AccountType.Credit)
-        {
-            source.SpentAmount = Math.Max(0m, source.SpentAmount - snapshot.Amount);
-            return;
-        }
-
-        source.Balance += snapshot.Amount;
-    }
-
-    private void RestoreIncomeFromTrackedSource(IncomeLogMemorySnapshot snapshot)
-    {
-        var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.AccountId);
-        if (source is null)
-            return;
-
-        if (source.AccountType == AccountType.Credit)
-        {
-            source.SpentAmount += snapshot.Amount;
-            return;
-        }
-
-        source.Balance -= snapshot.Amount;
-    }
-
-    private void UpsertExpenseLog(ExpenseLogMemorySnapshot snapshot)
-    {
-        var existingIndex = _allExpenseLogs.FindIndex(log => log.Id == snapshot.ExpenseLogId);
-        var vm = new ExpenseLogVM
-        {
-            Id = snapshot.ExpenseLogId,
-            Amount = snapshot.Amount,
-            DeductedOn = snapshot.DeductedOn,
-            Notes = snapshot.Notes,
-            IsForDeletion = snapshot.IsForDeletion,
-            ParentLogId = snapshot.ParentLogId,
-            Expense = new ExpenseVM
-            {
-                Id = snapshot.ExpenseId,
-                Name = snapshot.ExpenseName,
-                ExpenseCategory = snapshot.ExpenseCategory
-            },
-            Account = new AccountVM { Id = snapshot.AccountId }
-        };
-
-        if (existingIndex >= 0)
-            _allExpenseLogs[existingIndex] = vm;
-        else
-            _allExpenseLogs.Add(vm);
-    }
-
-    private void RemoveExpenseLog(int expenseLogId)
-    {
-        _allExpenseLogs = _allExpenseLogs
-            .Where(log => log.Id != expenseLogId)
-            .ToList();
-    }
-
-    private void UpsertIncomeLog(IncomeLogMemorySnapshot snapshot)
-    {
-        var existingIndex = _allIncomeLogs.FindIndex(log => log.Id == snapshot.IncomeLogId);
-        var vm = new IncomeLogVM
-        {
-            Id = snapshot.IncomeLogId,
-            Name = snapshot.Name,
-            Amount = snapshot.Amount,
-            AddedOn = snapshot.AddedOn,
-            Notes = snapshot.Notes,
-            Account = new AccountVM { Id = snapshot.AccountId }
-        };
-
-        if (existingIndex >= 0)
-            _allIncomeLogs[existingIndex] = vm;
-        else
-            _allIncomeLogs.Add(vm);
-    }
-
-    private void RemoveIncomeLog(int incomeLogId)
-    {
-        _allIncomeLogs = _allIncomeLogs
-            .Where(log => log.Id != incomeLogId)
-            .ToList();
-    }
-
     private static bool IsBalanceBackedSource(AccountVM source)
     {
         return source.AccountType != AccountType.Credit;

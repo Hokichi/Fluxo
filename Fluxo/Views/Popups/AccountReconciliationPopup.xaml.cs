@@ -37,7 +37,7 @@ public partial class AccountReconciliationPopup : BasePopup
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
 
-        if (shouldModify != MessageBoxResult.Yes || result.CreatedExpenseLog is null)
+        if (shouldModify != MessageBoxResult.Yes || result.CreatedTransaction is null)
         {
             Close();
             return;
@@ -46,6 +46,6 @@ public partial class AccountReconciliationPopup : BasePopup
         var ownerWindow = Owner as MainWindow;
         CloseForPopupHandoff();
         ownerWindow?.Dispatcher.BeginInvoke(new Action(() =>
-            ownerWindow.OpenExpenseDetailPopupForEditing(result.CreatedExpenseLog)));
+            ownerWindow.OpenTransactionDetailPopupForEditing(result.CreatedTransaction)));
     }
 }

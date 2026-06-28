@@ -108,10 +108,10 @@ public sealed partial class BackgroundResourceContractTests
     }
 
     [Fact]
-    public void ObsoleteAddFixedExpensePopup_IsDeleted()
+    public void ObsoleteAddRecurringTransactionPopup_IsDeleted()
     {
-        Assert.False(File.Exists(Path.Combine(RepositoryPaths.Root, "Fluxo", "Views", "Popups", "AddFixedExpensePopup.xaml")));
-        Assert.False(File.Exists(Path.Combine(RepositoryPaths.Root, "Fluxo", "Views", "Popups", "AddFixedExpensePopup.xaml.cs")));
+        Assert.False(File.Exists(Path.Combine(RepositoryPaths.Root, "Fluxo", "Views", "Popups", "AddRecurringTransactionPopup.xaml")));
+        Assert.False(File.Exists(Path.Combine(RepositoryPaths.Root, "Fluxo", "Views", "Popups", "AddRecurringTransactionPopup.xaml.cs")));
     }
 
     [Fact]

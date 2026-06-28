@@ -71,7 +71,7 @@ public sealed class SettingsVMOrchestrationTests
         RunInSta(() =>
         {
             var (settings, mainViewModel) = CreateSettingsViewModel();
-            settings.FixedExpensesTab.IsDashboardSpendingAmountGateLocked = true;
+            settings.RecurringTransactionsTab.IsDashboardSpendingAmountGateLocked = true;
             settings.GoalsTab.IsDashboardSpendingAmountGateLocked = true;
 
             var propertyChanges = new List<string?>();
@@ -84,7 +84,7 @@ public sealed class SettingsVMOrchestrationTests
             settings.Receive(new SettingsDataChangedMessage(SettingsDataChangedScope.Accounts));
 
             Assert.False(settings.IsSufficientFundsActionGateLocked);
-            Assert.False(settings.FixedExpensesTab.IsDashboardSpendingAmountGateLocked);
+            Assert.False(settings.RecurringTransactionsTab.IsDashboardSpendingAmountGateLocked);
             Assert.False(settings.GoalsTab.IsDashboardSpendingAmountGateLocked);
             Assert.Contains(nameof(SettingsVM.IsSufficientFundsActionGateLocked), propertyChanges);
         });
@@ -106,7 +106,7 @@ public sealed class SettingsVMOrchestrationTests
             Substitute.For<IUiSettleAwaiter>(),
             new SettingsBudgetTabVM(() => mainViewModel.BudgetPanel.TotalIncomeAmount, appData, messenger),
             new SettingsSourcesTabVM(mainViewModel, appData, messenger),
-            new SettingsFixedExpensesTabVM(mainViewModel, appData, messenger),
+            new SettingsRecurringTransactionsTabVM(mainViewModel, appData, messenger),
             new SettingsGoalsTabVM(mainViewModel, appData, messenger),
             new SettingsIoUsTabVM(mainViewModel, appData, messenger),
             new SettingsTagsTabVM(mainViewModel, appData, messenger),
@@ -161,10 +161,10 @@ public sealed class SettingsVMOrchestrationTests
             .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.Entities.UserSettings>>([]));
         unitOfWork.UserSettings.Returns(userSettings);
 
-        var incomeLogs = Substitute.For<IIncomeLogRepository>();
+        var incomeLogs = Substitute.For<ITransactionRepository>();
         incomeLogs.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.Entities.IncomeLog>>([]));
-        unitOfWork.IncomeLogs.Returns(incomeLogs);
+            .Returns(Task.FromResult<IReadOnlyList<Fluxo.Core.Entities.Transaction>>([]));
+        unitOfWork.Transactions.Returns(incomeLogs);
 
         return unitOfWork;
     }

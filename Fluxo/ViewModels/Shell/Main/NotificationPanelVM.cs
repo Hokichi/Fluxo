@@ -39,7 +39,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
     private readonly SemaphoreSlim _notificationSyncGate = new(1, 1);
     private readonly IAccountService _accountService;
-    private readonly HashSet<int> _hiddenFixedExpenseIds = [];
+    private readonly HashSet<int> _hiddenRecurringTransactionIds = [];
     private readonly HashSet<int> _hiddenSavingGoalIds = [];
     private readonly HashSet<int> _disabledSavingGoalIds = [];
 
@@ -57,7 +57,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
     private decimal _creditUsageWarningPercentage = 0.30m;
     private BudgetAllocation _budgetAllocation = new();
     private IReadOnlyList<RecurringTransactionVM> _recurringTransactions = [];
-    private IReadOnlyList<ExpenseLogVM> _expenseLogs = [];
+    private IReadOnlyList<TransactionVM> _expenseLogs = [];
     private IReadOnlyList<AccountVM> _accounts = [];
     private IReadOnlyList<SavingGoalVM> _savingGoals = [];
 
@@ -297,25 +297,6 @@ public partial class NotificationPanelVM : ObservableRecipient,
         _expenseLogs = _mapper.Map<IReadOnlyList<TransactionVM>>(
                 await _transactionService.GetAllAsync(cancellationToken))
             .Where(transaction => transaction.Type == TransactionType.Expense && !transaction.IsForDeletion)
-            .Select(transaction => new ExpenseLogVM
-            {
-                Id = transaction.Id,
-                Amount = transaction.Amount,
-                DeductedOn = transaction.OccurredOn,
-                Notes = transaction.Notes,
-                Account = transaction.Account,
-                ParentLogId = transaction.ParentTransactionId,
-                IsExcludedFromBudget = transaction.IsExcludedFromBudget,
-                Expense = new ExpenseVM
-                {
-                    Id = transaction.Id,
-                    Name = transaction.Name,
-                    Amount = transaction.Amount,
-                    ExpenseCategory = transaction.ExpenseCategory ?? ExpenseCategory.Needs,
-                    Account = transaction.Account,
-                    Tag = transaction.Tag ?? new TagVM()
-                }
-            })
             .ToList();
         _accounts = _mapper.Map<IReadOnlyList<AccountVM>>(
             await _accountService.GetAllAsync(cancellationToken));
@@ -506,10 +487,10 @@ public partial class NotificationPanelVM : ObservableRecipient,
 
     private IReadOnlyDictionary<ExpenseCategory, decimal> CalculateSpentByCategory(BudgetAllocationPeriod period)
     {
-        return BudgetEffectiveExpenseLogFilter.SelectBudgetEffectiveLogs(_expenseLogs)
-            .Where(log => log.DeductedOn.Date >= period.Start && log.DeductedOn.Date <= period.End)
-            .Where(log => log.Expense is not null)
-            .GroupBy(log => log.Expense!.ExpenseCategory)
+        return BudgetEffectiveTransactionFilter.Select(_expenseLogs)
+            .Where(log => log.OccurredOn.Date >= period.Start && log.OccurredOn.Date <= period.End)
+            .Where(log => log.ExpenseCategory.HasValue)
+            .GroupBy(log => log.ExpenseCategory!.Value)
             .ToDictionary(group => group.Key, group => group.Sum(log => log.Amount));
     }
 
@@ -826,7 +807,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
         _lowAccountBalancePercentage =
             ParseDecimal(settingsByName, UserSettingNames.LowAccountBalancePercentage, 0.20m);
         _isRecurringTransactionNotifEnabled =
-            ParseBool(settingsByName, UserSettingNames.IsFixedExpensesDeductionNotifEnabled, false);
+            ParseBool(settingsByName, UserSettingNames.IsRecurringTransactionsDeductionNotifEnabled, false);
         _isBudgetThresholdNotifEnabled =
             ParseBool(settingsByName, UserSettingNames.IsBudgetThresholdNotifEnabled, true);
         _isLowCreditNotifEnabled = ParseBool(settingsByName, UserSettingNames.IsLowCreditNotifEnabled, false);

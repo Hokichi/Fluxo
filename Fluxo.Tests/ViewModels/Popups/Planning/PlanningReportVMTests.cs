@@ -214,13 +214,13 @@ public class PlanningReportVMTests
         }
     }
 
-    private static IncomeLogVM CreateIncome(int id, decimal amount)
+    private static TransactionVM CreateIncome(int id, decimal amount)
     {
-        return new IncomeLogVM
+        return new TransactionVM
         {
             Id = id,
             Amount = amount,
-            AddedOn = DateTime.UnixEpoch.AddDays(id),
+            OccurredOn = DateTime.UnixEpoch.AddDays(id),
             Notes = $"Income {id}",
             Account = new AccountVM
             {
@@ -234,13 +234,13 @@ public class PlanningReportVMTests
         };
     }
 
-    private static ExpenseVM CreateExpense(
+    private static TransactionVM CreateExpense(
         int id,
         string name,
         ExpenseCategory category = ExpenseCategory.Needs,
         decimal? amount = null)
     {
-        return new ExpenseVM
+        return new TransactionVM
         {
             Id = id,
             Name = name,

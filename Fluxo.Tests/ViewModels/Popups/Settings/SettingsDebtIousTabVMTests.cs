@@ -247,10 +247,10 @@ public sealed class SettingsIoUsTabVMTests
         userSettings.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<UserSettings>>([]));
         unitOfWork.UserSettings.Returns(userSettings);
-        var incomeLogs = Substitute.For<IIncomeLogRepository>();
+        var incomeLogs = Substitute.For<ITransactionRepository>();
         incomeLogs.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<IncomeLog>>([]));
-        unitOfWork.IncomeLogs.Returns(incomeLogs);
+            .Returns(Task.FromResult<IReadOnlyList<Transaction>>([]));
+        unitOfWork.Transactions.Returns(incomeLogs);
 
         var runner = new InlineDataOperationRunner(unitOfWork);
         var dashboard = new DashboardVM(

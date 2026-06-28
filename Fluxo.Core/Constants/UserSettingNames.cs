@@ -8,14 +8,14 @@ public static class UserSettingNames
     public const string CreditUsageWarningPercentage = nameof(CreditUsageWarningPercentage);
     public const string LowAccountBalancePercentage = nameof(LowAccountBalancePercentage);
     public const string Salary = nameof(Salary);
-    public const string IsFixedExpensesDeductionNotifEnabled = nameof(IsFixedExpensesDeductionNotifEnabled);
+    public const string IsRecurringTransactionsDeductionNotifEnabled = nameof(IsRecurringTransactionsDeductionNotifEnabled);
     public const string IsCreditDeadlineNotifEnabled = nameof(IsCreditDeadlineNotifEnabled);
     public const string IsBudgetThresholdNotifEnabled = nameof(IsBudgetThresholdNotifEnabled);
     public const string IsLowCreditNotifEnabled = nameof(IsLowCreditNotifEnabled);
     public const string IsLowAccountBalanceNotifEnabled = nameof(IsLowAccountBalanceNotifEnabled);
     public const string IsGoalDeadlineNotifEnabled = nameof(IsGoalDeadlineNotifEnabled);
     public const string IsLatePaymentNotifEnabled = nameof(IsLatePaymentNotifEnabled);
-    public const string HiddenFixedExpenseIds = nameof(HiddenFixedExpenseIds);
+    public const string HiddenRecurringTransactionIds = nameof(HiddenRecurringTransactionIds);
     public const string HiddenSavingGoalIds = nameof(HiddenSavingGoalIds);
     public const string DisabledSavingGoalIds = nameof(DisabledSavingGoalIds);
     public const string PreferredDisplayName = nameof(PreferredDisplayName);

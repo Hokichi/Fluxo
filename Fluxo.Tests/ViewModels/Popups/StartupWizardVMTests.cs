@@ -358,7 +358,7 @@ public sealed class QuickSetupWizardVMTests
         var greeting = new QuickSetupWizardGreetingPageVM();
         var name = new QuickSetupWizardNamePageVM(appData, messenger);
         var accounts = new QuickSetupWizardAccountsVM(null!, appData, messenger);
-        var fixedExpenses = new QuickSetupWizardFixedExpensesVM(null!, appData, messenger);
+        var fixedExpenses = new QuickSetupWizardRecurringTransactionsVM(null!, appData, messenger);
         var savingGoals = new QuickSetupWizardSavingGoalsVM(null!, appData, messenger);
         var budget = new QuickSetupWizardBudgetAllocationVM(appData, messenger);
         var personalization = new QuickSetupWizardPersonalizationVM(appData, new TestPasswordProtector());
@@ -421,9 +421,8 @@ public sealed class QuickSetupWizardVMTests
         private readonly TestBudgetAllocationRepository _budgetAllocationRepository =
             budgetAllocationRepository ?? new TestBudgetAllocationRepository();
 
-        public IExpenseRepository Expenses => throw new NotSupportedException();
-        public IExpenseLogRepository ExpenseLogs => throw new NotSupportedException();
-        public IIncomeLogRepository IncomeLogs => throw new NotSupportedException();
+        public ITransactionRepository Expenses => throw new NotSupportedException();
+        public ITransactionRepository Transactions => throw new NotSupportedException();
         public ITagRepository Tags => throw new NotSupportedException();
         public ISavingGoalRepository SavingGoals => throw new NotSupportedException();
         public IAccountRepository Accounts => throw new NotSupportedException();

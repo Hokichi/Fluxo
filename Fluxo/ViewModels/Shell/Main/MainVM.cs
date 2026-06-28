@@ -37,8 +37,8 @@ public partial class MainVM : ObservableRecipient
 
         WeakReferenceMessenger.Default.Register<MainVM, UsernameChangedMessage>(this,
             static (recipient, message) => recipient.Username = message.Value);
-        WeakReferenceMessenger.Default.Register<MainVM, ExpenseDetailUpdatedMessage>(this,
-            static (recipient, message) => recipient.HandleExpenseDetailUpdatedMessage(message));
+        WeakReferenceMessenger.Default.Register<MainVM, TransactionDetailUpdatedMessage>(this,
+            static (recipient, message) => recipient.HandleTransactionDetailUpdatedMessage(message));
     }
 
     public DashboardVM Dashboard { get; }
@@ -134,7 +134,7 @@ public partial class MainVM : ObservableRecipient
         return AppLock.TryUnlockUi(password);
     }
 
-    private void HandleExpenseDetailUpdatedMessage(ExpenseDetailUpdatedMessage message)
+    private void HandleTransactionDetailUpdatedMessage(TransactionDetailUpdatedMessage message)
     {
         if (!message.Value.HasChanges)
             return;

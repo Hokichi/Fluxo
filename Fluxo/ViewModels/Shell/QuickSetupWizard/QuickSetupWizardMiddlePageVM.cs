@@ -24,7 +24,7 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
 
     public QuickSetupWizardMiddlePageVM(
         QuickSetupWizardAccountsVM accounts,
-        QuickSetupWizardFixedExpensesVM fixedExpenses,
+        QuickSetupWizardRecurringTransactionsVM fixedExpenses,
         QuickSetupWizardSavingGoalsVM savingGoals,
         QuickSetupWizardBudgetAllocationVM budgetAllocation,
         QuickSetupWizardPersonalizationVM personalization,
@@ -34,8 +34,8 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
         Accounts = accounts;
-        FixedExpenses = fixedExpenses;
-        FixedExpenses.SetAccounts(accounts);
+        RecurringTransactions = fixedExpenses;
+        RecurringTransactions.SetAccounts(accounts);
         SavingGoals = savingGoals;
         BudgetAllocation = budgetAllocation;
         Personalization = personalization;
@@ -46,7 +46,7 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
 
     public QuickSetupWizardAccountsVM Accounts { get; }
 
-    public QuickSetupWizardFixedExpensesVM FixedExpenses { get; }
+    public QuickSetupWizardRecurringTransactionsVM RecurringTransactions { get; }
 
     public QuickSetupWizardSavingGoalsVM SavingGoals { get; }
 
@@ -93,7 +93,7 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
     public async Task LoadAsync()
     {
         await Accounts.RefreshAsync();
-        await FixedExpenses.RefreshAsync();
+        await RecurringTransactions.RefreshAsync();
         await SavingGoals.RefreshAsync();
         await BudgetAllocation.LoadAsync();
         await Personalization.LoadAsync();
@@ -113,7 +113,7 @@ public partial class QuickSetupWizardMiddlePageVM : ObservableRecipient,
         IsStep8Active = stepIndex == 8;
 
         Accounts.IsStep2Active = IsStep2Active;
-        FixedExpenses.IsStep3Active = IsStep3Active;
+        RecurringTransactions.IsStep3Active = IsStep3Active;
         SavingGoals.IsStep4Active = IsStep4Active;
         BudgetAllocation.IsStep5Active = IsStep5Active;
         Personalization.IsStep6Active = IsStep6Active;

@@ -43,7 +43,7 @@
                         Margin="8,0,0,0"
                         VerticalAlignment="Center"
                         ButtonIcon="{StaticResource Info}"
-                        Click="OnExpenseDetailButtonClick"
+                        Click="OnTransactionDetailButtonClick"
                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.NavInfo}"
                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.NavInfo.Hovered}"
                         IconSize="12" />

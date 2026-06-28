@@ -22,6 +22,7 @@ public sealed class LogMemorySnapshotTests
             Tag = tag,
             Name = "Lend",
             Amount = 10m,
+            LoggedOn = new DateTime(2026, 6, 28, 12, 30, 0),
             ExpenseCategory = ExpenseCategory.Needs,
             IsIoU = true,
             IsExcludedFromBudget = true
@@ -32,5 +33,6 @@ public sealed class LogMemorySnapshotTests
         Assert.Equal(TransactionType.Expense, snapshot.Type);
         Assert.True(snapshot.IsIoU);
         Assert.True(snapshot.IsExcludedFromBudget);
+        Assert.Equal(transaction.LoggedOn, snapshot.LoggedOn);
     }
 }

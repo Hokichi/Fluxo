@@ -107,14 +107,14 @@ public partial class AccountReconciliationVM : ObservableObject
 
             await _appData.SaveChangesAsync(cancellationToken);
 
-            var createdExpenseLog = CreateExpenseLogViewModel(transaction, account, reconciliationTag);
+            var createdTransaction = CreateTransactionViewModel(transaction, account, reconciliationTag);
             WeakReferenceMessenger.Default.Send(new RecordLogMemoryMessage(
                 new AddTransactionMemoryAction(TransactionMemorySnapshot.Create(transaction))));
             WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
             await _reloadCurrentDataAsync();
 
-            return AccountReconciliationSaveResult.Success(createdExpenseLog);
+            return AccountReconciliationSaveResult.Success(createdTransaction);
         }
         catch (Exception exception)
         {
@@ -180,7 +180,7 @@ public partial class AccountReconciliationVM : ObservableObject
         return true;
     }
 
-    private static ExpenseLogVM CreateExpenseLogViewModel(
+    private static TransactionVM CreateTransactionViewModel(
         Transaction transaction,
         Account account,
         Tag reconciliationTag)
@@ -203,23 +203,19 @@ public partial class AccountReconciliationVM : ObservableObject
             SpendingLimit = reconciliationTag.SpendingLimit
         };
 
-        return new ExpenseLogVM
+        return new TransactionVM
         {
             Id = transaction.Id,
+            Type = transaction.Type,
+            Name = transaction.Name,
             Amount = transaction.Amount,
-            DeductedOn = transaction.OccurredOn,
+            OccurredOn = transaction.OccurredOn,
+            LoggedOn = transaction.LoggedOn,
             Notes = transaction.Notes,
             IsForDeletion = transaction.IsForDeletion,
             Account = sourceVm,
-            Expense = new ExpenseVM
-            {
-                Id = transaction.Id,
-                Name = transaction.Name,
-                Amount = transaction.Amount,
-                ExpenseCategory = transaction.ExpenseCategory!.Value,
-                Account = sourceVm,
-                Tag = tagVm
-            }
+            ExpenseCategory = transaction.ExpenseCategory,
+            Tag = tagVm
         };
     }
 
@@ -252,11 +248,11 @@ public partial class AccountReconciliationVM : ObservableObject
     public readonly record struct AccountReconciliationSaveResult(
         bool IsSuccess,
         string? ErrorMessage,
-        ExpenseLogVM? CreatedExpenseLog)
+        TransactionVM? CreatedTransaction)
     {
-        public static AccountReconciliationSaveResult Success(ExpenseLogVM createdExpenseLog)
+        public static AccountReconciliationSaveResult Success(TransactionVM createdTransaction)
         {
-            return new AccountReconciliationSaveResult(true, null, createdExpenseLog);
+            return new AccountReconciliationSaveResult(true, null, createdTransaction);
         }
 
         public static AccountReconciliationSaveResult Failure(string? errorMessage)

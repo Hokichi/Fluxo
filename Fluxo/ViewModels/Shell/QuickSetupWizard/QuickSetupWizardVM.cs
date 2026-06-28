@@ -270,7 +270,7 @@ public partial class QuickSetupWizardVM : ObservableRecipient,
             await MiddlePage.Personalization.ApplyAsync(stagedAppData);
             await MiddlePage.Notification.ApplyAsync(stagedAppData);
             await MiddlePage.Accounts.ApplyAsync(stagedAppData);
-            await MiddlePage.FixedExpenses.ApplyAsync(
+            await MiddlePage.RecurringTransactions.ApplyAsync(
                 stagedAppData,
                 MiddlePage.Accounts.LastPersistedIdMap);
             await MiddlePage.SavingGoals.ApplyAsync(stagedAppData);

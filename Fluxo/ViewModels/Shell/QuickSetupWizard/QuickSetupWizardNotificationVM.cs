@@ -42,8 +42,8 @@ public partial class QuickSetupWizardNotificationVM : ObservableObject
             new SettingsNotificationOptionVM(
                 "Upcoming recurring transaction reminders",
                 "Warn before recurring transactions are due.",
-                UserSettingNames.IsFixedExpensesDeductionNotifEnabled,
-                QuickSetupWizardShared.ParseBool(settingsByName, UserSettingNames.IsFixedExpensesDeductionNotifEnabled, false)),
+                UserSettingNames.IsRecurringTransactionsDeductionNotifEnabled,
+                QuickSetupWizardShared.ParseBool(settingsByName, UserSettingNames.IsRecurringTransactionsDeductionNotifEnabled, false)),
             new SettingsNotificationOptionVM(
                 "Credit deadline reminders",
                 "Warn when credit due dates are approaching.",

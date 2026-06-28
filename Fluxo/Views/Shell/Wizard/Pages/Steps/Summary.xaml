@@ -64,7 +64,7 @@
                         FontFamily="{StaticResource Bold}"
                         FontSize="22"
                         Foreground="{StaticResource Brush.Warning}"
-                        Text="{Binding ReportFixedExpenseCount}" />
+                        Text="{Binding ReportRecurringTransactionCount}" />
                     <TextBlock
                         Margin="0,4,0,0"
                         HorizontalAlignment="Center"
@@ -78,8 +78,8 @@
                         FontFamily="{StaticResource Medium}"
                         FontSize="11"
                         Foreground="{StaticResource Brush.Text.Muted}"
-                        Text="{Binding ReportTotalFixedExpenseText}"
-                        ToolTip="{Binding ReportTotalFixedExpenseTooltipText}" />
+                        Text="{Binding ReportTotalRecurringTransactionText}"
+                        ToolTip="{Binding ReportTotalRecurringTransactionTooltipText}" />
                 </StackPanel>
             </Border>
 

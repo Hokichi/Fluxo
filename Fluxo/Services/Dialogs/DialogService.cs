@@ -93,17 +93,10 @@ public sealed class DialogService : IDialogService
         return ShowDialog(popup, owner);
     }
 
-    public bool? ShowExpenseDetail(ExpenseDetailVM viewModel, Window? owner = null)
+    public bool? ShowTransactionDetail(TransactionDetailVM viewModel, Window? owner = null)
     {
         using var scope = _serviceProvider.CreateScope();
-        var popup = ActivatorUtilities.CreateInstance<ExpenseDetailPopup>(scope.ServiceProvider, viewModel);
-        return ShowDialog(popup, owner);
-    }
-
-    public bool? ShowIncomeDetail(IncomeDetailVM viewModel, Window? owner = null)
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var popup = ActivatorUtilities.CreateInstance<IncomeDetailPopup>(scope.ServiceProvider, viewModel);
+        var popup = ActivatorUtilities.CreateInstance<TransactionDetailPopup>(scope.ServiceProvider, viewModel);
         return ShowDialog(popup, owner);
     }
 

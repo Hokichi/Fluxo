@@ -210,10 +210,10 @@ public partial class QuickSetupWizard : BasePopup
         await _viewModel.MiddlePage.Accounts.RefreshAsync();
     }
 
-    public async void OnAddFixedExpenseClick(object sender, RoutedEventArgs e)
+    public async void OnAddRecurringTransactionClick(object sender, RoutedEventArgs e)
     {
-        _dialogService.ShowAddNewTransaction(_viewModel.MiddlePage.FixedExpenses.CreateAddViewModel(), this);
-        await _viewModel.MiddlePage.FixedExpenses.RefreshAsync();
+        _dialogService.ShowAddNewTransaction(_viewModel.MiddlePage.RecurringTransactions.CreateAddViewModel(), this);
+        await _viewModel.MiddlePage.RecurringTransactions.RefreshAsync();
     }
 
     public async void OnAddSavingGoalClick(object sender, RoutedEventArgs e)
@@ -246,17 +246,17 @@ public partial class QuickSetupWizard : BasePopup
             await _viewModel.MiddlePage.Accounts.DeleteAsync(id);
     }
 
-    public async void OnEditFixedExpenseClick(object sender, RoutedEventArgs e)
+    public async void OnEditRecurringTransactionClick(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: int id })
             return;
 
-        var vm = await _viewModel.MiddlePage.FixedExpenses.CreateEditViewModelAsync(id);
+        var vm = await _viewModel.MiddlePage.RecurringTransactions.CreateEditViewModelAsync(id);
         _dialogService.ShowAddNewTransaction(vm, this);
-        await _viewModel.MiddlePage.FixedExpenses.RefreshAsync();
+        await _viewModel.MiddlePage.RecurringTransactions.RefreshAsync();
     }
 
-    public async void OnDeleteFixedExpenseClick(object sender, RoutedEventArgs e)
+    public async void OnDeleteRecurringTransactionClick(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: int id })
             return;
@@ -266,7 +266,7 @@ public partial class QuickSetupWizard : BasePopup
             "Delete Recurring Transaction", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
         if (result == MessageBoxResult.Yes)
-            await _viewModel.MiddlePage.FixedExpenses.DeleteAsync(id);
+            await _viewModel.MiddlePage.RecurringTransactions.DeleteAsync(id);
     }
 
     public async void OnEditSavingGoalClick(object sender, RoutedEventArgs e)

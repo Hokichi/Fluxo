@@ -54,8 +54,6 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<IMapper>(_ => mapperConfig.CreateMapper());
 
-        services.AddTransient<IExpenseService, ExpenseService>();
-        services.AddTransient<IExpenseLogService, ExpenseLogService>();
         services.AddTransient<ITransactionService, TransactionService>();
         services.AddTransient<IAccountService, AccountService>();
         services.AddTransient<ITagService, TagService>();
@@ -93,9 +91,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<UpcomingEventsPanelVM>();
         services.AddSingleton<LedgerVM>();
         services.AddSingleton<DayOfWeekVM>();
-        services.AddTransient<ExpenseVM>();
-        services.AddTransient<ExpenseLogVM>();
-        services.AddTransient<IncomeLogVM>();
         services.AddTransient<TransactionVM>();
         services.AddTransient<TagVM>();
         services.AddTransient<SavingGoalVM>();
@@ -112,7 +107,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<CalendarVM>();
         services.AddTransient<SettingsBudgetTabVM>();
         services.AddTransient<SettingsSourcesTabVM>();
-        services.AddTransient<SettingsFixedExpensesTabVM>();
+        services.AddTransient<SettingsRecurringTransactionsTabVM>();
         services.AddTransient<SettingsGoalsTabVM>();
         services.AddTransient<SettingsIoUsTabVM>();
         services.AddTransient<SettingsTagsTabVM>();
@@ -125,7 +120,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardLoadingPageVM>();
         services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardFinalPageVM>();
         services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardAccountsVM>();
-        services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardFixedExpensesVM>();
+        services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardRecurringTransactionsVM>();
         services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardSavingGoalsVM>();
         services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardBudgetAllocationVM>();
         services.AddTransient<ViewModels.Shell.QuickSetupWizard.QuickSetupWizardPersonalizationVM>();

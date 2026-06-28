@@ -11,6 +11,7 @@ public sealed class TransactionDto
     public string Name { get; set; } = string.Empty;
     public decimal Amount { get; set; }
     public DateTime OccurredOn { get; set; }
+    public DateTime LoggedOn { get; set; }
     public string Notes { get; set; } = string.Empty;
     public ExpenseCategory? ExpenseCategory { get; set; }
     public int? TagId { get; set; }

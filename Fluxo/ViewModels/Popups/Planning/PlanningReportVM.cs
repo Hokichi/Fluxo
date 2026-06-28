@@ -14,8 +14,8 @@ public sealed partial class PlanningReportVM : ObservableObject, IDisposable
 {
     private readonly BudgetAllocationBalancer _allocationBalancer = new();
     private readonly IAppDataService _appData;
-    private readonly List<ExpenseVM> _trackedExpenses = [];
-    private readonly List<IncomeLogVM> _trackedIncomes = [];
+    private readonly List<TransactionVM> _trackedExpenses = [];
+    private readonly List<TransactionVM> _trackedIncomes = [];
     private bool _disposed;
     private bool _isApplyingAllocation;
     private int _investPercent;
@@ -58,9 +58,9 @@ public sealed partial class PlanningReportVM : ObservableObject, IDisposable
         RecalculateTotals();
     }
 
-    public ObservableCollection<IncomeLogVM> Incomes { get; }
+    public ObservableCollection<TransactionVM> Incomes { get; }
 
-    public ObservableCollection<ExpenseVM> Expenses { get; }
+    public ObservableCollection<TransactionVM> Expenses { get; }
 
     public int NeedsPercent
     {
@@ -123,12 +123,12 @@ public sealed partial class PlanningReportVM : ObservableObject, IDisposable
             Math.Clamp(allocation.InvestThreshold, 0, 100));
     }
 
-    public void AddIncome(IncomeLogVM income)
+    public void AddIncome(TransactionVM income)
     {
         Incomes.Add(CopyIncome(income));
     }
 
-    public void AddExpense(ExpenseVM expense)
+    public void AddExpense(TransactionVM expense)
     {
         Expenses.Add(CopyExpense(expense));
     }
@@ -142,12 +142,12 @@ public sealed partial class PlanningReportVM : ObservableObject, IDisposable
             if (Incomes.Any(income => income.Id == recurring.Id))
                 continue;
 
-            AddIncome(new IncomeLogVM
+            AddIncome(new TransactionVM
             {
                 Id = recurring.Id,
                 Name = recurring.Name,
                 Amount = recurring.Amount,
-                AddedOn = DateTime.Now,
+                OccurredOn = DateTime.Now,
                 Account = CopyAccount(recurring.Source, recurring.SourceId)
             });
         }
@@ -162,7 +162,7 @@ public sealed partial class PlanningReportVM : ObservableObject, IDisposable
             if (Expenses.Any(expense => expense.Id == recurring.Id))
                 continue;
 
-            AddExpense(new ExpenseVM
+            AddExpense(new TransactionVM
             {
                 Id = recurring.Id,
                 Name = recurring.Name,
@@ -174,7 +174,7 @@ public sealed partial class PlanningReportVM : ObservableObject, IDisposable
         }
     }
 
-    public bool RemoveIncome(IncomeLogVM income)
+    public bool RemoveIncome(TransactionVM income)
     {
         if (Incomes.Remove(income))
             return true;
@@ -183,7 +183,7 @@ public sealed partial class PlanningReportVM : ObservableObject, IDisposable
         return existing is not null && Incomes.Remove(existing);
     }
 
-    public bool RemoveExpense(ExpenseVM expense)
+    public bool RemoveExpense(TransactionVM expense)
     {
         if (Expenses.Remove(expense))
             return true;
@@ -272,14 +272,14 @@ public sealed partial class PlanningReportVM : ObservableObject, IDisposable
 
     private void OnIncomeChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(IncomeLogVM.Amount))
+        if (e.PropertyName == nameof(TransactionVM.Amount))
             RecalculateTotals();
     }
 
     private void OnExpenseChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ExpenseVM.Amount) ||
-            e.PropertyName == nameof(ExpenseVM.ExpenseCategory))
+        if (e.PropertyName == nameof(TransactionVM.Amount) ||
+            e.PropertyName == nameof(TransactionVM.ExpenseCategory))
             RecalculateTotals();
     }
 
@@ -358,22 +358,22 @@ public sealed partial class PlanningReportVM : ObservableObject, IDisposable
         usagePercent = (int)Math.Round(totalPercentage * 100d, MidpointRounding.AwayFromZero);
     }
 
-    private static IncomeLogVM CopyIncome(IncomeLogVM source)
+    private static TransactionVM CopyIncome(TransactionVM source)
     {
-        return new IncomeLogVM
+        return new TransactionVM
         {
             Id = source.Id,
             Name = source.Name,
             Amount = source.Amount,
-            AddedOn = source.AddedOn,
+            OccurredOn = source.OccurredOn,
             Notes = source.Notes,
             Account = CopyAccount(source.Account)
         };
     }
 
-    private static ExpenseVM CopyExpense(ExpenseVM source)
+    private static TransactionVM CopyExpense(TransactionVM source)
     {
-        return new ExpenseVM
+        return new TransactionVM
         {
             Id = source.Id,
             Name = source.Name,

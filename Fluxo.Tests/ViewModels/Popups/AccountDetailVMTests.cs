@@ -27,7 +27,7 @@ public sealed class AccountDetailVMTests
         var source = CreateSource(1, "Checking", AccountType.Checking);
         var appData = CreateAppData(
             [source],
-            [new ExpenseLog { Id = 10, AccountId = source.Id, Amount = 20m, DeductedOn = DateTime.Today }],
+            [new Transaction { Id = 10, AccountId = source.Id, Amount = 20m, OccurredOn = DateTime.Today }],
             []);
         var sut = new AccountDetailVM(null!, source.Id, appData);
 
@@ -119,8 +119,8 @@ public sealed class AccountDetailVMTests
 
     private static IAppDataService CreateAppData(
         IReadOnlyList<Account> sources,
-        IReadOnlyList<ExpenseLog> expenseLogs,
-        IReadOnlyList<IncomeLog> incomeLogs)
+        IReadOnlyList<Transaction> expenseLogs,
+        IReadOnlyList<Transaction> incomeLogs)
     {
         var appData = Substitute.For<IAppDataService>();
         appData.GetAccountByIdAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
@@ -128,10 +128,8 @@ public sealed class AccountDetailVMTests
                 sources.FirstOrDefault(source => source.Id == call.ArgAt<int>(0))));
         appData.GetAccountsAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(sources));
-        appData.GetExpenseLogsAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(expenseLogs));
-        appData.GetIncomeLogsAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(incomeLogs));
+        appData.GetTransactionsAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Transaction>>(expenseLogs.Concat(incomeLogs).ToList()));
         return appData;
     }
 

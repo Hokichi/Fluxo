@@ -69,7 +69,7 @@ public sealed class AccountReconciliationVMTests
         var result = await vm.SaveAsync();
 
         Assert.True(result.IsSuccess);
-        Assert.NotNull(result.CreatedExpenseLog);
+        Assert.NotNull(result.CreatedTransaction);
         Assert.NotNull(savedTransaction);
         Assert.Equal(TransactionType.Expense, savedTransaction.Type);
         Assert.Equal("Checking - Budget Reconciliation", savedTransaction.Name);

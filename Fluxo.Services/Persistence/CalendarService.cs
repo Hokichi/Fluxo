@@ -25,6 +25,7 @@ public sealed class CalendarService(IDataOperationRunner dataOperationRunner) : 
                 .Where(transaction => transaction.Type == TransactionType.Expense && !transaction.IsForDeletion &&
                                       transaction.ParentTransactionId is null && transaction.OccurredOn.Date == selectedDate)
                 .OrderByDescending(transaction => transaction.OccurredOn)
+                .ThenByDescending(transaction => transaction.LoggedOn)
                 .ThenBy(transaction => transaction.Id)
                 .Select(transaction => new CalendarExpenseItem(
                     transaction.Id,
@@ -37,6 +38,7 @@ public sealed class CalendarService(IDataOperationRunner dataOperationRunner) : 
             var incomes = transactions
                 .Where(transaction => transaction.Type == TransactionType.Income && transaction.OccurredOn.Date == selectedDate)
                 .OrderByDescending(transaction => transaction.OccurredOn)
+                .ThenByDescending(transaction => transaction.LoggedOn)
                 .ThenBy(transaction => transaction.Id)
                 .Select(transaction => new CalendarIncomeItem(
                     transaction.Id,

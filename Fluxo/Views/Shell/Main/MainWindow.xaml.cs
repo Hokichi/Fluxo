@@ -1125,10 +1125,7 @@ public partial class MainWindow : Window, IPopupHost
 
         CollapseHeaderSearch();
 
-        if (result.ExpenseLog is not null)
-            OpenExpenseDetailPopup(result.ExpenseLog);
-        else if (result.IncomeLog is not null)
-            OpenIncomeDetailPopup(result.IncomeLog);
+        OpenTransactionDetailPopup(result.Transaction);
 
         e.Handled = true;
     }
@@ -1221,8 +1218,7 @@ public partial class MainWindow : Window, IPopupHost
 
         var query = HeaderSearchBox.Text;
         var matches = HeaderQuickSearchEngine.Search(
-            _mainVM.BudgetPanel.GetAllExpenseLogs(),
-            _mainVM.BudgetPanel.GetAllIncomeLogs(),
+            _mainVM.BudgetPanel.GetAllTransactions(),
             query).ToList();
 
         _headerSearchResults.Clear();
@@ -1417,21 +1413,13 @@ public partial class MainWindow : Window, IPopupHost
         _dialogService.ShowAddNewTransaction(popupViewModel, this);
     }
 
-    public async void OpenExpenseDetailPopup(ExpenseLogVM expenseLog)
+    public async void OpenTransactionDetailPopup(TransactionVM transaction)
     {
         using var scope = _serviceProvider.CreateScope();
         var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
-        var targetExpenseLog = await ExpenseDetailTargetResolver.ResolveAsync(expenseLog, appData);
-        var popupViewModel = new ExpenseDetailVM(_mainVM, targetExpenseLog, appData);
-        _dialogService.ShowExpenseDetail(popupViewModel, this);
-    }
-
-    public void OpenIncomeDetailPopup(IncomeLogVM incomeLog)
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
-        var popupViewModel = new IncomeDetailVM(_mainVM, incomeLog, appData);
-        _dialogService.ShowIncomeDetail(popupViewModel, this);
+        var targetTransaction = await TransactionDetailTargetResolver.ResolveAsync(transaction, appData);
+        var popupViewModel = new TransactionDetailVM(_mainVM, targetTransaction, appData);
+        _dialogService.ShowTransactionDetail(popupViewModel, this);
     }
 
     public void OpenAccountsListPopup()
@@ -1833,13 +1821,13 @@ public partial class MainWindow : Window, IPopupHost
         _dialogService.ShowAccountReconciliation(reconciliationVm, this);
     }
 
-    public async void OpenExpenseDetailPopupForEditing(ExpenseLogVM expenseLog)
+    public async void OpenTransactionDetailPopupForEditing(TransactionVM expenseLog)
     {
         using var scope = _serviceProvider.CreateScope();
         var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
-        var popupViewModel = new ExpenseDetailVM(_mainVM, expenseLog, appData);
+        var popupViewModel = new TransactionDetailVM(_mainVM, expenseLog, appData);
         await popupViewModel.BeginEditingAsync();
-        _dialogService.ShowExpenseDetail(popupViewModel, this);
+        _dialogService.ShowTransactionDetail(popupViewModel, this);
     }
 
     private void ApplyMainWindowRangeToAnalyticsIfBounded()

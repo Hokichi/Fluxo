@@ -67,49 +67,37 @@ public class AddNewTransactionVMOrderingTests
         var groceries = new Tag { Id = 7, Name = "Groceries", HexCode = "#22C55E" };
         var logs = new[]
         {
-            new ExpenseLog
+            new Transaction
             {
                 Id = 20,
                 Amount = 42.50m,
-                DeductedOn = new DateTime(2026, 5, 1),
+                OccurredOn = new DateTime(2026, 5, 1),
                 Notes = "weekly",
                 AccountId = checking.Id,
                 Account = checking,
-                Expense = new Expense
-                {
-                    Id = 10,
-                    Name = "Market Groceries",
-                    Amount = 42.50m,
-                    ExpenseCategory = ExpenseCategory.Needs,
-                    AccountId = checking.Id,
-                    Account = checking,
-                    TagId = groceries.Id,
-                    Tag = groceries
-                }
+                Type = TransactionType.Expense,
+                Name = "Market Groceries",
+                ExpenseCategory = ExpenseCategory.Needs,
+                TagId = groceries.Id,
+                Tag = groceries
             },
-            new ExpenseLog
+            new Transaction
             {
                 Id = 21,
                 Amount = 12m,
-                DeductedOn = new DateTime(2026, 5, 2),
+                OccurredOn = new DateTime(2026, 5, 2),
                 Notes = "coffee",
                 AccountId = checking.Id,
                 Account = checking,
-                Expense = new Expense
-                {
-                    Id = 11,
-                    Name = "Coffee",
-                    Amount = 12m,
-                    ExpenseCategory = ExpenseCategory.Wants,
-                    AccountId = checking.Id,
-                    Account = checking,
-                    TagId = groceries.Id,
-                    Tag = groceries
-                }
+                Type = TransactionType.Expense,
+                Name = "Coffee",
+                ExpenseCategory = ExpenseCategory.Wants,
+                TagId = groceries.Id,
+                Tag = groceries
             }
         };
 
-        var suggestions = AddNewTransactionVM.BuildTransactionNameSuggestions(logs.Select(ToTransaction), [], isExpense: true, query: "gro").ToList();
+        var suggestions = AddNewTransactionVM.BuildTransactionNameSuggestions(logs, [], isExpense: true, query: "gro").ToList();
 
         var suggestion = Assert.Single(suggestions);
         Assert.Equal("Market Groceries", suggestion.Name);
@@ -127,29 +115,31 @@ public class AddNewTransactionVMOrderingTests
         var checking = new Account { Id = 5, Name = "Checking", IsEnabled = true };
         var logs = new[]
         {
-            new IncomeLog
+            new Transaction
             {
                 Id = 30,
+                Type = TransactionType.Income,
                 Name = "Monthly Salary",
                 Amount = 3000m,
-                AddedOn = new DateTime(2026, 5, 3),
+                OccurredOn = new DateTime(2026, 5, 3),
                 Notes = "May payroll",
                 AccountId = checking.Id,
                 Account = checking
             },
-            new IncomeLog
+            new Transaction
             {
                 Id = 31,
+                Type = TransactionType.Income,
                 Name = "Refund",
                 Amount = 14m,
-                AddedOn = new DateTime(2026, 5, 4),
+                OccurredOn = new DateTime(2026, 5, 4),
                 Notes = "store",
                 AccountId = checking.Id,
                 Account = checking
             }
         };
 
-        var suggestions = AddNewTransactionVM.BuildTransactionNameSuggestions([], logs.Select(ToTransaction), isExpense: false, query: "sal").ToList();
+        var suggestions = AddNewTransactionVM.BuildTransactionNameSuggestions([], logs, isExpense: false, query: "sal").ToList();
 
         var suggestion = Assert.Single(suggestions);
         Assert.Equal("Monthly Salary", suggestion.Name);
@@ -166,49 +156,22 @@ public class AddNewTransactionVMOrderingTests
     {
         var logs = new[]
         {
-            new IncomeLog
+            new Transaction
             {
                 Id = 30,
                 Name = "Monthly Salary",
                 Amount = 3000m,
-                AddedOn = new DateTime(2026, 5, 3),
+                OccurredOn = new DateTime(2026, 5, 3),
                 Notes = "May payroll",
                 AccountId = 5,
                 Account = new Account { Id = 5, Name = "Checking" }
             }
         };
 
-        var suggestions = AddNewTransactionVM.BuildTransactionNameSuggestions([], logs.Select(ToTransaction), isExpense: false, query: "sa");
+        var suggestions = AddNewTransactionVM.BuildTransactionNameSuggestions([], logs, isExpense: false, query: "sa");
 
         Assert.Empty(suggestions);
     }
-
-    private static Transaction ToTransaction(ExpenseLog log) => new()
-    {
-        Id = log.Id,
-        Type = TransactionType.Expense,
-        AccountId = log.AccountId,
-        Account = log.Account,
-        Name = log.Expense.Name,
-        Amount = log.Amount,
-        OccurredOn = log.DeductedOn,
-        Notes = log.Notes,
-        ExpenseCategory = log.Expense.ExpenseCategory,
-        TagId = log.Expense.TagId,
-        Tag = log.Expense.Tag
-    };
-
-    private static Transaction ToTransaction(IncomeLog log) => new()
-    {
-        Id = log.Id,
-        Type = TransactionType.Income,
-        AccountId = log.AccountId,
-        Account = log.Account,
-        Name = log.Name,
-        Amount = log.Amount,
-        OccurredOn = log.AddedOn,
-        Notes = log.Notes
-    };
 
     [Theory]
     [InlineData(RecurringPeriod.None, "", 0)]

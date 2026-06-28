@@ -71,7 +71,7 @@
                 </RadioButton>
 
                 <RadioButton
-                    x:Name="FixedExpensesTabButton"
+                    x:Name="RecurringTransactionsTabButton"
                     GroupName="SettingsTabs"
                     PreviewMouseLeftButtonDown="OnSettingsTabPreviewMouseLeftButtonDown"
                     Style="{StaticResource LockedSettingsTabButtonStyle}"
@@ -157,9 +157,9 @@
 
             <tabs:SettingsSourcesTab x:Name="SourcesTabContent" DataContext="{Binding SourcesTab}" />
 
-            <tabs:SettingsFixedExpensesTab
-                x:Name="FixedExpensesTabContent"
-                DataContext="{Binding FixedExpensesTab}"
+            <tabs:SettingsRecurringTransactionsTab
+                x:Name="RecurringTransactionsTabContent"
+                DataContext="{Binding RecurringTransactionsTab}"
                 Opacity="0"
                 Visibility="Collapsed" />
 

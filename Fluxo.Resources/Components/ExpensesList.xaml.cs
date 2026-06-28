@@ -120,20 +120,20 @@ public partial class ExpensesList : UserControl
         set => SetValue(IsLoadingProperty, value);
     }
 
-    private void OnExpenseDetailButtonClick(object sender, RoutedEventArgs e)
+    private void OnTransactionDetailButtonClick(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { DataContext: { } expenseLog })
             return;
 
-        var rowExpenseLog = expenseLog.GetType().GetProperty("ExpenseLog")?.GetValue(expenseLog);
-        if (rowExpenseLog is null && expenseLog.GetType().GetProperty("ExpenseLog") is not null)
+        var rowTransaction = expenseLog.GetType().GetProperty("Transaction")?.GetValue(expenseLog);
+        if (rowTransaction is null && expenseLog.GetType().GetProperty("Transaction") is not null)
             return;
 
         // Reset the swipe on the container
         if (DependencyObjectTree.FindAncestor<SwipeRevealContainer>((DependencyObject)sender) is { } container)
             container.ResetSwipe();
 
-        WindowMethodInvoker.TryInvoke(this, "OpenExpenseDetailPopup", rowExpenseLog ?? expenseLog);
+        WindowMethodInvoker.TryInvoke(this, "OpenTransactionDetailPopup", rowTransaction ?? expenseLog);
     }
 
     private void OnEmptyActionButtonClick(object sender, RoutedEventArgs e)

@@ -296,8 +296,8 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
         var amount = decision.Amount.Value;
         return recurring.Type switch
         {
-            RecurringTransactionType.Expense => await AddRecurringExpenseLogAsync(unitOfWork, recurring, source, amount, decision.SelectedTagId, cancellationToken),
-            RecurringTransactionType.Income => await AddRecurringIncomeLogAsync(unitOfWork, recurring, source, amount, cancellationToken),
+            RecurringTransactionType.Expense or RecurringTransactionType.Income =>
+                await AddRecurringTransactionAsync(unitOfWork, recurring, source, amount, decision.SelectedTagId, cancellationToken),
             RecurringTransactionType.GoalUpdate => await AddRecurringGoalUpdateAsync(unitOfWork, recurring, source, amount, decision.SelectedGoalId, cancellationToken),
             _ => false
         };
@@ -316,7 +316,7 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
         return TryExtractNotificationEntityId(notificationType, "UpcomingDeduction-", out entityId) ? entityId : 0;
     }
 
-    private static async Task<bool> AddRecurringExpenseLogAsync(
+    private static async Task<bool> AddRecurringTransactionAsync(
         IUnitOfWork unitOfWork,
         RecurringTransaction recurring,
         Account source,
@@ -331,40 +331,27 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
         if (tag is null)
             return false;
 
-        var expense = new Transaction
+        var transactionType = recurring.Type == RecurringTransactionType.Expense
+            ? TransactionType.Expense
+            : TransactionType.Income;
+        var transaction = new Transaction
         {
-            Type = TransactionType.Expense,
+            Type = transactionType,
             Name = recurring.Name,
             Amount = amount,
             OccurredOn = DateTime.Now,
             Notes = recurring.Name,
-            ExpenseCategory = ExpenseCategory.Needs,
+            ExpenseCategory = transactionType == TransactionType.Expense
+                ? recurring.Category ?? ExpenseCategory.Needs
+                : null,
             AccountId = source.Id,
             TagId = tag.Id
         };
-        await unitOfWork.Transactions.AddAsync(expense, cancellationToken);
-        ApplyExpenseToAccount(source, amount);
-        unitOfWork.Accounts.Update(source);
-        return true;
-    }
-
-    private static async Task<bool> AddRecurringIncomeLogAsync(
-        IUnitOfWork unitOfWork,
-        RecurringTransaction recurring,
-        Account source,
-        decimal amount,
-        CancellationToken cancellationToken)
-    {
-        await unitOfWork.Transactions.AddAsync(new Transaction
-        {
-            Type = TransactionType.Income,
-            AccountId = source.Id,
-            Name = recurring.Name,
-            Amount = amount,
-            OccurredOn = DateTime.Now,
-            Notes = string.Empty
-        }, cancellationToken);
-        ApplyIncomeToAccount(source, amount);
+        await unitOfWork.Transactions.AddAsync(transaction, cancellationToken);
+        if (transactionType == TransactionType.Expense)
+            ApplyExpenseToAccount(source, amount);
+        else
+            ApplyIncomeToAccount(source, amount);
         unitOfWork.Accounts.Update(source);
         return true;
     }

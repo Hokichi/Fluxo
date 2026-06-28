@@ -314,7 +314,7 @@ public partial class PlanningReportPopup : BasePopup
 
     private void OnRemoveIncomeClick(object sender, RoutedEventArgs e)
     {
-        if (sender is Button { DataContext: IncomeLogVM income })
+        if (sender is Button { DataContext: TransactionVM income })
             _viewModel.RemoveIncome(income);
     }
 
@@ -331,13 +331,13 @@ public partial class PlanningReportPopup : BasePopup
 
     private void AddIncomeRow()
     {
-        _viewModel.AddIncome(new IncomeLogVM { AddedOn = DateTime.Now });
+        _viewModel.AddIncome(new TransactionVM { OccurredOn = DateTime.Now });
         QueueScrollToBottom(IncomeScrollViewer);
     }
 
     private void AddExpenseRow()
     {
-        _viewModel.AddExpense(new ExpenseVM
+        _viewModel.AddExpense(new TransactionVM
         {
             ExpenseCategory = ExpenseCategory.Needs
         });
@@ -355,7 +355,7 @@ public partial class PlanningReportPopup : BasePopup
 
     private void OnRemoveExpenseClick(object sender, RoutedEventArgs e)
     {
-        if (sender is Button { DataContext: ExpenseVM expense })
+        if (sender is Button { DataContext: TransactionVM expense })
             _viewModel.RemoveExpense(expense);
     }
 

@@ -26,9 +26,7 @@ public sealed class DataServiceRegistrationTests
 
         AssertLifetime<FluxoDbContext>(services, ServiceLifetime.Scoped);
         AssertLifetime<IUnitOfWork>(services, ServiceLifetime.Scoped);
-        AssertLifetime<IExpenseRepository>(services, ServiceLifetime.Scoped);
-        AssertLifetime<IExpenseLogRepository>(services, ServiceLifetime.Scoped);
-        AssertLifetime<IIncomeLogRepository>(services, ServiceLifetime.Scoped);
+        AssertLifetime<ITransactionRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<ITagRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<ISavingGoalRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<IAccountRepository>(services, ServiceLifetime.Scoped);
@@ -36,9 +34,7 @@ public sealed class DataServiceRegistrationTests
         AssertLifetime<INotificationRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<IUserSettingsRepository>(services, ServiceLifetime.Scoped);
         AssertLifetime<IBudgetAllocationRepository>(services, ServiceLifetime.Scoped);
-        AssertLifetime<IRepository<Expense>>(services, ServiceLifetime.Scoped);
-        AssertLifetime<IRepository<ExpenseLog>>(services, ServiceLifetime.Scoped);
-        AssertLifetime<IRepository<IncomeLog>>(services, ServiceLifetime.Scoped);
+        AssertLifetime<IRepository<Transaction>>(services, ServiceLifetime.Scoped);
         AssertLifetime<IRepository<Tag>>(services, ServiceLifetime.Scoped);
         AssertLifetime<IRepository<SavingGoal>>(services, ServiceLifetime.Scoped);
         AssertLifetime<IRepository<Account>>(services, ServiceLifetime.Scoped);
@@ -101,9 +97,7 @@ public sealed class DataServiceRegistrationTests
     {
         return new UnitOfWork(
             dbContext,
-            new ExpenseRepository(dbContext),
-            new ExpenseLogRepository(dbContext),
-            new IncomeLogRepository(dbContext),
+            new TransactionRepository(dbContext),
             new TagRepository(dbContext),
             new SavingGoalRepository(dbContext),
             new AccountRepository(dbContext),

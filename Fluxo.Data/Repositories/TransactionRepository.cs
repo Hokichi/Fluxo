@@ -10,7 +10,10 @@ public sealed class TransactionRepository(FluxoDbContext dbContext)
     : Repository<Transaction>(dbContext), ITransactionRepository
 {
     public override async Task<IReadOnlyList<Transaction>> GetAllAsync(CancellationToken cancellationToken = default) =>
-        await Query().Where(transaction => !transaction.IsForDeletion).ToListAsync(cancellationToken);
+        await Query().Where(transaction => !transaction.IsForDeletion)
+            .OrderByDescending(transaction => transaction.OccurredOn)
+            .ThenByDescending(transaction => transaction.LoggedOn)
+            .ToListAsync(cancellationToken);
 
     public override async Task<Transaction?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
         FindTrackedEntity(id) ?? await Query().FirstOrDefaultAsync(transaction => transaction.Id == id, cancellationToken);
@@ -25,7 +28,10 @@ public sealed class TransactionRepository(FluxoDbContext dbContext)
         if (filter.EndDate.HasValue) query = query.Where(transaction => transaction.OccurredOn <= filter.EndDate);
         if (filter.ExpenseCategory.HasValue) query = query.Where(transaction => transaction.ExpenseCategory == filter.ExpenseCategory);
         if (filter.TagId.HasValue) query = query.Where(transaction => transaction.TagId == filter.TagId);
-        return await query.ToListAsync(cancellationToken);
+        return await query
+            .OrderByDescending(transaction => transaction.OccurredOn)
+            .ThenByDescending(transaction => transaction.LoggedOn)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<Transaction>> GetMarkedForDeletionAsync(CancellationToken cancellationToken = default) =>

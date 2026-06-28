@@ -47,9 +47,8 @@ public sealed class GoalUpdateTransactionSupportTests
     {
         public int SaveChangesCalls { get; private set; }
 
-        public IExpenseRepository Expenses => throw new NotSupportedException();
-        public IExpenseLogRepository ExpenseLogs => throw new NotSupportedException();
-        public IIncomeLogRepository IncomeLogs => throw new NotSupportedException();
+        public ITransactionRepository Expenses => throw new NotSupportedException();
+        public ITransactionRepository Transactions => throw new NotSupportedException();
         public ITagRepository Tags => tags;
         public ISavingGoalRepository SavingGoals => throw new NotSupportedException();
         public IAccountRepository Accounts => throw new NotSupportedException();
