@@ -509,6 +509,10 @@ public partial class AddNewTransactionVM : ObservableValidator
             ? Goals.FirstOrDefault()
             : Goals.FirstOrDefault(goal => goal.Id == draft.GoalId.Value) ?? Goals.FirstOrDefault();
         IsMoreTagsOpen = false;
+        if (IsGoal)
+            SyncGoalUpdateName();
+        _isTransactionTypeLocked = draft.LockTransactionType;
+        OnPropertyChanged(nameof(CanChangeTransactionType));
     }
 
     partial void OnIsExpenseChanged(bool value)
@@ -2118,7 +2122,8 @@ public partial class AddNewTransactionVM : ObservableValidator
         bool IsGoal = false,
         int? GoalId = null,
         bool IsIoU = false,
-        bool IsExcludedFromBudget = false);
+        bool IsExcludedFromBudget = false,
+        bool LockTransactionType = false);
 
     public readonly record struct RecurringDraftSaveInput(
         int? EditingRecurringTransactionId,

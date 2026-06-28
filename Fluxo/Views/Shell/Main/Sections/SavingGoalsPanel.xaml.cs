@@ -149,7 +149,8 @@ public partial class SavingGoalsPanel : UserControl
             null,
             null,
             true,
-            goal.Id));
+            goal.Id,
+            LockTransactionType: true));
     }
 
     private void OnCarouselViewportPreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)

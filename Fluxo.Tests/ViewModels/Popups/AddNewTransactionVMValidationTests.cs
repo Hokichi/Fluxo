@@ -107,6 +107,44 @@ public sealed class AddNewTransactionVMValidationTests
         });
     }
 
+    [Fact]
+    public void InitializeFromDraft_LockedGoalUpdateLocksTypeAndKeepsGoalSelectionEditable()
+    {
+        RunInSta(() =>
+        {
+            var main = CreateMainViewModel([CreateCheckingSource(balance: 500m)]);
+            main.SavingGoalsPanel.SavingGoals.Add(new SavingGoalVM
+            {
+                Id = 2,
+                Name = "Emergency Fund",
+                TargetAmount = 1_000m,
+                CurrentAmount = 100m
+            });
+            var vm = new AddNewTransactionVM(main, CreateAppData());
+
+            vm.InitializeFromDraft(new AddNewTransactionVM.AddNewTransactionDraft(
+                IsExpense: false,
+                Name: string.Empty,
+                AmountText: 0m,
+                AccountId: null,
+                Date: DateTime.Today,
+                Note: string.Empty,
+                Category: null,
+                TagId: null,
+                IsGoal: true,
+                GoalId: 2,
+                LockTransactionType: true));
+
+            Assert.False(vm.CanChangeTransactionType);
+            Assert.Equal(2, vm.SelectedGoal?.Id);
+            Assert.Equal("Goal Update for Emergency Fund", vm.NameText);
+
+            vm.SelectedGoal = vm.Goals.Single(goal => goal.Id == 1);
+
+            Assert.Equal("Goal Update for Goal", vm.NameText);
+        });
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
