@@ -132,6 +132,9 @@ public partial class MainWindow : Window, IPopupHost
         _dialogService = dialogService;
         _serviceProvider = serviceProvider;
         _logMemoryManager = new LogMemoryManager(_mainVM, _dataOperationRunner);
+        WeakReferenceMessenger.Default.Register<MainWindow, NavigateToLedgerRequestedMessage>(
+            this,
+            static (recipient, message) => _ = recipient.NavigateToMainPageAsync(MainPage.Ledger));
 
         HeaderSearchResultsList.ItemsSource = _headerSearchResults;
         DataContext = _mainVM;
@@ -312,6 +315,7 @@ public partial class MainWindow : Window, IPopupHost
             _hasCompletedPendingDeletionCleanup = true;
             _logMemoryManager.StateChanged -= OnHistoryManagerStateChanged;
             _mainVM.PropertyChanged -= OnMainViewModelPropertyChanged;
+            WeakReferenceMessenger.Default.Unregister<NavigateToLedgerRequestedMessage>(this);
             Activated -= OnWindowActivated;
             Deactivated -= OnWindowDeactivated;
             StateChanged -= OnWindowStateChanged;

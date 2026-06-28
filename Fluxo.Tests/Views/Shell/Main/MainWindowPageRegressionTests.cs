@@ -485,6 +485,17 @@ public sealed class MainWindowPageRegressionTests
         Assert.Contains("ApplyTransactionTag", ledgerCodeBehind);
     }
 
+    [Fact]
+    public void MainWindow_ReceivesLedgerNavigationRequestsAndCleansUpRegistration()
+    {
+        var source = File.ReadAllText(RepositoryPaths.File(
+            "Fluxo", "Views", "Shell", "Main", "MainWindow.xaml.cs"));
+
+        Assert.Contains("Register<MainWindow, NavigateToLedgerRequestedMessage>", source);
+        Assert.Contains("NavigateToMainPageAsync(MainPage.Ledger)", source);
+        Assert.Contains("Unregister<NavigateToLedgerRequestedMessage>(this)", source);
+    }
+
     private static void AssertPageHasDateSelectors(
         string pageName,
         string startSelectorName,

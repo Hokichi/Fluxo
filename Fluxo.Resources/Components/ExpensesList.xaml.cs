@@ -4,8 +4,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Resources.CustomControls;
 using Fluxo.Resources.Infrastructure;
+using Fluxo.Resources.Resources.Messages;
 
 namespace Fluxo.Resources.Components;
 
@@ -160,6 +162,16 @@ public partial class ExpensesList : UserControl
     private void OnEmptyActionButtonClick(object sender, RoutedEventArgs e)
     {
         EmptyActionClick?.Invoke(this, e);
+    }
+
+    private void OnViewInLedgerButtonClick(object sender, RoutedEventArgs e)
+    {
+        RequestLedgerNavigation(WeakReferenceMessenger.Default);
+    }
+
+    internal static void RequestLedgerNavigation(IMessenger messenger)
+    {
+        messenger.Send(new NavigateToLedgerRequestedMessage());
     }
 
     private void OnDeleteButtonClick(object sender, RoutedEventArgs e)
