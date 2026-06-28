@@ -320,21 +320,9 @@
                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                         IconSize="14"
-                        IsEnabled="{Binding CanToggleRecurring}"
+                        IsEnabled="{Binding CanEditFields}"
                         ToolTip="Transaction mode">
                         <customControls:BalloonToggle.States>
-                            <customControls:BalloonToggleState
-                                ButtonIcon="{StaticResource RegularRepeat}"
-                                ButtonText="Set as Recurring"
-                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
-                                HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                                OnChecked="{Binding HandleRecurringModeClickCommand}" />
-                            <customControls:BalloonToggleState
-                                ButtonIcon="{StaticResource CreditCardClockOutline}"
-                                ButtonText="Set as Installments"
-                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
-                                HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                                OnChecked="{Binding HandleInstallmentsModeClickCommand}" />
                             <customControls:BalloonToggleState
                                 ButtonIcon="{StaticResource CreditCardMinusSolid}"
                                 ButtonText="{Binding IoUTooltip}"

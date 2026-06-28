@@ -95,6 +95,19 @@ public sealed class TransactionDetailPopupSplitLayoutTests
     }
 
     [Fact]
+    public void TransactionDetailPopup_UsesUpdateOnlyTransactionModes()
+    {
+        var xaml = File.ReadAllText(PopupXamlPath);
+
+        Assert.DoesNotContain("HandleRecurringModeClickCommand", xaml);
+        Assert.DoesNotContain("HandleInstallmentsModeClickCommand", xaml);
+        Assert.Contains("OnChecked=\"{Binding HandleIoUModeClickCommand}\"", xaml);
+        Assert.Contains("OnChecked=\"{Binding HandleExcludeModeClickCommand}\"", xaml);
+        Assert.Contains("OnChecked=\"{Binding HandleExcludedIoUModeClickCommand}\"", xaml);
+        Assert.Contains("IsEnabled=\"{Binding CanEditFields}\"", xaml);
+    }
+
+    [Fact]
     public void TransactionDetailPopup_SplitRowTagPill_UsesEllipsisAndPopupSelection()
     {
         var xaml = File.ReadAllText(PopupXamlPath);

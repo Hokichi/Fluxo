@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
@@ -28,6 +29,8 @@ public partial class TransactionDetailVM : ObservableObject
 
     [ObservableProperty] private decimal _amountText;
     [ObservableProperty] private bool _isPinned;
+    [ObservableProperty] private bool _isIoU;
+    [ObservableProperty] private bool _isExcludedFromBudget;
     [ObservableProperty] private bool _isEditing;
     [ObservableProperty] private bool _isSplitMode;
     [ObservableProperty] private bool _isMoreTagsOpen;
@@ -42,7 +45,7 @@ public partial class TransactionDetailVM : ObservableObject
     [ObservableProperty] private string _popupTitle = "Transaction Detail";
 
     private TransactionDetailSavedState _savedState = new(string.Empty, 0m, false, string.Empty, DateTime.Today,
-        ExpenseCategory.Needs, 0, 0);
+        ExpenseCategory.Needs, 0, 0, false, false);
 
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
     [ObservableProperty] private ExpenseCategory _selectedExpenseCategory = ExpenseCategory.Needs;
@@ -82,6 +85,7 @@ public partial class TransactionDetailVM : ObservableObject
     public bool AreFieldsReadOnly => !IsEditing;
     public bool CanEditFields => IsEditing;
     public bool IsExpense => _transaction.Type == TransactionType.Expense;
+    public string IoUTooltip => IsExpense ? "Set as lend" : "Set as debt";
     public bool IsCategoryEnabled => IsEditing && IsExpense;
     public bool HasMoreTags => OverflowTags.Count > 0;
     public bool HasSplitRows => SplitRows.Count > 0;
@@ -144,6 +148,34 @@ public partial class TransactionDetailVM : ObservableObject
             PromoteTagToVisibleStart(value);
 
         IsMoreTagsOpen = false;
+    }
+
+    [RelayCommand]
+    public void HandleIoUModeClick()
+    {
+        ClearTransactionModes();
+        IsIoU = true;
+    }
+
+    [RelayCommand]
+    public void HandleExcludeModeClick()
+    {
+        ClearTransactionModes();
+        IsExcludedFromBudget = true;
+    }
+
+    [RelayCommand]
+    public void HandleExcludedIoUModeClick()
+    {
+        ClearTransactionModes();
+        IsIoU = true;
+        IsExcludedFromBudget = true;
+    }
+
+    private void ClearTransactionModes()
+    {
+        IsIoU = false;
+        IsExcludedFromBudget = false;
     }
 
     public async Task BeginEditingAsync()
@@ -379,6 +411,8 @@ public partial class TransactionDetailVM : ObservableObject
             transaction.OccurredOn = input.Date;
             transaction.Notes = input.Note;
             transaction.Account = newAccount;
+            transaction.IsIoU = input.IsIoU;
+            transaction.IsExcludedFromBudget = input.IsExcludedFromBudget;
 
             if (sourceChanged)
                 await CascadeAccountToChildTransactionsAsync(newAccount);
@@ -398,7 +432,9 @@ public partial class TransactionDetailVM : ObservableObject
                 input.Date,
                 input.Category,
                 input.AccountId,
-                input.TagId);
+                input.TagId,
+                input.IsIoU,
+                input.IsExcludedFromBudget);
 
             IsEditing = false;
             ClearSplitMode();
@@ -486,6 +522,8 @@ public partial class TransactionDetailVM : ObservableObject
         AmountText = _savedState.Amount;
         NameText = _savedState.Name;
         IsPinned = _savedState.IsPinned;
+        IsIoU = _savedState.IsIoU;
+        IsExcludedFromBudget = _savedState.IsExcludedFromBudget;
         NoteText = _savedState.Note;
         SelectedDate = _savedState.Date == default ? DateTime.Today : _savedState.Date.Date;
         SelectedExpenseCategory = _savedState.Category;
@@ -528,7 +566,9 @@ public partial class TransactionDetailVM : ObservableObject
             SelectedDate.Date,
             NoteText.Trim(),
             SelectedExpenseCategory,
-            SelectedTag.Id);
+            SelectedTag.Id,
+            IsIoU,
+            IsExcludedFromBudget);
 
         return true;
     }
@@ -960,7 +1000,9 @@ public partial class TransactionDetailVM : ObservableObject
             transaction.OccurredOn == default ? DateTime.Today : transaction.OccurredOn.Date,
             transaction.ExpenseCategory ?? ExpenseCategory.Needs,
             transaction.Account?.Id ?? 0,
-            transaction.Tag?.Id ?? 0);
+            transaction.Tag?.Id ?? 0,
+            transaction.IsIoU,
+            transaction.IsExcludedFromBudget);
     }
 
     private static TransactionDetailSnapshot CreateMessageSnapshot(TransactionDetailSavedState savedState)
@@ -1001,6 +1043,12 @@ public partial class TransactionDetailVM : ObservableObject
 
         if (!string.Equals(input.Note, savedState.Note, StringComparison.Ordinal))
             changedFields |= TransactionDetailChangedFields.Note;
+
+        if (input.IsIoU != savedState.IsIoU)
+            changedFields |= TransactionDetailChangedFields.IoU;
+
+        if (input.IsExcludedFromBudget != savedState.IsExcludedFromBudget)
+            changedFields |= TransactionDetailChangedFields.BudgetExclusion;
 
         return changedFields;
     }
@@ -1061,7 +1109,9 @@ public partial class TransactionDetailVM : ObservableObject
         DateTime Date,
         string Note,
         ExpenseCategory Category,
-        int TagId);
+        int TagId,
+        bool IsIoU,
+        bool IsExcludedFromBudget);
 
     private readonly record struct TransactionSplitInput(
         int? TransactionId,
@@ -1082,5 +1132,7 @@ public partial class TransactionDetailVM : ObservableObject
         DateTime Date,
         ExpenseCategory Category,
         int AccountId,
-        int TagId);
+        int TagId,
+        bool IsIoU,
+        bool IsExcludedFromBudget);
 }

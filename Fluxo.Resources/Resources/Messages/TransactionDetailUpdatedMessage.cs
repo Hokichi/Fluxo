@@ -11,7 +11,9 @@ public enum TransactionDetailChangedFields
     Account = 1 << 4,
     Tag = 1 << 5,
     Note = 1 << 6,
-    Pin = 1 << 7
+    Pin = 1 << 7,
+    IoU = 1 << 8,
+    BudgetExclusion = 1 << 9
 }
 
 public sealed class TransactionDetailUpdatedMessage(TransactionDetailUpdate value)
@@ -25,7 +27,8 @@ public sealed record TransactionDetailUpdate(
     public bool HasChanges => ChangedFields != TransactionDetailChangedFields.None;
 
     public bool AffectsAllTimeTotals =>
-        (ChangedFields & (TransactionDetailChangedFields.Amount | TransactionDetailChangedFields.Category)) != 0;
+        (ChangedFields & (TransactionDetailChangedFields.Amount | TransactionDetailChangedFields.Category |
+                          TransactionDetailChangedFields.BudgetExclusion)) != 0;
 
     public bool AffectsTagOrdering => (ChangedFields & TransactionDetailChangedFields.Tag) != 0;
 
