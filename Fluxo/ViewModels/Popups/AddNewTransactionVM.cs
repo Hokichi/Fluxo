@@ -42,6 +42,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     private bool _isNameValidationActive;
     private TransactionPopupPurpose _popupPurpose = TransactionPopupPurpose.AddNewTransaction;
     private bool _isTransactionTypeLocked;
+    private string _generatedRepaymentName = string.Empty;
     private int _transactionNameSuggestionRequestVersion;
 
     [ObservableProperty]
@@ -50,6 +51,7 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     [ObservableProperty] private bool _isExpense = true;
     [ObservableProperty] private bool _isGoal;
+    [ObservableProperty] private bool _isRepayment;
     [ObservableProperty] private bool _isMoreTagsOpen;
     [ObservableProperty] private bool _isSaving;
     private bool _isUpdatingTagCollections;
@@ -79,6 +81,8 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     [ObservableProperty] private bool _isRecurringModeLocked;
     [ObservableProperty] private ExpenseCategory _selectedExpenseCategory = ExpenseCategory.Needs;
+    [ObservableProperty] private bool _canChangeRepaymentAccount = true;
+    [ObservableProperty] private AccountVM? _selectedRepaymentAccount;
 
     [ObservableProperty]
     [NotifyDataErrorInfo]
@@ -141,6 +145,7 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     public ObservableCollection<AccountVM> Accounts { get; } = [];
     public ICollectionView AccountsView { get; }
+    public ObservableCollection<AccountVM> RepaymentAccounts { get; } = [];
     public ObservableCollection<SavingGoalVM> Goals { get; } = [];
     public ObservableCollection<TagVM> VisibleTags { get; } = [];
     public ObservableCollection<TagVM> OverflowTags { get; } = [];
@@ -181,13 +186,15 @@ public partial class AddNewTransactionVM : ObservableValidator
     public bool CanUseIoU => !IsGoal && CanToggleRecurring;
     public string DateOrRecurrenceLabel => IsRecurringTransactionMode ? "Recurrence" : "Date";
     public string InstallmentSummaryText => BuildInstallmentSummaryText();
-    public bool CanToggleRecurring => !IsRecurringModeLocked;
+    public bool CanToggleRecurring => !IsRecurringModeLocked && !IsRepayment;
     public bool CanUseHistory => true;
     public bool CanEditTransactionName => !IsGoal;
-    public bool CanEditCategory => IsExpense;
-    public bool CanEditTags => !IsGoal;
+    public bool CanEditCategory => IsExpense && !IsRepayment;
+    public bool CanEditTags => !IsGoal && !IsRepayment;
     public bool CanChangeTransactionType => !_isTransactionTypeLocked;
-    public bool CanPinTransaction => _popupPurpose == TransactionPopupPurpose.AddNewTransaction && !IsRecurringTransactionMode;
+    public bool CanPinTransaction => _popupPurpose == TransactionPopupPurpose.AddNewTransaction &&
+                                     !IsRecurringTransactionMode &&
+                                     !IsRepayment;
     public string IoUTooltip => IsExpense ? "Set as lend" : "Set as debt";
 
     public string PopupTitle => _popupPurpose switch
@@ -197,8 +204,11 @@ public partial class AddNewTransactionVM : ObservableValidator
         _ => "Add New Transaction"
     };
 
-    public bool ShowNoteField => !IsGoal;
+    public bool ShowNoteField => !IsGoal && !IsRepayment;
     public bool ShowGoalField => IsGoal;
+    public bool ShowRepaymentAccountField => IsRepayment;
+    public bool ShowDisabledCategoryField => !CanEditCategory && !IsRepayment;
+    public string CategoryFieldLabel => IsRepayment ? "Credit Account" : "Category";
     public string NameValidationHint => GetValidationHint(nameof(NameText));
     public string AmountValidationHint => GetValidationHint(nameof(AmountText));
 
@@ -239,7 +249,7 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     public bool IsIncome
     {
-        get => !IsExpense && !IsGoal;
+        get => !IsExpense && !IsGoal && !IsRepayment;
         set
         {
             if (value == IsIncome)
@@ -249,6 +259,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             {
                 IsGoal = false;
                 IsExpense = false;
+                IsRepayment = false;
             }
             else if (IsIncome)
             {
@@ -258,6 +269,23 @@ public partial class AddNewTransactionVM : ObservableValidator
     }
 
     public bool HasMoreTags => OverflowTags.Count > 0;
+
+    public void InitializeRepayment(AccountVM? target = null)
+    {
+        ReloadChoicesFromMainViewModel();
+        CanChangeRepaymentAccount = target is null;
+        IsRepayment = true;
+        SelectedRepaymentAccount = target is null
+            ? RepaymentAccounts.FirstOrDefault()
+            : RepaymentAccounts.FirstOrDefault(account => account.Id == target.Id) ?? target;
+
+        var deductSourceId = SelectedRepaymentAccount?.DeductSource;
+        SelectedAccount = Accounts.FirstOrDefault(account => account.Id == deductSourceId) ??
+                          Accounts.FirstOrDefault();
+
+        if (target is not null)
+            AmountText = target.SpentAmount;
+    }
 
     partial void OnAmountTextChanged(decimal value)
     {
@@ -517,13 +545,17 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     partial void OnIsExpenseChanged(bool value)
     {
-        if (value && IsGoal)
+        if (value)
+        {
             IsGoal = false;
+            IsRepayment = false;
+        }
 
         OnPropertyChanged(nameof(IsIncome));
         OnPropertyChanged(nameof(CanUseHistory));
         OnPropertyChanged(nameof(CanEditTransactionName));
         OnPropertyChanged(nameof(CanEditCategory));
+        OnPropertyChanged(nameof(ShowDisabledCategoryField));
         OnPropertyChanged(nameof(CanEditTags));
         OnPropertyChanged(nameof(ShowNoteField));
         OnPropertyChanged(nameof(ShowGoalField));
@@ -550,13 +582,17 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     partial void OnIsGoalChanged(bool value)
     {
-        if (value && IsExpense)
+        if (value)
+        {
             IsExpense = false;
+            IsRepayment = false;
+        }
 
         OnPropertyChanged(nameof(IsIncome));
         OnPropertyChanged(nameof(CanUseHistory));
         OnPropertyChanged(nameof(CanEditTransactionName));
         OnPropertyChanged(nameof(CanEditCategory));
+        OnPropertyChanged(nameof(ShowDisabledCategoryField));
         OnPropertyChanged(nameof(CanEditTags));
         OnPropertyChanged(nameof(ShowNoteField));
         OnPropertyChanged(nameof(ShowGoalField));
@@ -580,6 +616,41 @@ public partial class AddNewTransactionVM : ObservableValidator
         ResetHistoryLists();
         if (IsHistoryOpen)
             _ = LoadHistoryAsync();
+        NotifyFormStateChanged();
+    }
+
+    partial void OnIsRepaymentChanged(bool value)
+    {
+        if (value)
+        {
+            IsExpense = false;
+            IsGoal = false;
+            ClearTransactionModes();
+            IsPinned = false;
+            SelectedRepaymentAccount ??= RepaymentAccounts.FirstOrDefault();
+        }
+
+        OnPropertyChanged(nameof(IsIncome));
+        OnPropertyChanged(nameof(CanToggleRecurring));
+        OnPropertyChanged(nameof(CanUseInstallments));
+        OnPropertyChanged(nameof(CanUseIoU));
+        OnPropertyChanged(nameof(CanPinTransaction));
+        OnPropertyChanged(nameof(CanEditCategory));
+        OnPropertyChanged(nameof(CanEditTags));
+        OnPropertyChanged(nameof(ShowNoteField));
+        OnPropertyChanged(nameof(ShowRepaymentAccountField));
+        OnPropertyChanged(nameof(ShowDisabledCategoryField));
+        OnPropertyChanged(nameof(CategoryFieldLabel));
+        RefreshAccounts();
+        NotifyFormStateChanged();
+    }
+
+    partial void OnSelectedRepaymentAccountChanged(AccountVM? oldValue, AccountVM? newValue)
+    {
+        var nextGeneratedName = newValue is null ? string.Empty : $"Repayment to {newValue.Name}";
+        if (string.IsNullOrWhiteSpace(NameText) || NameText == _generatedRepaymentName)
+            NameText = nextGeneratedName;
+        _generatedRepaymentName = nextGeneratedName;
         NotifyFormStateChanged();
     }
 
@@ -925,6 +996,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         {
             IsExpense = true;
             IsGoal = false;
+            IsRepayment = false;
         }
 
         AmountText = 0m;
@@ -938,6 +1010,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         IsIoU = false;
         IsExcludedFromBudget = false;
         IsRecurringModeLocked = false;
+        CanChangeRepaymentAccount = true;
         _isTransactionTypeLocked = false;
         SetPopupPurpose(TransactionPopupPurpose.AddNewTransaction);
         OnPropertyChanged(nameof(CanChangeTransactionType));
@@ -947,6 +1020,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         SelectedAccount = Accounts.FirstOrDefault(account => account.IsDefault) ?? Accounts.FirstOrDefault();
         SelectedTag = _orderedTags.FirstOrDefault();
         SelectedGoal = Goals.FirstOrDefault();
+        SelectedRepaymentAccount = RepaymentAccounts.FirstOrDefault();
         IsMoreTagsOpen = false;
         ClearTransactionNameSuggestions();
     }
@@ -1047,6 +1121,11 @@ public partial class AddNewTransactionVM : ObservableValidator
         _availableAccounts.Clear();
         var sourceCatalog = _accountsOverride ?? _mainViewModel.BudgetPanel.Accounts;
         _availableAccounts.AddRange(sourceCatalog.Where(source => source.IsEnabled));
+        ReplaceCollection(
+            RepaymentAccounts,
+            _availableAccounts
+                .Where(source => source.AccountType == AccountType.Credit)
+                .OrderBy(source => source.Name, StringComparer.OrdinalIgnoreCase));
 
         _orderedTags.Clear();
         _orderedTags.AddRange(OrderNonSystemTags(_mainViewModel.BudgetPanel.Tags
@@ -1882,7 +1961,9 @@ public partial class AddNewTransactionVM : ObservableValidator
 
         var filteredSources = _availableAccounts
             .Where(source =>
-                IsGoal
+                IsRepayment
+                    ? source.AccountType == AccountType.Checking
+                    : IsGoal
                     ? GoalUpdateTransactionSupport.IsEligibleGoalSourceType(source.AccountType)
                     : IsExpense || source.AccountType != AccountType.Credit)
             .OrderBy(GetAccountTypeSortOrder)

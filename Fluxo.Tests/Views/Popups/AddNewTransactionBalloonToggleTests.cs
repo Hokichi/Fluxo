@@ -6,6 +6,19 @@ namespace Fluxo.Tests.Views.Popups;
 public sealed class AddNewTransactionBalloonToggleTests
 {
     [Fact]
+    public void RepaymentTab_UsesRepaymentStateAndCreditAccountSelector()
+    {
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml"));
+
+        Assert.Contains("Content=\"Repayment\"", xaml);
+        Assert.Contains("IsSelected=\"{Binding IsRepayment, Mode=TwoWay}\"", xaml);
+        Assert.Contains("ItemsSource=\"{Binding RepaymentAccounts}\"", xaml);
+        Assert.Contains("SelectedItem=\"{Binding SelectedRepaymentAccount, Mode=TwoWay}\"", xaml);
+        Assert.Contains("IsEnabled=\"{Binding CanChangeRepaymentAccount}\"", xaml);
+        Assert.Contains("Visibility=\"{Binding ShowDisabledCategoryField, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
+    }
+
+    [Fact]
     public void TransactionModes_UseFiveStateBalloonToggles()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml"));

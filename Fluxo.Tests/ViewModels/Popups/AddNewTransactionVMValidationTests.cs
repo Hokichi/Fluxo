@@ -48,6 +48,53 @@ public sealed class AddNewTransactionVMValidationTests
     }
 
     [Fact]
+    public void InitializeRepayment_FiltersSources_DefaultsTargetAndLocksRequestedTarget()
+    {
+        RunInSta(() =>
+        {
+            var checking = new AccountVM
+            {
+                Id = 1,
+                Name = "Checking",
+                AccountType = AccountType.Checking,
+                IsEnabled = true
+            };
+            var cash = new AccountVM
+            {
+                Id = 2,
+                Name = "Cash",
+                AccountType = AccountType.Cash,
+                IsEnabled = true
+            };
+            var credit = new AccountVM
+            {
+                Id = 3,
+                Name = "Visa",
+                AccountType = AccountType.Credit,
+                IsEnabled = true,
+                SpentAmount = 90m,
+                DeductSource = checking.Id
+            };
+            var vm = new AddNewTransactionVM(
+                CreateMainViewModel([checking, cash, credit]),
+                CreateAppData());
+
+            vm.InitializeRepayment(credit);
+
+            Assert.True(vm.IsRepayment);
+            Assert.Equal(new[] { checking.Id }, vm.Accounts.Select(account => account.Id));
+            Assert.Equal(credit.Id, vm.SelectedRepaymentAccount?.Id);
+            Assert.False(vm.CanChangeRepaymentAccount);
+            Assert.Equal(credit.SpentAmount, vm.AmountText);
+            Assert.Equal("Repayment to Visa", vm.NameText);
+            Assert.False(vm.CanToggleRecurring);
+            Assert.False(vm.CanPinTransaction);
+            Assert.False(vm.CanEditTags);
+            Assert.False(vm.ShowNoteField);
+        });
+    }
+
+    [Fact]
     public void InitializeFromRecurringTransaction_UsesEditPurposeAndLocksTransactionType()
     {
         RunInSta(() =>

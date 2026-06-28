@@ -291,7 +291,7 @@
 
             <StackPanel Grid.Row="0" Grid.Column="0">
                 <customControls:SegmentedToggleGroup
-                    Width="400"
+                    Width="520"
                     HorizontalAlignment="Center"
                     IsEnabled="{Binding CanChangeTransactionType}">
                     <customControls:SegmentedToggleOption
@@ -306,6 +306,10 @@
                         x:Name="GoalRadioButton"
                         Content="Goal Update"
                         IsSelected="{Binding IsGoal, Mode=TwoWay}" />
+                    <customControls:SegmentedToggleOption
+                        x:Name="RepaymentRadioButton"
+                        Content="Repayment"
+                        IsSelected="{Binding IsRepayment, Mode=TwoWay}" />
                 </customControls:SegmentedToggleGroup>
             </StackPanel>
 
@@ -494,7 +498,7 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0">
-                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Category" />
+                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="{Binding CategoryFieldLabel}" />
                             <Grid>
                                 <ComboBox
                                     x:Name="ExpenseCategoryComboBox"
@@ -514,7 +518,14 @@
                                     CornerRadius="12"
                                     IsEnabled="False"
                                     Opacity="0.4"
-                                    Visibility="{Binding CanEditCategory, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                                    Visibility="{Binding ShowDisabledCategoryField, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <ComboBox
+                                    DisplayMemberPath="Name"
+                                    IsEnabled="{Binding CanChangeRepaymentAccount}"
+                                    ItemsSource="{Binding RepaymentAccounts}"
+                                    SelectedItem="{Binding SelectedRepaymentAccount, Mode=TwoWay}"
+                                    Style="{StaticResource FluxoComboBoxStyle}"
+                                    Visibility="{Binding ShowRepaymentAccountField, Converter={StaticResource BoolToVisibilityConverter}}" />
                             </Grid>
                         </StackPanel>
 
