@@ -161,6 +161,60 @@ public class UpcomingEventsPanelVMTests
     }
 
     [Fact]
+    public async Task LoadAsync_IncludesCreditPaymentDueWithinNext14Days()
+    {
+        var today = new DateTime(2026, 6, 14);
+        var vm = CreateVm(
+            today,
+            recurringTransactions: [],
+            savingGoals: [],
+            accounts:
+            [
+                new Account
+                {
+                    Id = 1,
+                    Name = "Visa",
+                    AccountType = AccountType.Credit,
+                    SpentAmount = 12500m,
+                    MonthlyDueDate = 18,
+                    IsEnabled = true
+                }
+            ]);
+
+        await vm.LoadAsync();
+
+        var item = Assert.Single(vm.Events);
+        Assert.True(vm.HasEvents);
+        Assert.Equal(new DateOnly(2026, 6, 18), item.Date);
+        Assert.Equal("Visa", item.Title);
+        Assert.Equal("12,500", item.AmountText);
+        Assert.Equal("Payment", item.EventTypeText);
+    }
+
+    [Fact]
+    public async Task LoadAsync_ExcludesIneligibleCreditPayments()
+    {
+        var today = new DateTime(2026, 6, 14);
+        var vm = CreateVm(
+            today,
+            recurringTransactions: [],
+            savingGoals: [],
+            accounts:
+            [
+                new Account { Id = 1, Name = "Disabled", AccountType = AccountType.Credit, SpentAmount = 100m, MonthlyDueDate = 18, IsEnabled = false },
+                new Account { Id = 2, Name = "Paid", AccountType = AccountType.Credit, SpentAmount = 0m, MonthlyDueDate = 18, IsEnabled = true },
+                new Account { Id = 3, Name = "Checking", AccountType = AccountType.Checking, SpentAmount = 100m, MonthlyDueDate = 18, IsEnabled = true },
+                new Account { Id = 4, Name = "No due date", AccountType = AccountType.Credit, SpentAmount = 100m, IsEnabled = true },
+                new Account { Id = 5, Name = "Outside", AccountType = AccountType.Credit, SpentAmount = 100m, MonthlyDueDate = 1, IsEnabled = true }
+            ]);
+
+        await vm.LoadAsync();
+
+        Assert.Empty(vm.Events);
+        Assert.False(vm.HasEvents);
+    }
+
+    [Fact]
     public async Task LoadAsync_IncludesGoalDeadlineWithAmountLeftText()
     {
         var today = new DateTime(2026, 6, 14);
@@ -275,18 +329,33 @@ public class UpcomingEventsPanelVMTests
                     TargetAmount = 10m,
                     SavingEndDate = today.AddDays(1)
                 }
+            ],
+            accounts:
+            [
+                new Account
+                {
+                    Id = 1,
+                    Name = "Card",
+                    AccountType = AccountType.Credit,
+                    SpentAmount = 3m,
+                    MonthlyDueDate = sameDay.Day,
+                    IsEnabled = true
+                }
             ]);
 
         await vm.LoadAsync();
 
-        Assert.Equal(["Before deadline", "Alpha", "Zoo"], vm.Events.Select(item => item.Title).ToArray());
+        Assert.Equal(["Before deadline", "Alpha", "Card", "Zoo"], vm.Events.Select(item => item.Title).ToArray());
     }
 
     private static UpcomingEventsPanelVM CreateVm(
         DateTime today,
         IReadOnlyList<RecurringTransaction> recurringTransactions,
-        IReadOnlyList<SavingGoal> savingGoals)
+        IReadOnlyList<SavingGoal> savingGoals,
+        IReadOnlyList<Account>? accounts = null)
     {
+        accounts ??= [];
+
         var recurringRepository = Substitute.For<IRecurringTransactionRepository>();
         recurringRepository.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(recurringTransactions));
@@ -295,9 +364,14 @@ public class UpcomingEventsPanelVMTests
         savingGoalRepository.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(savingGoals));
 
+        var accountRepository = Substitute.For<IAccountRepository>();
+        accountRepository.GetAllAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(accounts));
+
         var unitOfWork = Substitute.For<IUnitOfWork>();
         unitOfWork.RecurringTransactions.Returns(recurringRepository);
         unitOfWork.SavingGoals.Returns(savingGoalRepository);
+        unitOfWork.Accounts.Returns(accountRepository);
 
         var mapper = Substitute.For<IMapper>();
         mapper.Map<IReadOnlyList<RecurringTransactionDto>>(Arg.Any<object>())

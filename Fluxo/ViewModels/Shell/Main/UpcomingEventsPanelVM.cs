@@ -9,6 +9,7 @@ using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.ViewModels.Entities;
+using Fluxo.ViewModels.Popups.Helpers;
 
 namespace Fluxo.ViewModels.Shell.Main;
 
@@ -56,7 +57,8 @@ public partial class UpcomingEventsPanelVM : ObservableRecipient, IRecipient<Das
         {
             var recurring = await scope.UnitOfWork.RecurringTransactions.GetAllAsync(ct);
             var goals = await scope.UnitOfWork.SavingGoals.GetAllAsync(ct);
-            return new UpcomingEventsSnapshot(recurring, goals);
+            var accounts = await scope.UnitOfWork.Accounts.GetAllAsync(ct);
+            return new UpcomingEventsSnapshot(recurring, goals, accounts);
         }, cancellationToken);
 
         var recurringDtos = _mapper.Map<IReadOnlyList<RecurringTransactionDto>>(snapshot.RecurringTransactions);
@@ -66,6 +68,7 @@ public partial class UpcomingEventsPanelVM : ObservableRecipient, IRecipient<Das
 
         var events = BuildRecurringEvents(recurringTransactions, today, endDate)
             .Concat(BuildGoalDeadlineEvents(snapshot.SavingGoals, today, endDate))
+            .Concat(BuildCreditPaymentEvents(snapshot.Accounts, today, endDate))
             .OrderBy(item => item.Date)
             .ThenBy(item => item.Title, StringComparer.OrdinalIgnoreCase)
             .ToArray();
@@ -139,6 +142,34 @@ public partial class UpcomingEventsPanelVM : ObservableRecipient, IRecipient<Das
         }
     }
 
+    private static IEnumerable<UpcomingEventItemVM> BuildCreditPaymentEvents(
+        IEnumerable<Account> accounts,
+        DateOnly today,
+        DateOnly endDate)
+    {
+        foreach (var account in accounts.Where(account =>
+                     account.AccountType == AccountType.Credit &&
+                     account.IsEnabled &&
+                     account.SpentAmount > 0m))
+        {
+            var dueDate = MonthlyDueDateHelper.ResolveUpcomingDate(
+                account.MonthlyDueDate,
+                today.ToDateTime(TimeOnly.MinValue));
+            if (!dueDate.HasValue)
+                continue;
+
+            var eventDate = DateOnly.FromDateTime(dueDate.Value);
+            if (eventDate > endDate)
+                continue;
+
+            yield return new UpcomingEventItemVM(
+                eventDate,
+                account.Name,
+                FormatAmount(account.SpentAmount),
+                "Payment");
+        }
+    }
+
     private static string ResolveRecurringEventTypeText(RecurringTransactionVM transaction)
     {
         return transaction.Type switch
@@ -159,5 +190,6 @@ public partial class UpcomingEventsPanelVM : ObservableRecipient, IRecipient<Das
 
     private sealed record UpcomingEventsSnapshot(
         IReadOnlyList<RecurringTransaction> RecurringTransactions,
-        IReadOnlyList<SavingGoal> SavingGoals);
+        IReadOnlyList<SavingGoal> SavingGoals,
+        IReadOnlyList<Account> Accounts);
 }
