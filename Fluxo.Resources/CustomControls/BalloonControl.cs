@@ -24,7 +24,6 @@ public class BalloonControl : ButtonBase
     private const string PartButtonText = "PART_ButtonText";
     private static readonly Thickness ButtonTextMargin = new(8, 0, 0, 0);
 
-    private static readonly Duration FadeDuration = new(TimeSpan.FromSeconds(0.2));
     private static readonly Duration ExpandDuration = new(TimeSpan.FromSeconds(0.18));
     private static readonly Duration CollapseDuration = new(TimeSpan.FromSeconds(0.16));
     private static readonly Duration TextFadeDuration = new(TimeSpan.FromSeconds(0.12));
@@ -171,14 +170,14 @@ public class BalloonControl : ButtonBase
     protected override void OnMouseEnter(MouseEventArgs e)
     {
         base.OnMouseEnter(e);
-        AnimateShapeFill(ResolveHoveredBackground());
+        SetShapeFill(ResolveHoveredBackground());
         AnimateExpansion(isExpanded: true);
     }
 
     protected override void OnMouseLeave(MouseEventArgs e)
     {
         base.OnMouseLeave(e);
-        AnimateShapeFill(ResolveRestingBackground());
+        SetShapeFill(ResolveRestingBackground());
         AnimateExpansion(isExpanded: false);
     }
 
@@ -247,24 +246,13 @@ public class BalloonControl : ButtonBase
     // Snaps the fill back to DefaultBackground (no animation); called on template apply or DP change.
     private void ResetShapeFill()
     {
-        if (_shape == null) return;
-        var background = ResolveRestingBackground();
-        if (background is SolidColorBrush scb)
-            _shape.Fill = new SolidColorBrush(scb.Color);
-        else
-            _shape.Fill = background;
+        SetShapeFill(ResolveRestingBackground());
     }
 
-    private void AnimateShapeFill(Brush target)
+    private void SetShapeFill(Brush background)
     {
-        if (_shape?.Fill is not SolidColorBrush current) return;
-        if (target is not SolidColorBrush targetScb) return;
-
-        var animation = new ColorAnimation(targetScb.Color, FadeDuration)
-        {
-            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
-        };
-        current.BeginAnimation(SolidColorBrush.ColorProperty, animation);
+        if (_shape is not null)
+            _shape.Fill = background;
     }
 
     private void ResetExpansion()

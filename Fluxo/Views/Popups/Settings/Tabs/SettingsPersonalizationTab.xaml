@@ -163,7 +163,7 @@
                                     <customControls:BalloonCheckBox
                                         Margin="8,0,8,0"
                                         HorizontalAlignment="Right"
-                                        CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                        CheckedBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
                                         CheckedIcon="{StaticResource EyeOff}"
                                         CheckedText="Hide password"
                                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
