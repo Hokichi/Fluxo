@@ -112,7 +112,7 @@
                     Text="Manage loans, debts and IoUs" />
                 <TextBlock
                     Grid.Column="1"
-                    Margin="16,0,12,0"
+                    Margin="16,0,0,0"
                     FontFamily="{StaticResource Bold}"
                     FontSize="12"
                     Foreground="{StaticResource Brush.Mint}">
@@ -123,7 +123,7 @@
 
             <customControls:FadingScrollViewer
                 Grid.Row="2"
-                Margin="0,8,0,0"
+                Margin="-12,8,-8,0"
                 VerticalScrollBarVisibility="Auto">
                 <ItemsControl ItemTemplate="{StaticResource IoUItemTemplate}" ItemsSource="{Binding Items}" />
             </customControls:FadingScrollViewer>

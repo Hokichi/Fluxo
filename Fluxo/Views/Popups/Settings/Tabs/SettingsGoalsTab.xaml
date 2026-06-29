@@ -232,7 +232,7 @@
                 Text="Track and manage savings/goals" />
             <customControls:FadingScrollViewer
                 Grid.Row="2"
-                Margin="0,8,0,0"
+                Margin="-12,8,-20,0"
                 VerticalScrollBarVisibility="Auto">
                 <ItemsControl
                     behaviors:ScrollOnDemandBehavior.HasMoreItems="{Binding HasMoreItems}"

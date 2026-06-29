@@ -244,7 +244,7 @@
 
             <StackPanel Visibility="{Binding IsConfigurationPageSelected, Converter={StaticResource BoolToVisibilityConverter}}">
 
-                <Border Style="{StaticResource RowCardStyle}">
+                <Border Padding="12" Style="{StaticResource RowCardStyle}">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -263,7 +263,7 @@
                     </Grid>
                 </Border>
 
-                <Border Style="{StaticResource RowCardStyle}">
+                <Border Padding="12" Style="{StaticResource RowCardStyle}">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -284,7 +284,7 @@
                     </Grid>
                 </Border>
 
-                <Border Style="{StaticResource RowCardStyle}">
+                <Border Padding="12" Style="{StaticResource RowCardStyle}">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -345,7 +345,7 @@
                     </Grid>
                 </Border>
 
-                <Border Style="{StaticResource RowCardStyle}">
+                <Border Padding="12" Style="{StaticResource RowCardStyle}">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
