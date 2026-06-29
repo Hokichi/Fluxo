@@ -33,6 +33,9 @@ public sealed class SettingsIoUsTabLayoutTests
         Assert.Contains("Click=\"OnResolveClick\"", xaml);
         Assert.Contains("Visibility=\"{Binding HasItems, Converter={StaticResource BoolToVisibilityInvertedConverter}}\"", xaml);
         Assert.Contains("Text=\"{Binding TotalAmountText, Mode=OneWay, Converter={StaticResource MoneyDisplayConverter}}\"", xaml);
+        Assert.Contains("<Run Text=\"{Binding AmountSign}\" />", xaml);
+        Assert.Contains("<Run Text=\"{Binding Amount, Converter={StaticResource NumberWithCommasConverter}}\" />", xaml);
+        Assert.Contains("<Run Text=\"{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}}\" />", xaml);
         Assert.Contains("await viewModel.ResolveAsync(item);", codeBehind);
     }
 

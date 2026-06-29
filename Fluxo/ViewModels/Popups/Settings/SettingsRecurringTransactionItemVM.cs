@@ -33,4 +33,5 @@ public partial class SettingsRecurringTransactionItemVM : ObservableObject
     public bool IsEnabled { get; }
     public bool IsHidden { get; }
     public RecurringTransactionType Type { get; }
+    public string AmountSign => Type == RecurringTransactionType.Income ? "+" : "-";
 }

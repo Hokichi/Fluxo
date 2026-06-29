@@ -28,6 +28,7 @@ public sealed class IoUItemVM
     public DateTime Date { get; init; }
     public string AccountName { get; init; } = string.Empty;
     public string TypeLabel => Kind == IoUKind.Lend ? "Lend" : "Debt";
+    public string AmountSign => Kind == IoUKind.Debt ? "+" : "-";
 }
 
 public partial class SettingsIoUsTabVM : ObservableObject

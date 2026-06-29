@@ -44,9 +44,16 @@
                             Margin="16,0,0,0"
                             VerticalAlignment="Center"
                             FontFamily="{StaticResource Bold}"
-                            Foreground="{StaticResource Brush.Text.Primary}"
-                            Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}}"
-                            ToolTip="{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}}" />
+                            Foreground="{StaticResource Brush.Text.Primary}">
+                            <TextBlock.ToolTip>
+                                <TextBlock>
+                                    <Run Text="{Binding AmountSign}" />
+                                    <Run Text="{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}}" />
+                                </TextBlock>
+                            </TextBlock.ToolTip>
+                            <Run Text="{Binding AmountSign}" />
+                            <Run Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}}" />
+                        </TextBlock>
 
                         <StackPanel
                             x:Name="RowActions"

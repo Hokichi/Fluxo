@@ -48,8 +48,14 @@
                             <TextBlock
                                 HorizontalAlignment="Right"
                                 FontFamily="{StaticResource Bold}"
-                                Foreground="{StaticResource Brush.Text.Primary}"
-                                ToolTip="{Binding Amount, Mode=OneWay, Converter={StaticResource MoneyFullDisplayConverter}}">
+                                Foreground="{StaticResource Brush.Text.Primary}">
+                                <TextBlock.ToolTip>
+                                    <TextBlock>
+                                        <Run Text="{Binding AmountSign}" />
+                                        <Run Text="{Binding Amount, Mode=OneWay, Converter={StaticResource MoneyFullDisplayConverter}}" />
+                                    </TextBlock>
+                                </TextBlock.ToolTip>
+                                <Run Text="{Binding AmountSign}" />
                                 <Run Text="{Binding Amount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
                             </TextBlock>
                             <TextBlock
