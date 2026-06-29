@@ -28,7 +28,7 @@ public sealed class TransactionDetailPopupSplitLayoutTests
         Assert.Contains("ShowSplitButton=\"{Binding ShowSplitButton}\"", xaml);
         Assert.Contains("protected override async void OnSplitButtonClick()", codeBehind);
         Assert.Contains("await _viewModel.BeginSplitModeAsync();", codeBehind);
-        Assert.Contains("SplitExpenseAmountTextBox.Focus();", codeBehind);
+        Assert.Contains("SplitTransactionAmountTextBox.Focus();", codeBehind);
         Assert.Contains("ShowSplitButton = _viewModel.ShowSplitButton;", codeBehind);
         Assert.Contains("_viewModel.CanCloseSplitModeWithoutSaving", codeBehind);
         Assert.Contains("_viewModel.RequiresEmptySplitConfirmationOnClose", codeBehind);
@@ -49,10 +49,11 @@ public sealed class TransactionDetailPopupSplitLayoutTests
     {
         var xaml = File.ReadAllText(PopupXamlPath);
 
-        Assert.Contains("x:Name=\"NormalExpenseNameDatePanel\"", xaml);
-        Assert.Contains("x:Name=\"NormalExpenseCategorySourcePanel\"", xaml);
+        Assert.Contains("x:Name=\"NormalTransactionNamePinPanel\"", xaml);
+        Assert.Contains("x:Name=\"NormalTransactionNameDatePanel\"", xaml);
+        Assert.Contains("x:Name=\"NormalTransactionCategorySourcePanel\"", xaml);
         Assert.Contains("x:Name=\"NormalTagsPanel\"", xaml);
-        Assert.Contains("x:Name=\"NormalExpenseNotePanel\"", xaml);
+        Assert.Contains("x:Name=\"NormalTransactionNotePanel\"", xaml);
         Assert.Contains("ShowNormalTransactionFields", xaml);
         Assert.Contains("x:Name=\"SplitRowsPanel\"", xaml);
         Assert.Contains("x:Name=\"SplitRowsItemsControl\"", xaml);
@@ -65,7 +66,7 @@ public sealed class TransactionDetailPopupSplitLayoutTests
         Assert.Contains("Text=\"Set as lend\"", xaml);
         Assert.Contains("IsChecked=\"{Binding IsIoU, Mode=TwoWay}\"", xaml);
 
-        var addExpenseButtonIndex = xaml.IndexOf("Content=\"Add Sub-expense\"", StringComparison.Ordinal);
+        var addExpenseButtonIndex = xaml.IndexOf("Content=\"Add Sub-Transaction\"", StringComparison.Ordinal);
         var splitRowsHeaderIndex = xaml.IndexOf("x:Name=\"SplitRowsHeaderGrid\"", StringComparison.Ordinal);
         var splitRowsItemsIndex = xaml.IndexOf("x:Name=\"SplitRowsItemsControl\"", StringComparison.Ordinal);
         Assert.True(addExpenseButtonIndex >= 0);
@@ -81,9 +82,9 @@ public sealed class TransactionDetailPopupSplitLayoutTests
         var xaml = File.ReadAllText(PopupXamlPath);
         var codeBehind = File.ReadAllText(PopupCodeBehindPath);
 
-        var namePanelIndex = xaml.IndexOf("x:Name=\"NormalExpenseNamePinPanel\"", StringComparison.Ordinal);
-        var pinIndex = xaml.IndexOf("x:Name=\"ExpensePinButton\"", StringComparison.Ordinal);
-        var amountIndex = xaml.IndexOf("x:Name=\"ExpenseAmountTextBox\"", StringComparison.Ordinal);
+        var namePanelIndex = xaml.IndexOf("x:Name=\"NormalTransactionNamePinPanel\"", StringComparison.Ordinal);
+        var pinIndex = xaml.IndexOf("x:Name=\"TransactionPinButton\"", StringComparison.Ordinal);
+        var amountIndex = xaml.IndexOf("x:Name=\"TransactionAmountTextBox\"", StringComparison.Ordinal);
 
         Assert.True(namePanelIndex >= 0);
         Assert.True(pinIndex > namePanelIndex);

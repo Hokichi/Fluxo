@@ -34,14 +34,15 @@ public sealed class ExpensesListEmptyActionTests
     }
 
     [Fact]
-    public void ExpensesList_UsesCompactDotAndNameHeader()
+    public void ExpensesList_UsesRecentActivityAndAmountHeaders()
     {
         var xaml = File.ReadAllText(ResolveExpensesListXamlPath());
         var source = File.ReadAllText(ResolveExpensesListCodeBehindPath());
 
-        Assert.Contains("x:Name=\"ExpenseListCompactHeader\"", xaml);
-        Assert.Contains("Text=\"{Binding Title", xaml);
-        Assert.Contains("Fill=\"{Binding DotColor", xaml);
+        Assert.Contains("Text=\"RECENT ACTIVITIES\"", xaml);
+        Assert.Contains("Foreground=\"{Binding DotColor", xaml);
+        Assert.Contains("Text=\"ITEM\"", xaml);
+        Assert.Contains("Text=\"AMOUNT\"", xaml);
         Assert.DoesNotContain("alloc", xaml);
         Assert.DoesNotContain("ProgressToArcGeometryConverter", xaml);
         Assert.DoesNotContain("SpentAmountProperty", source);

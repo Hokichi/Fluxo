@@ -89,24 +89,13 @@ public sealed class MainWindowLayoutTests
     }
 
     [Fact]
-    public void AcrylicBackdrop_ForcesDwmDarkModeBeforeApplyingBackdrop()
+    public void MainWindow_DoesNotUseLegacyDwmBackdropInterop()
     {
         var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
 
-        Assert.Contains("private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;", source);
-
-        var onLoaded = ExtractMethodBodyBySignature(source, "private void OnLoaded(object sender, RoutedEventArgs e)");
-        var enableDarkModeIndex = onLoaded.IndexOf("EnableDarkMode(hwnd);", StringComparison.Ordinal);
-        var enableAcrylicIndex = onLoaded.IndexOf("EnableAcrylic(hwnd);", StringComparison.Ordinal);
-
-        Assert.True(enableDarkModeIndex >= 0);
-        Assert.True(enableAcrylicIndex >= 0);
-        Assert.True(enableDarkModeIndex < enableAcrylicIndex);
-
-        var enableDarkMode = ExtractMethodBodyBySignature(source, "private static void EnableDarkMode(IntPtr hwnd)");
-
-        Assert.Contains("int useDarkMode = 1;", enableDarkMode);
-        Assert.Contains("DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE", enableDarkMode);
+        Assert.DoesNotContain("DwmSetWindowAttribute", source);
+        Assert.DoesNotContain("EnableAcrylic", source);
+        Assert.DoesNotContain("DWMWA_USE_IMMERSIVE_DARK_MODE", source);
     }
 
     [Fact]
@@ -131,16 +120,17 @@ public sealed class MainWindowLayoutTests
     }
 
     [Fact]
-    public void RootBorder_HasDarkOuterGlowAndStateChangeDoesNotMutateCornerRadius()
+    public void RootBorder_UsesDeepenedOuterGlowAndUpdatesChromeForWindowState()
     {
         var xaml = MainWindowXaml.Value;
         var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
 
         Assert.Contains("x:Name=\"RootBorder\"", xaml);
         Assert.Contains("<DropShadowEffect", xaml);
-        Assert.Contains("Color=\"Black\"", xaml);
+        Assert.Contains("Color=\"{StaticResource Color.Background.Deepened}\"", xaml);
         Assert.Contains("ShadowDepth=\"0\"", xaml);
-        Assert.DoesNotContain("RootBorder.CornerRadius", source);
+        Assert.Contains("RootBorder.BorderThickness = maximizing ? new Thickness(0) : new Thickness(1);", source);
+        Assert.Contains("RootBorder.CornerRadius = maximizing ? new CornerRadius(0) : new CornerRadius(8);", source);
     }
 
     [Fact]
@@ -148,8 +138,8 @@ public sealed class MainWindowLayoutTests
     {
         var xamlDocument = MainWindowXamlDocument.Value;
 
-        AssertElementHasNameAndStyle(xamlDocument, "Grid", "HeaderSearchRegion", "HideWhenSufficientFundsActionGateLockedStyle");
-        AssertElementHasNameAndStyle(xamlDocument, "customControls:BalloonButton", "HeaderQuickAddButton", "HeaderButtonHideWhenSufficientFundsActionGateLockedStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "Grid", "HeaderSearchRegion", "HeaderSearchRegionLockAndGateStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "customControls:BalloonButton", "HeaderQuickAddButton", "HeaderButtonDisableWhenAppLockedAndSufficientFundsActionGateLockedStyle");
         AssertElementHasNameAndStyle(xamlDocument, "Button", "QuickAddMenuButton", "HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle");
         AssertElementHasNameAndStyle(xamlDocument, "Button", "UndoMenuButton", "HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle");
         AssertElementHasNameAndStyle(xamlDocument, "Button", "RedoMenuButton", "HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle");
@@ -184,7 +174,7 @@ public sealed class MainWindowLayoutTests
         var xamlDocument = MainWindowXamlDocument.Value;
 
         Assert.Contains("xmlns:sections=\"clr-namespace:Fluxo.Views.Shell.Main.Sections\"", xaml);
-        AssertElementHasNameAndStyle(xamlDocument, "customControls:BalloonButton", "HeaderNotificationButton", "HeaderButtonStyle");
+        AssertElementHasNameAndStyle(xamlDocument, "customControls:BalloonButton", "HeaderNotificationButton", "HeaderButtonDisableWhenAppLockedStyle");
         Assert.Contains("ButtonIcon=\"{StaticResource Bell}\"", xaml);
         Assert.Contains("Click=\"OnHeaderNotificationButtonClick\"", xaml);
 
@@ -210,8 +200,8 @@ public sealed class MainWindowLayoutTests
             codeBehind,
             "private void OnWindowPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)");
 
-        Assert.Contains("!IsDescendantOf(source, HeaderNotificationPanel)", externalClickHandler);
-        Assert.Contains("FindAncestor<BalloonButton>(source) != HeaderNotificationButton", externalClickHandler);
+        Assert.Contains("!DependencyObjectTree.IsDescendantOf(source, HeaderNotificationPanel)", externalClickHandler);
+        Assert.Contains("DependencyObjectTree.FindAncestor<BalloonButton>(source) != HeaderNotificationButton", externalClickHandler);
     }
 
     [Fact]
@@ -243,11 +233,12 @@ public sealed class MainWindowLayoutTests
         Assert.NotNull(popup);
         var popupHost = popup!
             .Descendants(PresentationNamespace + "Border")
-            .SingleOrDefault(element => (string?)element.Attribute("Width") == "360");
+            .SingleOrDefault(element =>
+                (string?)element.Attribute("MinHeight") == "150" &&
+                (string?)element.Attribute("MaxHeight") == "420");
 
         Assert.NotNull(popupHost);
-        Assert.Equal("150", (string?)popupHost!.Attribute("MinHeight"));
-        Assert.Equal("420", (string?)popupHost.Attribute("MaxHeight"));
+        Assert.Null(popupHost!.Attribute("Width"));
         Assert.Null(popupHost.Attribute("Height"));
     }
 
@@ -281,9 +272,9 @@ public sealed class MainWindowLayoutTests
         Assert.NotNull(quickAddButton);
         Assert.Equal("{StaticResource PlusSolid}", (string?)quickAddButton!.Attribute("ButtonIcon"));
         Assert.Equal("New Transaction", (string?)quickAddButton.Attribute("ButtonText"));
-        Assert.Equal("{StaticResource Brush.BalloonButton.Background.Default}", (string?)quickAddButton.Attribute("DefaultBackground"));
+        Assert.Equal("{StaticResource Brush.Mint}", (string?)quickAddButton.Attribute("DefaultBackground"));
         Assert.Null(quickAddButton.Attribute("ExpandedWidth"));
-        Assert.Equal("{StaticResource Brush.BalloonButton.Background.Default.Hovered}", (string?)quickAddButton.Attribute("HoveredBackground"));
+        Assert.Equal("{StaticResource Brush.Mint.Muted}", (string?)quickAddButton.Attribute("HoveredBackground"));
         Assert.Equal("{StaticResource Brush.Text.Primary.Dark}", (string?)quickAddButton.Attribute("Foreground"));
         Assert.Equal("8,0", (string?)quickAddButton.Attribute("Padding"));
         Assert.Equal("True", (string?)quickAddButton.Attribute("ShouldExpand"));
@@ -376,7 +367,6 @@ public sealed class MainWindowLayoutTests
         Assert.DoesNotContain("DaySpinnerControlHost", dashboardXaml);
         AssertElementHasName(dashboardXamlDocument, "MainViewModeToggleControl", "ViewModeToggleControlHost");
         AssertElementHasName(dashboardXamlDocument, "Grid", "MainContentGrid");
-        AssertElementHasName(dashboardXamlDocument, "Button", "ViewAllAccountsButton");
         AssertElementHasName(dashboardXamlDocument, "Button", "AddAccountButton");
         AssertElementHasName(dashboardXamlDocument, "SpentAllowancePanel", "SpentAllowancePanelHost");
         AssertElementHasName(dashboardXamlDocument, "BudgetAllocationPanel", "BudgetAllocationPanelHost");

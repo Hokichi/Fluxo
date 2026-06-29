@@ -11,16 +11,14 @@ public sealed class AccountComponentLayoutTests
         "Account.xaml");
 
     [Fact]
-    public void AccountCard_UsesTopAccentBarAndTopRightDotWithoutTypeText()
+    public void AccountCard_UsesAccountAccentBackgroundAndOutlineWithoutTypeText()
     {
         var xaml = File.ReadAllText(AccountXamlPath);
 
-        var topBarIndex = xaml.IndexOf("Height=\"3\"", StringComparison.Ordinal);
-        var dotIndex = xaml.IndexOf("x:Name=\"AccentBorder\"", StringComparison.Ordinal);
-
-        Assert.True(topBarIndex >= 0);
-        Assert.True(dotIndex > topBarIndex);
-        Assert.Contains("VerticalAlignment=\"Top\"", xaml);
+        Assert.Contains("x:Name=\"BGCard\"", xaml);
+        Assert.Contains("Opacity=\"0.1\"", xaml);
+        Assert.Contains("Background=\"Transparent\"", xaml);
+        Assert.Contains("BorderThickness=\"2\"", xaml);
         Assert.Contains("Style=\"{StaticResource AccountAccentStyle}\"", xaml);
         Assert.DoesNotContain("Text=\"{Binding AccountType}\"", xaml);
     }

@@ -84,7 +84,7 @@ public sealed partial class BackgroundResourceContractTests
 
         Assert.Contains("Property=\"Padding\" Value=\"16\"", section);
         Assert.Contains("Property=\"Background\" Value=\"{StaticResource Brush.Background.Surface}\"", section);
-        Assert.Contains("Property=\"BorderBrush\" Value=\"{StaticResource Brush.Border.Subtle}\"", section);
+        Assert.Contains("Property=\"BorderBrush\" Value=\"{StaticResource Brush.Border.Default}\"", section);
         Assert.Contains("Property=\"BorderThickness\" Value=\"1\"", section);
         Assert.Contains("Property=\"CornerRadius\" Value=\"8\"", section);
         Assert.DoesNotContain("Brush.Background.Elevated", section);

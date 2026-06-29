@@ -25,21 +25,21 @@ public sealed class SettingsIoUsTabLayoutTests
     [Fact]
     public void SettingsIoUsTab_IncludesResolveButtonAndItems()
     {
-        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsIoUsTab.xaml"));
-        var codeBehind = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsIoUsTab.xaml.cs"));
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsDebtIousTab.xaml"));
+        var codeBehind = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsDebtIousTab.xaml.cs"));
 
         Assert.Contains("ItemsSource=\"{Binding Items}\"", xaml);
         Assert.Contains("ButtonIcon=\"{StaticResource Check}\"", xaml);
         Assert.Contains("Click=\"OnResolveClick\"", xaml);
         Assert.Contains("Visibility=\"{Binding HasItems, Converter={StaticResource BoolToVisibilityInvertedConverter}}\"", xaml);
-        Assert.Contains("Text=\"{Binding TotalAmountText}\"", xaml);
+        Assert.Contains("Text=\"{Binding TotalAmountText, Mode=OneWay, Converter={StaticResource MoneyDisplayConverter}}\"", xaml);
         Assert.Contains("await viewModel.ResolveAsync(item);", codeBehind);
     }
 
     [Fact]
     public void SettingsIoUsTab_UsesSettingsListItemHoverTemplate()
     {
-        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsIoUsTab.xaml"));
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsDebtIousTab.xaml"));
 
         Assert.Contains("x:Name=\"ItemRoot\"", xaml);
         Assert.Contains("BorderBrush=\"Transparent\"", xaml);

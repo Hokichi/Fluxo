@@ -60,7 +60,7 @@ public sealed class SettingsSpendingAmountGateTextTests
                 "Debt/IoUs",
                 "Tags",
                 "Preferences",
-                "About"
+                "Configuration"
             ],
             tabNames);
     }

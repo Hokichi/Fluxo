@@ -64,14 +64,13 @@ public class UpcomingEventsPanelLayoutTests
     }
 
     [Fact]
-    public void UpcomingEventsPanel_CalculatesItemHeightFromScrollViewport()
+    public void UpcomingEventsPanel_UsesFixedHeightRows()
     {
         var xaml = File.ReadAllText(PanelPath);
-        var codeBehind = File.ReadAllText(PanelPath.Replace(".xaml", ".xaml.cs"));
 
-        Assert.Contains("Height=\"{Binding UpcomingEventItemHeight, RelativeSource={RelativeSource AncestorType=UserControl}}\"", xaml);
-        Assert.Contains("SizeChanged=\"OnUpcomingEventsScrollViewerSizeChanged\"", xaml);
-        Assert.Contains("const double VisibleItemCount = 2d;", codeBehind);
-        Assert.Contains("UpcomingEventItemHeight = Math.Max(0d, (UpcomingEventsScrollViewer.ActualHeight - ItemGap) / VisibleItemCount);", codeBehind);
+        Assert.Contains("x:Name=\"UpcomingEventItemSurface\"", xaml);
+        Assert.Contains("Height=\"60\"", xaml);
+        Assert.Contains("Margin=\"0,0,0,10\"", xaml);
+        Assert.DoesNotContain("Height=\"{Binding UpcomingEventItemHeight", xaml);
     }
 }

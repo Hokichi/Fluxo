@@ -134,12 +134,12 @@ public sealed class BalloonButtonStyleTests
     {
         var xaml = ReadButtonStylesXaml();
         var styleStart = xaml.IndexOf("<Style TargetType=\"{x:Type c:BalloonControl}\">", StringComparison.Ordinal);
-        Assert.True(styleStart >= 0, "Could not find the default BalloonButton style start.");
+        Assert.True(styleStart >= 0, "Could not find the default BalloonControl style start.");
 
-        var nextStyleStart = xaml.IndexOf("<Style TargetType=\"{x:Type c:BalloonButton}\"", styleStart, StringComparison.Ordinal);
-        Assert.True(nextStyleStart > styleStart, "Could not find the next BalloonButton chrome style.");
+        var styleEnd = xaml.IndexOf("</Style>", styleStart, StringComparison.Ordinal);
+        Assert.True(styleEnd > styleStart, "Could not find the default BalloonControl style end.");
 
-        return xaml[styleStart..nextStyleStart];
+        return xaml[styleStart..(styleEnd + "</Style>".Length)];
     }
 
     private static string ReadButtonStylesXaml() =>

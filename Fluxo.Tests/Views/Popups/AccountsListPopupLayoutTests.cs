@@ -19,17 +19,15 @@ public sealed class AccountsListPopupLayoutTests
         "AccountsListPopup.xaml.cs");
 
     [Fact]
-    public void AddNewSourceButton_IsAboveScrollingSourceList()
+    public void AddNewAccountButton_IsBelowScrollingAccountList()
     {
         var xaml = File.ReadAllText(PopupXamlPath);
 
         Assert.Contains("x:Name=\"AddNewSourceButton\"", xaml);
-        Assert.Contains("Content=\"+ Add New Source\"", xaml);
+        Assert.Contains("Grid.Row=\"2\"", xaml);
+        Assert.Contains("ButtonText=\"Add New Account\"", xaml);
         Assert.Contains("Click=\"OnAddNewSourceClick\"", xaml);
-        Assert.True(
-            xaml.IndexOf("x:Name=\"AddNewSourceButton\"", StringComparison.Ordinal) <
-            xaml.IndexOf("<customControls:FadingScrollViewer", StringComparison.Ordinal),
-            "The add-source button should be outside and above the scrolling list.");
+        Assert.Contains("<customControls:FadingScrollViewer", xaml);
     }
 
     [Fact]

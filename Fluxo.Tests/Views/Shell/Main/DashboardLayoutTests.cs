@@ -47,7 +47,7 @@ public class DashboardLayoutTests
     }
 
     [Fact]
-    public void Dashboard_AccountsStrip_HasTypeLegendBelowScroller()
+    public void Dashboard_AccountsStrip_HasSeparateTypeLegendBesideScroller()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File(
             "Fluxo",
@@ -58,13 +58,15 @@ public class DashboardLayoutTests
             "Dashboard.xaml"));
 
         var scrollerIndex = xaml.IndexOf("x:Name=\"DashboardAccountsScrollViewer\"", StringComparison.Ordinal);
-        var legendIndex = xaml.IndexOf("Text=\"Checking/Cash\"", StringComparison.Ordinal);
+        var legendIndex = xaml.IndexOf("Text=\"Checking\"", StringComparison.Ordinal);
 
         Assert.True(scrollerIndex >= 0);
         Assert.True(legendIndex > scrollerIndex);
+        Assert.Contains("Text=\"Cash\"", xaml);
         Assert.Contains("Text=\"Credit\"", xaml);
         Assert.Contains("Text=\"Saving\"", xaml);
-        Assert.Contains("Brush.Account.Checking.CashCash", xaml);
+        Assert.Contains("Brush.Account.Checking", xaml);
+        Assert.Contains("Brush.Account.Cash", xaml);
         Assert.Contains("Brush.Account.Credit", xaml);
         Assert.Contains("Brush.Account.Saving", xaml);
     }

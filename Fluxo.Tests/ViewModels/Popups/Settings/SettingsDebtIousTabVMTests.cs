@@ -91,7 +91,7 @@ public sealed class SettingsIoUsTabVMTests
 
         await vm.LoadAsync();
 
-        Assert.Equal("Total: 65", vm.TotalAmountText);
+        Assert.Equal("65", vm.TotalAmountText);
     }
 
     [Fact]
