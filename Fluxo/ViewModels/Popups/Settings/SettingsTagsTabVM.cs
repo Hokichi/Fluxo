@@ -1,13 +1,15 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Core.Budgeting;
 using Fluxo.Core.Entities;
+using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.Services.Logging;
-using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Entities;
+using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 using System.Globalization;
@@ -31,7 +33,8 @@ public partial class SettingsTagsTabVM : ObservableObject
         _messenger = messenger ?? WeakReferenceMessenger.Default;
     }
 
-    public ObservableCollection<TagVM> Tags { get; } = [];
+    public ObservableCollection<SettingsTagCardVM> Tags { get; } = [];
+    public bool HasTags => Tags.Count > 0;
 
     public async Task LoadAsync()
     {
@@ -76,16 +79,46 @@ public partial class SettingsTagsTabVM : ObservableObject
 
     public async Task RefreshTagsAsync()
     {
-        SettingsShared.ReplaceCollection(Tags, (await _appData.GetTagsByCountDescendingAsync())
-            .Where(item => !item.Tag.IsSystemTag)
-            .Select(item => new TagVM
+        var tags = await _appData.GetTagsByCountDescendingAsync();
+        var transactions = await _appData.GetTransactionsAsync();
+        var allocation = await _appData.GetBudgetAllocationAsync();
+
+        SettingsShared.ReplaceCollection(Tags, CreateCards(tags, transactions, allocation, DateTime.Today));
+        OnPropertyChanged(nameof(HasTags));
+    }
+
+    internal static IReadOnlyList<SettingsTagCardVM> CreateCards(
+        IReadOnlyList<(Tag Tag, int Count)> tags,
+        IReadOnlyList<Transaction> transactions,
+        BudgetAllocation allocation,
+        DateTime today)
+    {
+        var period = BudgetAllocationCalculator.ResolveCurrentPeriod(
+            allocation.AllocationPeriod,
+            today,
+            allocation.PeriodStart);
+        var spendingByTag = transactions
+            .Where(transaction =>
+                transaction.Type == TransactionType.Expense &&
+                !transaction.IsForDeletion &&
+                !transaction.IsExcludedFromBudget &&
+                transaction.OccurredOn.Date >= period.Start &&
+                transaction.OccurredOn.Date <= period.End)
+            .Select(transaction => new
             {
-                Id = item.Tag.Id,
-                Name = item.Tag.Name,
-                HexCode = item.Tag.HexCode,
-                IsSystemTag = item.Tag.IsSystemTag,
-                SpendingLimit = item.Tag.SpendingLimit
-            }));
+                TagId = transaction.TagId ?? transaction.Tag?.Id,
+                transaction.Amount
+            })
+            .Where(item => item.TagId.HasValue)
+            .GroupBy(item => item.TagId!.Value)
+            .ToDictionary(group => group.Key, group => group.Sum(item => item.Amount));
+
+        return tags
+            .Where(item => !item.Tag.IsSystemTag)
+            .Select(item => SettingsTagCardVM.Create(
+                item.Tag,
+                spendingByTag.GetValueOrDefault(item.Tag.Id)))
+            .ToList();
     }
 
     public async Task<SettingsOperationResult> CreateTagAsync(string name, string hexCode, string spendingLimitText)
@@ -134,13 +167,23 @@ public partial class SettingsTagsTabVM : ObservableObject
     public Task<SettingsOperationResult> CreateTagAsync(string name, string hexCode) =>
         CreateTagAsync(name, hexCode, string.Empty);
 
-    public async Task<SettingsOperationResult> DeleteTagAsync(TagVM tag)
+    public Task<SettingsOperationResult> DeleteTagAsync(SettingsTagCardVM tag)
     {
         ArgumentNullException.ThrowIfNull(tag);
+        return DeleteTagAsync(tag.Id);
+    }
 
+    public Task<SettingsOperationResult> DeleteTagAsync(TagVM tag)
+    {
+        ArgumentNullException.ThrowIfNull(tag);
+        return DeleteTagAsync(tag.Id);
+    }
+
+    private async Task<SettingsOperationResult> DeleteTagAsync(int tagId)
+    {
         try
         {
-            var persistedTag = await _appData.GetTagByIdAsync(tag.Id);
+            var persistedTag = await _appData.GetTagByIdAsync(tagId);
             if (persistedTag is null)
                 return SettingsOperationResult.Failure("That tag could not be found anymore.");
 
@@ -265,5 +308,74 @@ public partial class SettingsTagsTabVM : ObservableObject
         spendingLimit = parsed == 0m ? null : parsed;
         return true;
     }
+}
+
+public enum SettingsTagSpendingState
+{
+    Success,
+    Warning,
+    Danger
+}
+
+public sealed class SettingsTagCardVM
+{
+    public int Id { get; private init; }
+    public string Name { get; private init; } = string.Empty;
+    public string HexCode { get; private init; } = string.Empty;
+    public decimal Spent { get; private init; }
+    public decimal? SpendingLimit { get; private init; }
+    public bool HasSpendingLimit => SpendingLimit is > 0m;
+    public string SpentText { get; private init; } = string.Empty;
+    public string LimitText { get; private init; } = string.Empty;
+    public string RemainderText { get; private init; } = string.Empty;
+    public string PercentageText { get; private init; } = string.Empty;
+    public double ProgressPercentage { get; private init; }
+    public SettingsTagSpendingState SpendingState { get; private init; }
+
+    internal static SettingsTagCardVM Create(Tag tag, decimal spent)
+    {
+        if (tag.SpendingLimit is not > 0m)
+        {
+            return new SettingsTagCardVM
+            {
+                Id = tag.Id,
+                Name = tag.Name,
+                HexCode = tag.HexCode,
+                Spent = spent,
+                SpendingLimit = null,
+                SpentText = FormatMoney(spent),
+                PercentageText = "∞",
+                ProgressPercentage = 100d,
+                SpendingState = SettingsTagSpendingState.Success
+            };
+        }
+
+        var limit = tag.SpendingLimit.Value;
+        var rawPercentage = spent / limit * 100m;
+        var percentage = (int)Math.Round(rawPercentage, MidpointRounding.AwayFromZero);
+        var state = rawPercentage < 75m
+            ? SettingsTagSpendingState.Success
+            : rawPercentage <= 100m
+                ? SettingsTagSpendingState.Warning
+                : SettingsTagSpendingState.Danger;
+
+        return new SettingsTagCardVM
+        {
+            Id = tag.Id,
+            Name = tag.Name,
+            HexCode = tag.HexCode,
+            Spent = spent,
+            SpendingLimit = limit,
+            SpentText = FormatMoney(spent),
+            LimitText = $"of {FormatMoney(limit)}",
+            RemainderText = $"{FormatMoney(Math.Abs(limit - spent))} {(spent <= limit ? "left" : "over")}",
+            PercentageText = $"{percentage}%",
+            ProgressPercentage = (double)Math.Clamp(rawPercentage, 0m, 100m),
+            SpendingState = state
+        };
+    }
+
+    private static string FormatMoney(decimal value) =>
+        value.ToString("N0", CultureInfo.InvariantCulture);
 }
 
