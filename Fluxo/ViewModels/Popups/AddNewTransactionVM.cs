@@ -1025,15 +1025,16 @@ public partial class AddNewTransactionVM : ObservableValidator
             if (string.IsNullOrWhiteSpace(candidateName))
                 return false;
 
+            var transactions = (await _appData.GetTransactionsAsync(cancellationToken))
+                .Where(transaction => transaction.OccurredOn.Date == input.Date.Date);
+
             if (!input.IsExpense && !input.IsGoal)
             {
-                var incomeLogs = (await _appData.GetTransactionsAsync(cancellationToken))
-                    .Where(transaction => transaction.Type == TransactionType.Income);
+                var incomeLogs = transactions.Where(transaction => transaction.Type == TransactionType.Income);
                 return incomeLogs.Any(log => IsSimilarIncomeTransaction(log, input, candidateName));
             }
 
-            var expenseLogs = (await _appData.GetTransactionsAsync(cancellationToken))
-                .Where(transaction => transaction.Type == TransactionType.Expense);
+            var expenseLogs = transactions.Where(transaction => transaction.Type == TransactionType.Expense);
             var goalUpdateTagIds = await GetGoalUpdateTagIdsAsync(cancellationToken);
             return expenseLogs.Any(log => IsSimilarExpenseTransaction(
                 log,

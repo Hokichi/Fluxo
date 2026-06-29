@@ -13,7 +13,7 @@ public class BalloonToggle : BalloonControl
 {
     private const string PartStatePopup = "PART_StatePopup";
     private const string PartStateItems = "PART_StateItems";
-    internal static readonly TimeSpan LongPressDuration = TimeSpan.FromMilliseconds(300);
+    internal static readonly TimeSpan LongPressDuration = TimeSpan.FromMilliseconds(500);
 
     private static readonly DependencyPropertyKey IsCyclingPropertyKey =
         DependencyProperty.RegisterReadOnly(nameof(IsCycling), typeof(bool), typeof(BalloonToggle),
@@ -92,6 +92,12 @@ public class BalloonToggle : BalloonControl
     {
         _longPressTimer.Stop();
         base.OnMouseLeave(e);
+    }
+
+    protected override void OnMouseDown(MouseButtonEventArgs e)
+    {
+        base.OnMouseDown(e);
+        _longPressTimer.Stop();
     }
 
     private void OnIsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)

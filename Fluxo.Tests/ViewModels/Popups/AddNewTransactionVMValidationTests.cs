@@ -934,23 +934,48 @@ public sealed class AddNewTransactionVMValidationTests
     }
 
     [Fact]
-    public void HasSimilarTransactionAsync_FindsExpense_WithSameNameTypeSourceAndNearAmount()
+    public void HasSimilarTransactionAsync_FindsExpense_OnSelectedDate()
     {
         RunInSta(() =>
         {
-            var appData = CreateAppData(expenseLogs: [
-                CreateTransaction("Valid name", 10.50m, sourceId: 1)
-            ]);
+            var selectedDate = new DateTime(2026, 6, 29);
+            var existing = CreateTransaction("Valid name", 10.50m, sourceId: 1);
+            existing.OccurredOn = selectedDate.AddHours(8);
+            var appData = CreateAppData(expenseLogs: [existing]);
             var vm = CreateVm(
                 TransactionKind.Expense,
                 CreateCheckingSource(balance: 500m),
                 isRecurring: false,
                 amount: 10m,
                 appData: appData);
+            vm.SelectedDate = selectedDate;
 
             var result = vm.HasSimilarTransactionAsync().GetAwaiter().GetResult();
 
             Assert.True(result);
+        });
+    }
+
+    [Fact]
+    public void HasSimilarTransactionAsync_IgnoresExpense_OutsideSelectedDate()
+    {
+        RunInSta(() =>
+        {
+            var selectedDate = new DateTime(2026, 6, 29);
+            var existing = CreateTransaction("Valid name", 10.50m, sourceId: 1);
+            existing.OccurredOn = selectedDate.AddDays(-1).AddHours(23);
+            var appData = CreateAppData(expenseLogs: [existing]);
+            var vm = CreateVm(
+                TransactionKind.Expense,
+                CreateCheckingSource(balance: 500m),
+                isRecurring: false,
+                amount: 10m,
+                appData: appData);
+            vm.SelectedDate = selectedDate;
+
+            var result = vm.HasSimilarTransactionAsync().GetAwaiter().GetResult();
+
+            Assert.False(result);
         });
     }
 
@@ -1007,7 +1032,8 @@ public sealed class AddNewTransactionVMValidationTests
                     Type = TransactionType.Income,
                     Name = "Valid name",
                     Amount = 10.25m,
-                    AccountId = 1
+                    AccountId = 1,
+                    OccurredOn = DateTime.Today
                 }
             ]);
             var vm = CreateVm(
