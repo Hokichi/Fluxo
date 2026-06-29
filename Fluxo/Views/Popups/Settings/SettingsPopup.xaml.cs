@@ -157,7 +157,7 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
 
     private void FocusSettingsSideMenu()
     {
-        var targetTab = GetCheckedTabButton() ?? SourcesTabButton;
+        var targetTab = GetCheckedTabButton() ?? AccountsTabButton;
         targetTab.Focus();
     }
 
@@ -216,7 +216,7 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
     {
         return
         [
-            SourcesTabButton,
+            AccountsTabButton,
             BudgetTabButton,
             RecurringTransactionsTabButton,
             GoalsTabButton,
@@ -265,8 +265,8 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
 
     private RadioButton? GetCheckedTabButton()
     {
-        if (SourcesTabButton.IsChecked.GetValueOrDefault())
-            return SourcesTabButton;
+        if (AccountsTabButton.IsChecked.GetValueOrDefault())
+            return AccountsTabButton;
 
         if (BudgetTabButton.IsChecked.GetValueOrDefault())
             return BudgetTabButton;
@@ -294,8 +294,8 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
 
     private FrameworkElement? GetContentForTab(RadioButton tabButton)
     {
-        if (ReferenceEquals(tabButton, SourcesTabButton))
-            return SourcesTabContent;
+        if (ReferenceEquals(tabButton, AccountsTabButton))
+            return AccountsTabContent;
 
         if (ReferenceEquals(tabButton, BudgetTabButton))
             return BudgetTabContent;

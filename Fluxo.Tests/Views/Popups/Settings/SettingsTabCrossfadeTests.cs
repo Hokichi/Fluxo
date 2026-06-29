@@ -8,7 +8,7 @@ public sealed class SettingsTabCrossfadeTests
     private static readonly string[] TabContentNames =
     [
         "BudgetTabContent",
-        "SourcesTabContent",
+        "AccountsTabContent",
         "RecurringTransactionsTabContent",
         "GoalsTabContent",
         "TagsTabContent",

@@ -73,7 +73,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         IStartupRegistrationService startupRegistrationService,
         IUiSettleAwaiter uiSettleAwaiter,
         SettingsBudgetTabVM budgetTab,
-        SettingsSourcesTabVM sourcesTab,
+        SettingsAccountsTabVM accountsTab,
         SettingsRecurringTransactionsTabVM fixedExpensesTab,
         SettingsGoalsTabVM goalsTab,
         SettingsIoUsTabVM debtIousTab,
@@ -87,7 +87,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         _startupRegistrationService = startupRegistrationService;
         _uiSettleAwaiter = uiSettleAwaiter;
         BudgetTab = budgetTab;
-        SourcesTab = sourcesTab;
+        AccountsTab = accountsTab;
         RecurringTransactionsTab = fixedExpensesTab;
         GoalsTab = goalsTab;
         IoUsTab = debtIousTab;
@@ -97,7 +97,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     }
 
     public SettingsBudgetTabVM BudgetTab { get; }
-    public SettingsSourcesTabVM SourcesTab { get; }
+    public SettingsAccountsTabVM AccountsTab { get; }
     public SettingsRecurringTransactionsTabVM RecurringTransactionsTab { get; }
     public SettingsGoalsTabVM GoalsTab { get; }
     public SettingsIoUsTabVM IoUsTab { get; }
@@ -164,7 +164,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     {
         // Tab VMs share the same unit of work, so loads must be sequenced.
         await BudgetTab.LoadAsync();
-        await SourcesTab.LoadAsync();
+        await AccountsTab.LoadAsync();
         await RecurringTransactionsTab.LoadAsync();
         await GoalsTab.LoadAsync();
         await IoUsTab.LoadAsync();
@@ -271,7 +271,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         switch (target)
         {
             case SettingsBatchTarget.Accounts:
-                SourcesTab.ClearSelections();
+                AccountsTab.ClearSelections();
                 break;
 
             case SettingsBatchTarget.RecurringTransactions:
@@ -289,7 +289,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         switch (target)
         {
             case SettingsBatchTarget.Accounts:
-                SourcesTab.SetSelections(isChecked);
+                AccountsTab.SetSelections(isChecked);
                 break;
 
             case SettingsBatchTarget.RecurringTransactions:
@@ -306,7 +306,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     {
         return target switch
         {
-            SettingsBatchTarget.Accounts => SourcesTab.ShouldWarnBeforeApplyingToAll(action),
+            SettingsBatchTarget.Accounts => AccountsTab.ShouldWarnBeforeApplyingToAll(action),
             SettingsBatchTarget.RecurringTransactions => RecurringTransactionsTab.ShouldWarnBeforeApplyingToAll(action),
             SettingsBatchTarget.Goals => GoalsTab.ShouldWarnBeforeApplyingToAll(action),
             _ => false
@@ -316,7 +316,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     public Task<SettingsOperationResult> ExecuteAccountActionAsync(SettingsBatchAction action,
         IReadOnlyCollection<int>? selectedIdsOverride = null)
     {
-        return SourcesTab.ExecuteActionAsync(action, selectedIdsOverride);
+        return AccountsTab.ExecuteActionAsync(action, selectedIdsOverride);
     }
 
     public Task<SettingsOperationResult> ExecuteRecurringTransactionActionAsync(SettingsBatchAction action,
@@ -333,7 +333,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
 
     public Task<SettingsOperationResult> ExecuteAccountItemActionAsync(int itemId, SettingsBatchAction action)
     {
-        return SourcesTab.ExecuteItemActionAsync(itemId, action);
+        return AccountsTab.ExecuteItemActionAsync(itemId, action);
     }
 
     public Task<SettingsOperationResult> ExecuteRecurringTransactionItemActionAsync(int itemId, SettingsBatchAction action)
@@ -439,7 +439,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
 
     public AddAccountVM CreateAddAccountViewModel()
     {
-        return SourcesTab.CreateAddAccountViewModel();
+        return AccountsTab.CreateAddAccountViewModel();
     }
 
     public AddNewTransactionVM CreateAddRecurringTransactionViewModel()
@@ -454,7 +454,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
 
     public AccountDetailVM CreateAccountDetailViewModel(int accountId)
     {
-        return SourcesTab.CreateAccountDetailViewModel(accountId);
+        return AccountsTab.CreateAccountDetailViewModel(accountId);
     }
 
     public void SelectSingleItem(SettingsBatchTarget target, int itemId)
@@ -462,7 +462,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         switch (target)
         {
             case SettingsBatchTarget.Accounts:
-                SourcesTab.SelectSingleItem(itemId);
+                AccountsTab.SelectSingleItem(itemId);
                 break;
 
             case SettingsBatchTarget.RecurringTransactions:
@@ -477,7 +477,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
 
     public Task RefreshAccountsAsync()
     {
-        return SourcesTab.RefreshAccountsAsync();
+        return AccountsTab.RefreshAccountsAsync();
     }
 
     public Task RefreshRecurringTransactionsAsync()
@@ -502,10 +502,10 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
 
     public bool IsAccountChecksEnabled
     {
-        get => SourcesTab.IsAccountChecksEnabled;
+        get => AccountsTab.IsAccountChecksEnabled;
         set
         {
-            SourcesTab.IsAccountChecksEnabled = value;
+            AccountsTab.IsAccountChecksEnabled = value;
             OnPropertyChanged();
         }
     }

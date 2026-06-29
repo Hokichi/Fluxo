@@ -106,7 +106,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<AnalyticsVM>();
         services.AddTransient<CalendarVM>();
         services.AddTransient<SettingsBudgetTabVM>();
-        services.AddTransient<SettingsSourcesTabVM>();
+        services.AddTransient<SettingsAccountsTabVM>();
         services.AddTransient<SettingsRecurringTransactionsTabVM>();
         services.AddTransient<SettingsGoalsTabVM>();
         services.AddTransient<SettingsIoUsTabVM>();

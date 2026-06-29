@@ -17,7 +17,7 @@ using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
 namespace Fluxo.ViewModels.Popups.Settings;
 
-public partial class SettingsSourcesTabVM : ObservableObject
+public partial class SettingsAccountsTabVM : ObservableObject
 {
     private const int PageSize = 25;
 
@@ -31,7 +31,7 @@ public partial class SettingsSourcesTabVM : ObservableObject
     [ObservableProperty] private bool _hasMoreItems;
     [ObservableProperty] private bool _isLoading;
 
-    public SettingsSourcesTabVM(MainVM mainViewModel, IAppDataService appData, IMessenger? messenger = null)
+    public SettingsAccountsTabVM(MainVM mainViewModel, IAppDataService appData, IMessenger? messenger = null)
     {
         _mainViewModel = mainViewModel;
         _appData = appData;

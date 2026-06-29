@@ -46,7 +46,7 @@
             CornerRadius="8">
             <StackPanel>
                 <RadioButton
-                    x:Name="SourcesTabButton"
+                    x:Name="AccountsTabButton"
                     GroupName="SettingsTabs"
                     IsChecked="True"
                     PreviewMouseLeftButtonDown="OnSettingsTabPreviewMouseLeftButtonDown"
@@ -155,7 +155,7 @@
                 Opacity="0"
                 Visibility="Collapsed" />
 
-            <tabs:SettingsSourcesTab x:Name="SourcesTabContent" DataContext="{Binding SourcesTab}" />
+            <tabs:SettingsAccountsTab x:Name="AccountsTabContent" DataContext="{Binding AccountsTab}" />
 
             <tabs:SettingsRecurringTransactionsTab
                 x:Name="RecurringTransactionsTabContent"

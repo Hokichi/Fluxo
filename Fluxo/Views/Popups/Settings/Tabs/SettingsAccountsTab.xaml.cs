@@ -9,14 +9,14 @@ using Fluxo.ViewModels.Popups.Settings;
 
 namespace Fluxo.Views.Popups.Settings.Tabs;
 
-public partial class SettingsSourcesTab : UserControl
+public partial class SettingsAccountsTab : UserControl
 {
-    public SettingsSourcesTab()
+    public SettingsAccountsTab()
     {
         InitializeComponent();
     }
 
-    private SettingsSourcesTabVM? _viewModel => DataContext as SettingsSourcesTabVM;
+    private SettingsAccountsTabVM? _viewModel => DataContext as SettingsAccountsTabVM;
 
     private async void OnBatchActionClick(object sender, RoutedEventArgs e)
     {

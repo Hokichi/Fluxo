@@ -3,15 +3,15 @@ using Xunit;
 
 namespace Fluxo.Tests.Views.Popups.Settings;
 
-public sealed class SettingsSourcesPinTerminologyTests
+public sealed class SettingsAccountsPinTerminologyTests
 {
     [Fact]
     public void AccountSettings_UsesPinUnpinActionNames()
     {
         var root = GetRepositoryRootPath();
-        var xaml = File.ReadAllText(Path.Combine(root, "Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsSourcesTab.xaml"));
-        var codeBehind = File.ReadAllText(Path.Combine(root, "Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsSourcesTab.xaml.cs"));
-        var viewModel = File.ReadAllText(Path.Combine(root, "Fluxo", "ViewModels", "Popups", "Settings", "SettingsSourcesTabVM.cs"));
+        var xaml = File.ReadAllText(Path.Combine(root, "Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsAccountsTab.xaml"));
+        var codeBehind = File.ReadAllText(Path.Combine(root, "Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsAccountsTab.xaml.cs"));
+        var viewModel = File.ReadAllText(Path.Combine(root, "Fluxo", "ViewModels", "Popups", "Settings", "SettingsAccountsTabVM.cs"));
 
         Assert.Contains("Accounts:Unpin", xaml);
         Assert.Contains("Accounts:Pin", xaml);
