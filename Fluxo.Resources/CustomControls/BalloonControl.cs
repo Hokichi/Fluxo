@@ -171,7 +171,7 @@ public class BalloonControl : ButtonBase
     protected override void OnMouseEnter(MouseEventArgs e)
     {
         base.OnMouseEnter(e);
-        AnimateShapeFill(HoveredBackground);
+        AnimateShapeFill(ResolveHoveredBackground());
         AnimateExpansion(isExpanded: true);
     }
 
@@ -229,6 +229,8 @@ public class BalloonControl : ButtonBase
     }
 
     protected virtual Brush ResolveRestingBackground() => DefaultBackground;
+
+    protected virtual Brush ResolveHoveredBackground() => HoveredBackground;
 
     protected virtual object? ResolveButtonIcon() => ButtonIcon;
 

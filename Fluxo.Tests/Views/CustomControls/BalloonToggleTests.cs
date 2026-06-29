@@ -1,4 +1,5 @@
 using System.Windows.Input;
+using System.Windows.Media;
 using Fluxo.Resources.CustomControls;
 using Xunit;
 
@@ -152,13 +153,62 @@ public sealed class BalloonToggleTests
     }
 
     [Fact]
+    public void Backgrounds_UseToggleWhenUntoggledAndStateWhenToggled()
+    {
+        RunOnStaThread(() =>
+        {
+            var state = new BalloonToggleState
+            {
+                DefaultBackground = Brushes.Red,
+                HoverBackground = Brushes.Orange
+            };
+            var toggle = new TestBalloonToggle
+            {
+                DefaultBackground = Brushes.Black,
+                HoveredBackground = Brushes.White
+            };
+
+            toggle.States.Add(state);
+
+            Assert.Same(Brushes.Black, toggle.ResolvedRestingBackground);
+            Assert.Same(Brushes.White, toggle.ResolvedHoveredBackground);
+
+            toggle.SelectState(state);
+
+            Assert.Same(Brushes.Red, toggle.ResolvedRestingBackground);
+            Assert.Same(Brushes.Orange, toggle.ResolvedHoveredBackground);
+            Assert.Same(Brushes.Black, toggle.DefaultBackground);
+            Assert.Same(Brushes.White, toggle.HoveredBackground);
+        });
+    }
+
+    [Fact]
+    public void PopupStates_ShowAllWhenUntoggledAndHideActiveStateWhenToggled()
+    {
+        RunOnStaThread(() =>
+        {
+            var first = new BalloonToggleState { ButtonText = "First" };
+            var second = new BalloonToggleState { ButtonText = "Second" };
+            var toggle = new BalloonToggle();
+            toggle.States.Add(first);
+            toggle.States.Add(second);
+
+            Assert.Equal(new[] { first, second }, toggle.GetPopupStates());
+
+            toggle.SelectState(first);
+
+            Assert.Equal(new[] { second }, toggle.GetPopupStates());
+        });
+    }
+
+    [Fact]
     public void DefaultStyle_ContainsStatePopupAndStateButtons()
     {
         var xaml = File.ReadAllText(Fluxo.Tests.TestSupport.RepositoryPaths.File(
             "Fluxo.Resources", "Resources", "Styles", "ButtonStyles.xaml"));
 
         Assert.Contains("x:Name=\"PART_StatePopup\"", xaml);
-        Assert.Contains("ItemsSource=\"{Binding States, RelativeSource={RelativeSource TemplatedParent}}\"", xaml);
+        Assert.Contains("x:Name=\"PART_StateItems\"", xaml);
         Assert.Contains("CommandParameter=\"{Binding}\"", xaml);
     }
 
@@ -170,6 +220,8 @@ public sealed class BalloonToggleTests
 
     private sealed class TestBalloonToggle : BalloonToggle
     {
+        public Brush ResolvedRestingBackground => ResolveRestingBackground();
+        public Brush ResolvedHoveredBackground => ResolveHoveredBackground();
         public void InvokeClick() => OnClick();
     }
 

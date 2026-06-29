@@ -85,7 +85,7 @@
                             PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
                             StaysOpen="False">
                             <Border Padding="4" Background="Transparent">
-                                <ItemsControl ItemsSource="{Binding States, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ItemsControl x:Name="PART_StateItems">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
                                             <StackPanel />

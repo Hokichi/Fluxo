@@ -1,14 +1,18 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace Fluxo.Resources.CustomControls;
 
 [TemplatePart(Name = PartStatePopup, Type = typeof(Popup))]
+[TemplatePart(Name = PartStateItems, Type = typeof(ItemsControl))]
 public class BalloonToggle : BalloonControl
 {
     private const string PartStatePopup = "PART_StatePopup";
+    private const string PartStateItems = "PART_StateItems";
     internal static readonly TimeSpan LongPressDuration = TimeSpan.FromMilliseconds(300);
 
     private static readonly DependencyPropertyKey IsCyclingPropertyKey =
@@ -25,6 +29,7 @@ public class BalloonToggle : BalloonControl
     private BalloonToggleState[] _stateOrder = [];
     private readonly DispatcherTimer _longPressTimer;
     private Popup? _statePopup;
+    private ItemsControl? _stateItems;
     private UIElement? _statePopupChild;
     private bool _suppressCycling;
 
@@ -53,6 +58,7 @@ public class BalloonToggle : BalloonControl
         DetachPopup();
         base.OnApplyTemplate();
         _statePopup = GetTemplateChild(PartStatePopup) as Popup;
+        _stateItems = GetTemplateChild(PartStateItems) as ItemsControl;
         if (_statePopup is null)
             return;
 
@@ -74,17 +80,11 @@ public class BalloonToggle : BalloonControl
         base.OnClick();
     }
 
-    protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
+    protected override void OnMouseEnter(MouseEventArgs e)
     {
-        base.OnPreviewMouseLeftButtonDown(e);
+        base.OnMouseEnter(e);
         if (IsEnabled && _statePopup?.IsOpen != true)
             _longPressTimer.Start();
-    }
-
-    protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e)
-    {
-        _longPressTimer.Stop();
-        base.OnPreviewMouseLeftButtonUp(e);
     }
 
     protected override void OnMouseLeave(MouseEventArgs e)
@@ -93,17 +93,15 @@ public class BalloonToggle : BalloonControl
         base.OnMouseLeave(e);
     }
 
-    protected override void OnLostMouseCapture(MouseEventArgs e)
-    {
-        _longPressTimer.Stop();
-        base.OnLostMouseCapture(e);
-    }
-
     private void OnIsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
         if (!(bool)e.NewValue)
             _longPressTimer.Stop();
     }
+
+    internal BalloonToggleState[] GetPopupStates() => _activeState is null
+        ? [.. States]
+        : [.. States.Where(state => !ReferenceEquals(state, _activeState))];
 
     internal bool TryOpenStatePopup()
     {
@@ -111,6 +109,9 @@ public class BalloonToggle : BalloonControl
             return false;
 
         _suppressCycling = true;
+        if (_stateItems is not null)
+            _stateItems.ItemsSource = GetPopupStates();
+
         if (_statePopup is not null)
         {
             _statePopup.IsOpen = true;
@@ -177,12 +178,16 @@ public class BalloonToggle : BalloonControl
             ApplyState(States[0]);
     }
 
+    protected override Brush ResolveRestingBackground() =>
+        _activeState?.DefaultBackground ?? base.ResolveRestingBackground();
+
+    protected override Brush ResolveHoveredBackground() =>
+        _activeState?.HoverBackground ?? base.ResolveHoveredBackground();
+
     private void ApplyState(BalloonToggleState state)
     {
         SetCurrentValue(ButtonIconProperty, state.ButtonIcon);
         SetCurrentValue(ButtonTextProperty, state.ButtonText);
-        SetCurrentValue(DefaultBackgroundProperty, state.DefaultBackground);
-        SetCurrentValue(HoveredBackgroundProperty, state.HoverBackground);
         RefreshPresentation();
     }
 
@@ -244,6 +249,7 @@ public class BalloonToggle : BalloonControl
         }
 
         _statePopup = null;
+        _stateItems = null;
         _statePopupChild = null;
     }
 }
