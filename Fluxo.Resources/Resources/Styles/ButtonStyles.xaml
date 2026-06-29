@@ -80,12 +80,15 @@
                         </Grid>
                         <Popup
                             x:Name="PART_StatePopup"
+                            HorizontalAlignment="Right"
                             AllowsTransparency="True"
+                            HorizontalOffset="4"
                             Placement="Bottom"
                             PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
+                            PopupAnimation="Fade"
                             StaysOpen="False">
-                            <Border Padding="4" Background="Transparent">
-                                <ItemsControl x:Name="PART_StateItems">
+                            <Border Padding="4" Background="#01000000">
+                                <ItemsControl x:Name="PART_StateItems" Tag="{Binding RelativeSource={RelativeSource TemplatedParent}}">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
                                             <StackPanel />
@@ -100,10 +103,10 @@
                                                 ButtonSize="40"
                                                 ButtonText="{Binding ButtonText}"
                                                 CommandParameter="{Binding}"
-                                                CornerRadius="12"
+                                                CornerRadius="{Binding Tag.CornerRadius, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"
                                                 DefaultBackground="{Binding DefaultBackground}"
                                                 HoveredBackground="{Binding HoverBackground}"
-                                                IconSize="12"
+                                                IconSize="{Binding Tag.IconSize, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"
                                                 ShouldExpand="True"
                                                 ShouldShowText="False" />
                                         </DataTemplate>

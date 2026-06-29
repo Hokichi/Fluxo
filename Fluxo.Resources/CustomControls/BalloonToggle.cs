@@ -68,6 +68,7 @@ public class BalloonToggle : BalloonControl
             return;
 
         _statePopupChild.AddHandler(ButtonBase.ClickEvent, new RoutedEventHandler(OnPopupButtonClick));
+        _statePopupChild.MouseLeave += OnStatePopupMouseLeave;
         _statePopupChild.PreviewKeyDown += OnPopupPreviewKeyDown;
     }
 
@@ -165,7 +166,7 @@ public class BalloonToggle : BalloonControl
     {
         _activeState = state;
         SetValue(IsCyclingPropertyKey, true);
-        ApplyState(state);
+        ApplyState();
         if (state.OnChecked?.CanExecute(null) == true)
             state.OnChecked.Execute(null);
     }
@@ -175,7 +176,7 @@ public class BalloonToggle : BalloonControl
         _activeState = null;
         SetValue(IsCyclingPropertyKey, false);
         if (States.Count > 0)
-            ApplyState(States[0]);
+            ApplyState();
     }
 
     protected override Brush ResolveRestingBackground() =>
@@ -184,10 +185,14 @@ public class BalloonToggle : BalloonControl
     protected override Brush ResolveHoveredBackground() =>
         _activeState?.HoverBackground ?? base.ResolveHoveredBackground();
 
-    private void ApplyState(BalloonToggleState state)
+    protected override object? ResolveButtonIcon() =>
+        _activeState?.ButtonIcon ?? base.ResolveButtonIcon();
+
+    protected override string? ResolveButtonText() =>
+        _activeState?.ButtonText ?? base.ResolveButtonText();
+
+    private void ApplyState()
     {
-        SetCurrentValue(ButtonIconProperty, state.ButtonIcon);
-        SetCurrentValue(ButtonTextProperty, state.ButtonText);
         RefreshPresentation();
     }
 
@@ -203,9 +208,9 @@ public class BalloonToggle : BalloonControl
         }
 
         if (_activeState is not null)
-            ApplyState(_activeState);
+            ApplyState();
         else if (States.Count > 0)
-            ApplyState(States[0]);
+            ApplyState();
     }
 
     private void OnLongPressTimerTick(object? sender, EventArgs e)
@@ -232,6 +237,12 @@ public class BalloonToggle : BalloonControl
         e.Handled = true;
     }
 
+    private void OnStatePopupMouseLeave(object sender, MouseEventArgs e)
+    {
+        if (_statePopup is not null)
+            _statePopup.IsOpen = false;
+    }
+
     private void OnStatePopupClosed(object? sender, EventArgs e)
     {
         Dispatcher.BeginInvoke(() => _suppressCycling = false);
@@ -245,6 +256,7 @@ public class BalloonToggle : BalloonControl
         if (_statePopupChild is not null)
         {
             _statePopupChild.RemoveHandler(ButtonBase.ClickEvent, new RoutedEventHandler(OnPopupButtonClick));
+            _statePopupChild.MouseLeave -= OnStatePopupMouseLeave;
             _statePopupChild.PreviewKeyDown -= OnPopupPreviewKeyDown;
         }
 

@@ -24,10 +24,11 @@ public sealed class AddNewTransactionBalloonToggleTests
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml"));
         var codeBehind = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml.cs"));
 
-        Assert.Equal(2, xaml.Split("ToolTip=\"Transaction mode\"", StringSplitOptions.None).Length - 1);
+        Assert.Equal(1, xaml.Split("ToolTip=\"Transaction mode\"", StringSplitOptions.None).Length - 1);
         Assert.Contains("ButtonText=\"Recurring\"", xaml);
         Assert.Contains("ButtonText=\"Installments\"", xaml);
-        Assert.Equal(2, xaml.Split("ButtonText=\"Exclude\"", StringSplitOptions.None).Length - 1);
+        Assert.Equal(1, xaml.Split("ButtonText=\"Exclude\"", StringSplitOptions.None).Length - 1);
+        Assert.Contains("ButtonText=\"Exclude from budget\"", xaml);
         Assert.Equal(2, xaml.Split("ButtonText=\"Set as Debt and Exclude\"", StringSplitOptions.None).Length - 1);
         Assert.Equal(2, xaml.Split("ButtonIcon=\"{StaticResource CreditCardOff}\"", StringSplitOptions.None).Length - 1);
         Assert.Equal(2, xaml.Split("ButtonIcon=\"{StaticResource CreditCardXRegular}\"", StringSplitOptions.None).Length - 1);

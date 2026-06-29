@@ -359,38 +359,37 @@
                                 DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                                 HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                 IconSize="14"
-                                IsEnabled="{Binding CanToggleRecurring}"
-                                ToolTip="Transaction mode">
+                                IsEnabled="{Binding CanToggleRecurring}">
                                 <customControls:BalloonToggle.States>
                                     <customControls:BalloonToggleState
                                         ButtonIcon="{StaticResource RegularRepeat}"
                                         ButtonText="Set as Recurring"
                                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
-                                        HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                        HoverBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
                                         OnChecked="{Binding HandleRecurringModeClickCommand}" />
                                     <customControls:BalloonToggleState
                                         ButtonIcon="{StaticResource CreditCardClockOutline}"
                                         ButtonText="Set as Installments"
                                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
-                                        HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                        HoverBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
                                         OnChecked="{Binding HandleInstallmentsModeClickCommand}" />
                                     <customControls:BalloonToggleState
                                         ButtonIcon="{StaticResource CreditCardMinusSolid}"
                                         ButtonText="{Binding IoUTooltip}"
-                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
-                                        HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
+                                        HoverBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
                                         OnChecked="{Binding HandleIoUModeClickCommand}" />
                                     <customControls:BalloonToggleState
                                         ButtonIcon="{StaticResource CreditCardOff}"
-                                        ButtonText="Exclude"
-                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
-                                        HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                        ButtonText="Exclude from budget"
+                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
+                                        HoverBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
                                         OnChecked="{Binding HandleExcludeModeClickCommand}" />
                                     <customControls:BalloonToggleState
                                         ButtonIcon="{StaticResource CreditCardXRegular}"
-                                        ButtonText="Set as Debt and Exclude"
-                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
-                                        HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                        ButtonText="Set as debt and exclude"
+                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
+                                        HoverBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
                                         OnChecked="{Binding HandleExcludedIoUModeClickCommand}" />
                                 </customControls:BalloonToggle.States>
                             </customControls:BalloonToggle>

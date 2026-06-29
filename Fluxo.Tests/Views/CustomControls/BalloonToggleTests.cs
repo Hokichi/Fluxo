@@ -8,31 +8,31 @@ namespace Fluxo.Tests.Views.CustomControls;
 public sealed class BalloonToggleTests
 {
     [Fact]
-    public void Click_CyclesStatesThenReturnsToUntoggledFirstVisuals()
+    public void Click_CyclesStatesThenReturnsToUntoggledToggleVisuals()
     {
         RunOnStaThread(() =>
         {
             var firstCommand = new CountingCommand();
             var secondCommand = new CountingCommand();
-            var toggle = new TestBalloonToggle();
+            var toggle = new TestBalloonToggle { ButtonText = "Toggle" };
             toggle.States.Add(new BalloonToggleState { ButtonText = "First", OnChecked = firstCommand });
             toggle.States.Add(new BalloonToggleState { ButtonText = "Second", OnChecked = secondCommand });
 
             Assert.False(toggle.IsCycling);
-            Assert.Equal("First", toggle.ButtonText);
+            Assert.Equal("Toggle", toggle.ResolvedButtonText);
 
             toggle.InvokeClick();
             Assert.True(toggle.IsCycling);
-            Assert.Equal("First", toggle.ButtonText);
+            Assert.Equal("First", toggle.ResolvedButtonText);
             Assert.Equal(1, firstCommand.ExecuteCount);
 
             toggle.InvokeClick();
-            Assert.Equal("Second", toggle.ButtonText);
+            Assert.Equal("Second", toggle.ResolvedButtonText);
             Assert.Equal(1, secondCommand.ExecuteCount);
 
             toggle.InvokeClick();
             Assert.False(toggle.IsCycling);
-            Assert.Equal("First", toggle.ButtonText);
+            Assert.Equal("Toggle", toggle.ResolvedButtonText);
             Assert.Equal(1, firstCommand.ExecuteCount);
             Assert.Equal(1, secondCommand.ExecuteCount);
         });
@@ -62,7 +62,7 @@ public sealed class BalloonToggleTests
 
             toggle.InvokeClick();
 
-            Assert.Equal("Selected", toggle.ButtonText);
+            Assert.Equal("Selected", toggle.ResolvedButtonText);
             Assert.Equal(0, skipped.ExecuteCount);
             Assert.Equal(1, selected.ExecuteCount);
         });
@@ -94,7 +94,7 @@ public sealed class BalloonToggleTests
         {
             var first = new BalloonToggleState { ButtonText = "First" };
             var second = new BalloonToggleState { ButtonText = "Second" };
-            var toggle = new TestBalloonToggle();
+            var toggle = new TestBalloonToggle { ButtonText = "Toggle" };
             toggle.States.Add(first);
             toggle.States.Add(second);
             toggle.InvokeClick();
@@ -103,7 +103,7 @@ public sealed class BalloonToggleTests
             toggle.States.Remove(second);
 
             Assert.False(toggle.IsCycling);
-            Assert.Equal("First", toggle.ButtonText);
+            Assert.Equal("Toggle", toggle.ResolvedButtonText);
         });
     }
 
@@ -123,7 +123,7 @@ public sealed class BalloonToggleTests
 
             toggle.SelectState(state);
             Assert.True(toggle.IsCycling);
-            Assert.Equal("Chosen", toggle.ButtonText);
+            Assert.Equal("Chosen", toggle.ResolvedButtonText);
             Assert.Equal(1, command.ExecuteCount);
         });
     }
@@ -202,6 +202,52 @@ public sealed class BalloonToggleTests
     }
 
     [Fact]
+    public void Presentation_UsesToggleValuesUntilStateIsActive()
+    {
+        RunOnStaThread(() =>
+        {
+            var toggleIcon = new object();
+            var stateIcon = new object();
+            var state = new BalloonToggleState
+            {
+                ButtonIcon = stateIcon,
+                ButtonText = "State"
+            };
+            var toggle = new TestBalloonToggle
+            {
+                ButtonIcon = toggleIcon,
+                ButtonText = "Toggle"
+            };
+
+            toggle.States.Add(state);
+
+            Assert.Same(toggleIcon, toggle.ResolvedButtonIcon);
+            Assert.Equal("Toggle", toggle.ResolvedButtonText);
+
+            toggle.SelectState(state);
+
+            Assert.Same(stateIcon, toggle.ResolvedButtonIcon);
+            Assert.Equal("State", toggle.ResolvedButtonText);
+            Assert.Same(toggleIcon, toggle.ButtonIcon);
+            Assert.Equal("Toggle", toggle.ButtonText);
+        });
+    }
+
+    [Fact]
+    public void Popup_ClosesOutsideAndOnMouseLeave()
+    {
+        var xaml = File.ReadAllText(Fluxo.Tests.TestSupport.RepositoryPaths.File(
+            "Fluxo.Resources", "Resources", "Styles", "ButtonStyles.xaml"));
+        var code = File.ReadAllText(Fluxo.Tests.TestSupport.RepositoryPaths.File(
+            "Fluxo.Resources", "CustomControls", "BalloonToggle.cs"));
+
+        Assert.Contains("StaysOpen=\"False\"", xaml);
+        Assert.Contains("_statePopupChild.MouseLeave += OnStatePopupMouseLeave;", code);
+        Assert.Contains("_statePopupChild.MouseLeave -= OnStatePopupMouseLeave;", code);
+        Assert.Contains("_statePopup.IsOpen = false;", code);
+    }
+
+    [Fact]
     public void DefaultStyle_ContainsStatePopupAndStateButtons()
     {
         var xaml = File.ReadAllText(Fluxo.Tests.TestSupport.RepositoryPaths.File(
@@ -222,6 +268,8 @@ public sealed class BalloonToggleTests
     {
         public Brush ResolvedRestingBackground => ResolveRestingBackground();
         public Brush ResolvedHoveredBackground => ResolveHoveredBackground();
+        public object? ResolvedButtonIcon => ResolveButtonIcon();
+        public string? ResolvedButtonText => ResolveButtonText();
         public void InvokeClick() => OnClick();
     }
 
