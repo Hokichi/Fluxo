@@ -1,7 +1,5 @@
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups.Settings;
 
 namespace Fluxo.Views.Popups.Settings.Tabs;
@@ -15,56 +13,31 @@ public partial class SettingsTagsTab : UserControl
 
     private SettingsTagsTabVM? _viewModel => DataContext as SettingsTagsTabVM;
 
-    private void OnAddTagClick(object sender, RoutedEventArgs e)
-    {
+    private void OnAddTagClick(object sender, RoutedEventArgs e) =>
         _viewModel?.RequestAddTagDialog();
-    }
 
-    private async void OnTagPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private async void OnEditTagClick(object sender, RoutedEventArgs e)
     {
-        if (_viewModel is null ||
-            sender is not FrameworkElement { DataContext: TagVM tag })
+        if (_viewModel is null || sender is not FrameworkElement { DataContext: SettingsTagCardVM tag })
             return;
 
-        var isDotClick = IsDotClick(sender, e);
-        if (!isDotClick || e.ClickCount != 1)
-            return;
-
-        e.Handled = true;
-
-        if (FluxoMessageBox.Show(Window.GetWindow(this), $"Delete the tag \"{tag.Name}\"?", "Tags", MessageBoxButton.YesNo,
-                MessageBoxImage.Warning) != MessageBoxResult.Yes)
-            return;
-
-        var deleteResult = await _viewModel.DeleteTagAsync(tag);
-        if (!deleteResult.IsSuccess && !string.IsNullOrWhiteSpace(deleteResult.ErrorMessage))
-        {
-            FluxoMessageBox.Show(Window.GetWindow(this), deleteResult.ErrorMessage, "Tags",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-    }
-
-    private async void OnTagMouseDoubleClick(object sender, MouseButtonEventArgs e)
-    {
-        if (_viewModel is null ||
-            sender is not FrameworkElement { DataContext: TagVM tag } ||
-            IsDotClick(sender, e))
-            return;
-
-        e.Handled = true;
         await _viewModel.OpenEditTagAsync(tag.Id);
     }
 
-    private static bool IsDotClick(object sender, MouseButtonEventArgs e)
+    private async void OnDeleteTagClick(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement element)
-            return false;
+        if (_viewModel is null || sender is not FrameworkElement { DataContext: SettingsTagCardVM tag })
+            return;
 
-        var clickPosition = e.GetPosition(element);
+        if (FluxoMessageBox.Show(Window.GetWindow(this), $"Delete the tag \"{tag.Name}\"?", "Tags",
+                MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            return;
 
-        // Matches the chip geometry in TagDeleteButtonStyle:
-        // left padding (12) + dot width (10) + a small buffer.
-        const double dotHitMaxX = 26d;
-        return clickPosition.X <= dotHitMaxX;
+        var result = await _viewModel.DeleteTagAsync(tag);
+        if (!result.IsSuccess && !string.IsNullOrWhiteSpace(result.ErrorMessage))
+        {
+            FluxoMessageBox.Show(Window.GetWindow(this), result.ErrorMessage, "Tags",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
     }
 }

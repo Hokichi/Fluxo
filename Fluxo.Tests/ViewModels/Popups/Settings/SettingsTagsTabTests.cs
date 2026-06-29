@@ -1,6 +1,7 @@
 using Fluxo.Core.Budgeting;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
+using Fluxo.Tests.TestSupport;
 using Fluxo.ViewModels.Popups.Settings;
 using Xunit;
 
@@ -8,6 +9,32 @@ namespace Fluxo.Tests.ViewModels.Popups.Settings;
 
 public sealed class SettingsTagsTabTests
 {
+    [Fact]
+    public void View_UsesApprovedCardLayoutAndExplicitActions()
+    {
+        var xaml = File.ReadAllText(RepositoryPaths.File(
+            "Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsTagsTab.xaml"));
+        var codeBehind = File.ReadAllText(RepositoryPaths.File(
+            "Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsTagsTab.xaml.cs"));
+
+        Assert.Contains("<customControls:SpacedUniformGrid", xaml);
+        Assert.Contains("Columns=\"2\"", xaml);
+        Assert.Contains("HorizontalGap=\"16\"", xaml);
+        Assert.Contains("VerticalGap=\"16\"", xaml);
+        Assert.Contains("Height=\"120\"", xaml);
+        Assert.Contains("Style=\"{StaticResource CardBorderStyle}\"", xaml);
+        Assert.Contains("ButtonIcon=\"{StaticResource Pen}\"", xaml);
+        Assert.Contains("ButtonIcon=\"{StaticResource Delete}\"", xaml);
+        Assert.Equal(2, xaml.Split("DefaultBackground=\"{StaticResource Brush.BalloonButton.Background.Neutral}\"", StringSplitOptions.None).Length - 1);
+        Assert.Equal(2, xaml.Split("HoveredBackground=\"{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}\"", StringSplitOptions.None).Length - 1);
+        Assert.Contains("No tags yet — add one to get started.", xaml);
+        Assert.DoesNotContain("Click the color dot", xaml);
+        Assert.Contains("OnEditTagClick", codeBehind);
+        Assert.Contains("OnDeleteTagClick", codeBehind);
+        Assert.DoesNotContain("OnTagMouseDoubleClick", codeBehind);
+        Assert.DoesNotContain("IsDotClick", codeBehind);
+    }
+
     [Fact]
     public void CreateCards_UsesOnlyEffectiveExpensesFromCurrentPeriod()
     {
