@@ -13,8 +13,9 @@ public sealed class SettingsAccountsPinTerminologyTests
         var codeBehind = File.ReadAllText(Path.Combine(root, "Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsAccountsTab.xaml.cs"));
         var viewModel = File.ReadAllText(Path.Combine(root, "Fluxo", "ViewModels", "Popups", "Settings", "SettingsAccountsTabVM.cs"));
 
-        Assert.Contains("Accounts:Unpin", xaml);
-        Assert.Contains("Accounts:Pin", xaml);
+        Assert.Contains("Tag=\"Accounts:PinToggle\"", xaml);
+        Assert.Contains("UncheckedText=\"Pin Selected\"", xaml);
+        Assert.Contains("CheckedText=\"Unpin Selected\"", xaml);
         Assert.DoesNotContain("Accounts:Hide", xaml);
         Assert.DoesNotContain("Accounts:Unhide", xaml);
         Assert.DoesNotContain("SettingsBatchAction.Hide", codeBehind);

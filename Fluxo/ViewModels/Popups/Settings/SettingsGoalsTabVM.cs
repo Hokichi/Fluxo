@@ -44,6 +44,7 @@ public partial class SettingsGoalsTabVM : ObservableObject
     public ObservableCollection<SettingsSavingGoalItemVM> SavingGoals { get; } = [];
     public ICollectionView SavingGoalsView { get; }
     public bool AreAllGoalsChecked => SavingGoals.Count > 0 && SavingGoals.All(item => item.IsChecked);
+    public bool HasCheckedGoals => SavingGoals.Any(item => item.IsChecked);
     public bool HasSavingGoals => SavingGoals.Count > 0;
 
     public bool ShowGoalDisableActionButton =>
@@ -288,6 +289,7 @@ public partial class SettingsGoalsTabVM : ObservableObject
     private void OnSelectionStateChanged()
     {
         OnPropertyChanged(nameof(AreAllGoalsChecked));
+        OnPropertyChanged(nameof(HasCheckedGoals));
         OnPropertyChanged(nameof(ShowGoalDisableActionButton));
         OnPropertyChanged(nameof(ShowGoalEnableActionButton));
         OnPropertyChanged(nameof(ShowGoalCheckAllButton));

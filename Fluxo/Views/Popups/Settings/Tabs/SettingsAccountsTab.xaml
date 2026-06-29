@@ -99,42 +99,30 @@
                                 Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                                 Tag="Accounts:Delete"
                                 ToolTip="Delete" />
-                            <customControls:BalloonButton
-                                ButtonIcon="{StaticResource Unpin}"
+                            <customControls:BalloonCheckBox
+                                CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                CheckedIcon="{StaticResource Unpin}"
+                                CheckedText="Unpin"
                                 Click="OnRowActionClick"
                                 DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                                 HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                                Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                                Tag="Accounts:Unpin"
-                                ToolTip="Unpin"
-                                Visibility="{Binding IsUnpinned, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
-                            <customControls:BalloonButton
-                                ButtonIcon="{StaticResource Pin}"
-                                Click="OnRowActionClick"
-                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                                Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                                Tag="Accounts:Pin"
-                                ToolTip="Pin"
-                                Visibility="{Binding IsUnpinned, Converter={StaticResource BoolToVisibilityConverter}}" />
-                            <customControls:BalloonButton
-                                ButtonIcon="{StaticResource LightningSlashFill}"
-                                Click="OnRowActionClick"
-                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
-                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Caution.Hovered}"
-                                Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                                Tag="Accounts:Disable"
-                                ToolTip="Disable"
-                                Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
-                            <customControls:BalloonButton
-                                ButtonIcon="{StaticResource LightningFill}"
+                                IsChecked="{Binding IsUnpinned, Converter={StaticResource BoolNegationConverter}, Mode=OneWay}"
+                                Style="{StaticResource HeaderCheckBoxStyle}"
+                                Tag="Accounts:PinToggle"
+                                UncheckedIcon="{StaticResource Pin}"
+                                UncheckedText="Pin" />
+                            <customControls:BalloonCheckBox
+                                CheckedBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
+                                CheckedIcon="{StaticResource LightningSlashFill}"
+                                CheckedText="Disable"
                                 Click="OnRowActionClick"
                                 DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
-                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}"
-                                Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                                Tag="Accounts:Enable"
-                                ToolTip="Enable"
-                                Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                IsChecked="{Binding IsEnabled, Mode=OneWay}"
+                                Style="{StaticResource HeaderCheckBoxStyle}"
+                                Tag="Accounts:EnableToggle"
+                                UncheckedIcon="{StaticResource LightningFill}"
+                                UncheckedText="Enable" />
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -151,6 +139,13 @@
                     <Setter TargetName="RowActions" Property="Opacity" Value="1" />
                     <Setter TargetName="RowActions" Property="IsHitTestVisible" Value="True" />
                 </Trigger>
+                <DataTrigger
+                    Binding="{Binding DataContext.IsAccountChecksEnabled, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                    Value="True">
+                    <Setter TargetName="RowActions" Property="Visibility" Value="Collapsed" />
+                    <Setter TargetName="RowActions" Property="Opacity" Value="0" />
+                    <Setter TargetName="RowActions" Property="IsHitTestVisible" Value="False" />
+                </DataTrigger>
                 <DataTrigger Binding="{Binding IsSelected}" Value="True">
                     <Setter TargetName="ItemRoot" Property="BorderBrush" Value="{StaticResource Brush.Mint}" />
                 </DataTrigger>
@@ -187,79 +182,59 @@
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                         Tag="Accounts:Delete"
                         ToolTip="Delete selected"
+                        IsEnabled="{Binding HasCheckedAccounts}"
                         Visibility="{Binding IsAccountChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
-                    <customControls:BalloonButton
-                        ButtonIcon="{StaticResource Unpin}"
+                    <customControls:BalloonCheckBox
+                        CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                        CheckedIcon="{StaticResource Unpin}"
+                        CheckedText="Unpin Selected"
                         Click="OnBatchActionClick"
                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                        Tag="Accounts:Unpin"
-                        ToolTip="Unpin selected"
-                        Visibility="{Binding ShowAccountUnpinActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-                    <customControls:BalloonButton
-                        ButtonIcon="{StaticResource Pin}"
-                        Click="OnBatchActionClick"
-                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                        Tag="Accounts:Pin"
-                        ToolTip="Pin selected"
-                        Visibility="{Binding ShowAccountPinActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-                    <customControls:BalloonButton
-                        ButtonIcon="{StaticResource LightningSlashFill}"
-                        Click="OnBatchActionClick"
-                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
-                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Caution.Hovered}"
-                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                        Tag="Accounts:Disable"
-                        ToolTip="Disable selected"
-                        Visibility="{Binding ShowAccountDisableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-                    <customControls:BalloonButton
-                        ButtonIcon="{StaticResource LightningFill}"
+                        IsChecked="{Binding ShowAccountUnpinActionButton, Mode=OneWay}"
+                        IsEnabled="{Binding HasCheckedAccounts}"
+                        Style="{StaticResource HeaderCheckBoxStyle}"
+                        Tag="Accounts:PinToggle"
+                        UncheckedIcon="{StaticResource Pin}"
+                        UncheckedText="Pin Selected"
+                        Visibility="{Binding IsAccountChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    <customControls:BalloonCheckBox
+                        CheckedBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
+                        CheckedIcon="{StaticResource LightningSlashFill}"
+                        CheckedText="Disable Selected"
                         Click="OnBatchActionClick"
                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
-                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}"
-                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                        Tag="Accounts:Enable"
-                        ToolTip="Enable selected"
-                        Visibility="{Binding ShowAccountEnableActionButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-                    <customControls:BalloonButton
-                        ButtonIcon="{StaticResource CheckAll}"
-                        Click="OnSelectionActionClick"
-                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                        Tag="Accounts:CheckAll"
-                        ToolTip="Check all"
-                        Visibility="{Binding ShowAccountCheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-                    <customControls:BalloonButton
-                        ButtonIcon="{StaticResource UncheckAll}"
-                        Click="OnSelectionActionClick"
-                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                        Tag="Accounts:UncheckAll"
-                        ToolTip="Uncheck all"
-                        Visibility="{Binding ShowAccountUncheckAllButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-                    <customControls:BalloonButton
-                        ButtonIcon="{StaticResource EnableChecks}"
-                        Click="OnChecksToggleClick"
-                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                        Tag="Accounts:EnableChecks"
-                        ToolTip="Enable selection"
-                        Visibility="{Binding ShowAccountEnableChecksButton, Converter={StaticResource BoolToVisibilityConverter}}" />
-                    <customControls:BalloonButton
-                        ButtonIcon="{StaticResource DisableChecks}"
-                        Click="OnChecksToggleClick"
-                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                        Style="{StaticResource ToolbarActionBalloonButtonStyle}"
-                        Tag="Accounts:DisableChecks"
-                        ToolTip="Disable selection"
+                        IsChecked="{Binding ShowAccountDisableActionButton, Mode=OneWay}"
+                        IsEnabled="{Binding HasCheckedAccounts}"
+                        Style="{StaticResource HeaderCheckBoxStyle}"
+                        Tag="Accounts:EnableToggle"
+                        UncheckedIcon="{StaticResource LightningFill}"
+                        UncheckedText="Enable Selected"
                         Visibility="{Binding IsAccountChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    <customControls:BalloonCheckBox
+                        CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                        CheckedIcon="{StaticResource UncheckAll}"
+                        CheckedText="Uncheck All"
+                        Click="OnSelectionActionClick"
+                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                        IsChecked="{Binding AreAllAccountsChecked, Mode=OneWay}"
+                        Style="{StaticResource HeaderCheckBoxStyle}"
+                        UncheckedIcon="{StaticResource CheckAll}"
+                        UncheckedText="Check All"
+                        Visibility="{Binding IsAccountChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    <customControls:BalloonCheckBox
+                        CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                        CheckedIcon="{StaticResource DisableChecks}"
+                        CheckedText="Disable Selection"
+                        Click="OnChecksToggleClick"
+                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                        IsChecked="{Binding IsAccountChecksEnabled, Mode=OneWay}"
+                        Style="{StaticResource HeaderCheckBoxStyle}"
+                        UncheckedIcon="{StaticResource EnableChecks}"
+                        UncheckedText="Enable Selection" />
                     <customControls:BalloonButton
                         ButtonIcon="{StaticResource PlusSolid}"
                         Click="OnAddPlaceholderClick"

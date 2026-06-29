@@ -44,6 +44,7 @@ public partial class SettingsAccountsTabVM : ObservableObject
     public ObservableCollection<SettingsAccountItemVM> Accounts { get; } = [];
     public ICollectionView AccountsView { get; }
     public bool AreAllAccountsChecked => Accounts.Count > 0 && Accounts.All(item => item.IsChecked);
+    public bool HasCheckedAccounts => Accounts.Any(item => item.IsChecked);
     public bool HasAccounts => Accounts.Count > 0;
 
     public bool ShowAccountUnpinActionButton =>
@@ -321,6 +322,7 @@ public partial class SettingsAccountsTabVM : ObservableObject
     private void OnSelectionStateChanged()
     {
         OnPropertyChanged(nameof(AreAllAccountsChecked));
+        OnPropertyChanged(nameof(HasCheckedAccounts));
         OnPropertyChanged(nameof(ShowAccountUnpinActionButton));
         OnPropertyChanged(nameof(ShowAccountPinActionButton));
         OnPropertyChanged(nameof(ShowAccountDisableActionButton));

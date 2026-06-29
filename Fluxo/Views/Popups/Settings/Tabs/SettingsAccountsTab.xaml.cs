@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using Fluxo.Core.Enums;
+using Fluxo.Resources.CustomControls;
 using Fluxo.Resources.Infrastructure;
 using Fluxo.ViewModels.Popups.Settings;
 
@@ -33,11 +34,15 @@ public partial class SettingsAccountsTab : UserControl
                     await _viewModel.BuildDeleteConfirmationMessageAsync(selectedItem.Id, selectedItem.Name);
                 if (FluxoMessageBox.Show(Window.GetWindow(this), confirmationMessage, "Settings", MessageBoxButton.YesNo,
                         MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                {
+                    RestoreToggleState(sender);
                     return;
+                }
             }
             else if (FluxoMessageBox.Show(Window.GetWindow(this), "Delete the selected items?", "Settings",
                          MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
             {
+                RestoreToggleState(sender);
                 return;
             }
         }
@@ -50,28 +55,33 @@ public partial class SettingsAccountsTab : UserControl
                 "Settings",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning) != MessageBoxResult.Yes)
+        {
+            RestoreToggleState(sender);
             return;
+        }
 
         var result = await _viewModel.ExecuteActionAsync(action);
+        if (!result.IsSuccess)
+            RestoreToggleState(sender);
         ShowResult(result);
     }
 
     private void OnChecksToggleClick(object sender, RoutedEventArgs e)
     {
-        if (_viewModel is null || !TryParseChecksToggle(sender, out var isEnabled))
+        if (_viewModel is null || sender is not BalloonCheckBox checkBox)
             return;
 
-        _viewModel.IsAccountChecksEnabled = isEnabled;
-        if (!isEnabled)
+        _viewModel.IsAccountChecksEnabled = checkBox.IsChecked;
+        if (!checkBox.IsChecked)
             _viewModel.ClearSelections();
     }
 
     private void OnSelectionActionClick(object sender, RoutedEventArgs e)
     {
-        if (_viewModel is null || !TryParseSelectionAction(sender, out var shouldCheck))
+        if (_viewModel is null || sender is not BalloonCheckBox checkBox)
             return;
 
-        _viewModel.SetSelections(shouldCheck);
+        _viewModel.SetSelections(checkBox.IsChecked);
     }
 
     private async void OnAddPlaceholderClick(object sender, RoutedEventArgs e)
@@ -94,10 +104,15 @@ public partial class SettingsAccountsTab : UserControl
             var confirmationMessage = await _viewModel.BuildDeleteConfirmationMessageAsync(sourceItem.Id, sourceItem.Name);
             if (FluxoMessageBox.Show(Window.GetWindow(this), confirmationMessage, "Settings", MessageBoxButton.YesNo,
                     MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            {
+                RestoreToggleState(sender);
                 return;
+            }
         }
 
         var result = await _viewModel.ExecuteItemActionAsync(sourceItem.Id, action);
+        if (!result.IsSuccess)
+            RestoreToggleState(sender);
         ShowResult(result);
     }
 
@@ -112,7 +127,7 @@ public partial class SettingsAccountsTab : UserControl
 
         _viewModel.SelectSingleItem(sourceItem.Id);
 
-        if (e.ClickCount < 2 || IsCheckBoxClick(originalSource))
+        if (e.ClickCount < 2 || _viewModel.IsAccountChecksEnabled)
             return;
 
         await _viewModel.OpenAccountDetailAsync(sourceItem.Id);
@@ -126,37 +141,23 @@ public partial class SettingsAccountsTab : UserControl
             return false;
 
         var parts = tag.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        return parts.Length == 2 && Enum.TryParse(parts[1], out action);
-    }
-
-    private static bool TryParseChecksToggle(object sender, out bool isEnabled)
-    {
-        isEnabled = false;
-
-        if (sender is not FrameworkElement { Tag: string tag })
-            return false;
-
-        var parts = tag.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (parts.Length != 2)
             return false;
 
-        isEnabled = string.Equals(parts[1], "EnableChecks", StringComparison.Ordinal);
-        return true;
-    }
+        if (sender is BalloonCheckBox checkBox)
+        {
+            action = parts[1] switch
+            {
+                "PinToggle" => checkBox.IsChecked ? SettingsBatchAction.Pin : SettingsBatchAction.Unpin,
+                "EnableToggle" => checkBox.IsChecked ? SettingsBatchAction.Enable : SettingsBatchAction.Disable,
+                _ => default
+            };
 
-    private static bool TryParseSelectionAction(object sender, out bool shouldCheck)
-    {
-        shouldCheck = false;
+            if (parts[1] is "PinToggle" or "EnableToggle")
+                return true;
+        }
 
-        if (sender is not FrameworkElement { Tag: string tag })
-            return false;
-
-        var parts = tag.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (parts.Length != 2)
-            return false;
-
-        shouldCheck = string.Equals(parts[1], "CheckAll", StringComparison.Ordinal);
-        return true;
+        return Enum.TryParse(parts[1], out action);
     }
 
     private static bool ShouldIgnoreRowClick(DependencyObject? source)
@@ -165,9 +166,10 @@ public partial class SettingsAccountsTab : UserControl
         return clickedButton is not null && clickedButton is not CheckBox;
     }
 
-    private static bool IsCheckBoxClick(DependencyObject? source)
+    private static void RestoreToggleState(object sender)
     {
-        return DependencyObjectTree.FindAncestor<CheckBox>(source) is not null;
+        if (sender is BalloonCheckBox checkBox)
+            checkBox.IsChecked = !checkBox.IsChecked;
     }
 
     private void ShowResult(SettingsOperationResult result)

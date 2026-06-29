@@ -42,6 +42,7 @@ public partial class SettingsRecurringTransactionsTabVM : ObservableObject
     public ObservableCollection<SettingsRecurringTransactionItemVM> RecurringTransactions { get; } = [];
     public ICollectionView RecurringTransactionsView { get; }
     public bool AreAllRecurringTransactionsChecked => RecurringTransactions.Count > 0 && RecurringTransactions.All(item => item.IsChecked);
+    public bool HasCheckedRecurringTransactions => RecurringTransactions.Any(item => item.IsChecked);
     public bool HasRecurringTransactions => RecurringTransactions.Count > 0;
 
     public bool ShowRecurringTransactionDisableActionButton =>
@@ -260,6 +261,7 @@ public partial class SettingsRecurringTransactionsTabVM : ObservableObject
     private void OnSelectionStateChanged()
     {
         OnPropertyChanged(nameof(AreAllRecurringTransactionsChecked));
+        OnPropertyChanged(nameof(HasCheckedRecurringTransactions));
         OnPropertyChanged(nameof(ShowRecurringTransactionDisableActionButton));
         OnPropertyChanged(nameof(ShowRecurringTransactionEnableActionButton));
         OnPropertyChanged(nameof(ShowRecurringTransactionCheckAllButton));
