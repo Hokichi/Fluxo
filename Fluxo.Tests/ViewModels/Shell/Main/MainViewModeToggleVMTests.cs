@@ -46,6 +46,22 @@ public class MainViewModeToggleVMTests
     }
 
     [Fact]
+    public void ViewModeChangeMessage_SynchronizesSeparateToggleViewModels()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var dashboardToggle = new MainViewModeToggleVM(messenger);
+        var ledgerToggle = new MainViewModeToggleVM(messenger);
+
+        dashboardToggle.SetSelectedMainContentViewCommand.Execute(MainContentViewMode.Weekly);
+
+        Assert.Equal(MainContentViewMode.Weekly, ledgerToggle.SelectedMainContentViewMode);
+
+        ledgerToggle.SetSelectedMainContentViewCommand.Execute(MainContentViewMode.Monthly);
+
+        Assert.Equal(MainContentViewMode.Monthly, dashboardToggle.SelectedMainContentViewMode);
+    }
+
+    [Fact]
     public void SetSelectedMainContentViewCommand_UpdatesAllocationPeriodSelectionFlag()
     {
         var vm = new MainViewModeToggleVM();

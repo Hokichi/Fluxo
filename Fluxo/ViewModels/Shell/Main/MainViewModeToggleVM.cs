@@ -9,7 +9,9 @@ using Fluxo.Resources.Resources.Messages;
 
 namespace Fluxo.ViewModels.Shell.Main;
 
-public partial class MainViewModeToggleVM : ObservableRecipient, IRecipient<SpinnerPeriodStateChangedMessage>
+public partial class MainViewModeToggleVM : ObservableRecipient,
+    IRecipient<SpinnerPeriodStateChangedMessage>,
+    IRecipient<ViewModeChangeMessage>
 {
     private readonly IDialogService? _dialogService;
     private readonly IUiSettleAwaiter? _uiSettleAwaiter;
@@ -95,6 +97,11 @@ public partial class MainViewModeToggleVM : ObservableRecipient, IRecipient<Spin
         IsAtCurrentPeriod = message.Value.IsAtCurrentPeriod;
         IsSpinnerVisible = message.Value.IsSpinnerVisible;
         MoveToCurrentLabel = message.Value.MoveToCurrentLabel;
+    }
+
+    public void Receive(ViewModeChangeMessage message)
+    {
+        SelectedMainContentViewMode = message.Value;
     }
 
     public async Task SetSelectedMainContentViewFromUserAsync(MainContentViewMode viewMode, Window? owner = null)
