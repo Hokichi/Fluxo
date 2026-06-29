@@ -51,11 +51,11 @@
                                 Foreground="{StaticResource Brush.Text.Primary}">
                                 <TextBlock.ToolTip>
                                     <TextBlock>
-                                        <Run Text="{Binding AmountSign}" />
+                                        <Run Text="{Binding AmountSign, Mode=OneWay}" />
                                         <Run Text="{Binding Amount, Mode=OneWay, Converter={StaticResource MoneyFullDisplayConverter}}" />
                                     </TextBlock>
                                 </TextBlock.ToolTip>
-                                <Run Text="{Binding AmountSign}" />
+                                <Run Text="{Binding AmountSign, Mode=OneWay}" />
                                 <Run Text="{Binding Amount, Mode=OneWay, Converter={StaticResource NumberWithCommasConverter}}" />
                             </TextBlock>
                             <TextBlock
@@ -122,9 +122,7 @@
                     <Setter TargetName="RowActions" Property="Opacity" Value="1" />
                     <Setter TargetName="RowActions" Property="IsHitTestVisible" Value="True" />
                 </Trigger>
-                <DataTrigger
-                    Binding="{Binding DataContext.IsRecurringTransactionChecksEnabled, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                    Value="True">
+                <DataTrigger Binding="{Binding DataContext.IsRecurringTransactionChecksEnabled, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}" Value="True">
                     <Setter TargetName="RowActions" Property="Visibility" Value="Collapsed" />
                     <Setter TargetName="RowActions" Property="Opacity" Value="0" />
                     <Setter TargetName="RowActions" Property="IsHitTestVisible" Value="False" />
@@ -161,10 +159,10 @@
                         Click="OnBatchActionClick"
                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
+                        IsEnabled="{Binding HasCheckedRecurringTransactions}"
                         Style="{StaticResource ToolbarActionBalloonButtonStyle}"
                         Tag="RecurringTransactions:Delete"
                         ToolTip="Delete selected"
-                        IsEnabled="{Binding HasCheckedRecurringTransactions}"
                         Visibility="{Binding IsRecurringTransactionChecksEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <customControls:BalloonCheckBox
                         CheckedBackground="{StaticResource Brush.BalloonButton.Background.Caution}"

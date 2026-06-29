@@ -47,11 +47,11 @@
                             Foreground="{StaticResource Brush.Text.Primary}">
                             <TextBlock.ToolTip>
                                 <TextBlock>
-                                    <Run Text="{Binding AmountSign}" />
+                                    <Run Text="{Binding AmountSign, Mode=OneWay}" />
                                     <Run Text="{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}}" />
                                 </TextBlock>
                             </TextBlock.ToolTip>
-                            <Run Text="{Binding AmountSign}" />
+                            <Run Text="{Binding AmountSign, Mode=OneWay}" />
                             <Run Text="{Binding Amount, Converter={StaticResource NumberWithCommasConverter}}" />
                         </TextBlock>
 
