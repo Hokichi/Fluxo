@@ -18,6 +18,15 @@ public sealed class BalloonControlDependencyPropertyTests
     }
 
     [Fact]
+    public void BalloonControl_ExposesStrokePropertiesWithInvisibleDefaults()
+    {
+        Assert.Equal(typeof(BalloonControl), BalloonControl.StrokeBrushProperty.OwnerType);
+        Assert.Equal(typeof(BalloonControl), BalloonControl.StrokeThicknessProperty.OwnerType);
+        Assert.Null(BalloonControl.StrokeBrushProperty.GetMetadata(typeof(BalloonControl)).DefaultValue);
+        Assert.Equal(0d, BalloonControl.StrokeThicknessProperty.GetMetadata(typeof(BalloonControl)).DefaultValue);
+    }
+
+    [Fact]
     public void BalloonControl_CalculatesAutoOpenWidth()
     {
         Assert.Equal(88, BalloonControl.CalculateAutoOpenWidth(

@@ -38,6 +38,16 @@ public class BalloonControl : ButtonBase
         DependencyProperty.Register(nameof(HoveredBackground), typeof(Brush), typeof(BalloonControl),
             new PropertyMetadata(Brushes.RoyalBlue));
 
+    // --- StrokeBrush ---
+    public static readonly DependencyProperty StrokeBrushProperty =
+        DependencyProperty.Register(nameof(StrokeBrush), typeof(Brush), typeof(BalloonControl),
+            new PropertyMetadata(null));
+
+    // --- StrokeThickness ---
+    public static readonly DependencyProperty StrokeThicknessProperty =
+        DependencyProperty.Register(nameof(StrokeThickness), typeof(double), typeof(BalloonControl),
+            new PropertyMetadata(0d));
+
     // --- ButtonIcon ---
     public static readonly DependencyProperty ButtonIconProperty =
         DependencyProperty.Register(nameof(ButtonIcon), typeof(object), typeof(BalloonControl),
@@ -102,6 +112,18 @@ public class BalloonControl : ButtonBase
     {
         get => (Brush)GetValue(HoveredBackgroundProperty);
         set => SetValue(HoveredBackgroundProperty, value);
+    }
+
+    public Brush? StrokeBrush
+    {
+        get => (Brush?)GetValue(StrokeBrushProperty);
+        set => SetValue(StrokeBrushProperty, value);
+    }
+
+    public double StrokeThickness
+    {
+        get => (double)GetValue(StrokeThicknessProperty);
+        set => SetValue(StrokeThicknessProperty, value);
     }
 
     public object? ButtonIcon

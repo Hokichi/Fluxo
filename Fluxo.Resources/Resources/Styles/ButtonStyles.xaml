@@ -15,7 +15,11 @@
                 <ControlTemplate TargetType="{x:Type c:BalloonControl}">
                     <Grid>
                         <!--  Balloon shape  -->
-                        <Path x:Name="PART_Shape" Fill="{TemplateBinding DefaultBackground}" />
+                        <Path
+                            x:Name="PART_Shape"
+                            Fill="{TemplateBinding DefaultBackground}"
+                            Stroke="{TemplateBinding StrokeBrush}"
+                            StrokeThickness="{TemplateBinding StrokeThickness}" />
                         <!--  Pressed overlay shares geometry with PART_Shape via code-behind  -->
                         <Path
                             x:Name="PART_Overlay"
@@ -47,7 +51,7 @@
                                         Stretch="Uniform">
                                         <Path.Fill>
                                             <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
-                                                <Binding Path="Background" RelativeSource="{RelativeSource TemplatedParent}" />
+                                                <Binding ElementName="PART_Shape" Path="Fill" />
                                                 <Binding Path="Foreground" RelativeSource="{RelativeSource TemplatedParent}" />
                                             </MultiBinding>
                                         </Path.Fill>
@@ -70,7 +74,7 @@
                                         TextWrapping="NoWrap">
                                         <TextBlock.Foreground>
                                             <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
-                                                <Binding Path="Background" RelativeSource="{RelativeSource TemplatedParent}" />
+                                                <Binding ElementName="PART_Shape" Path="Fill" />
                                                 <Binding Path="Foreground" RelativeSource="{RelativeSource TemplatedParent}" />
                                             </MultiBinding>
                                         </TextBlock.Foreground>

@@ -35,13 +35,24 @@ public sealed class BalloonButtonStyleTests
         var style = ReadDefaultBalloonButtonStyle();
 
         Assert.Contains("Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\"", style);
-        Assert.Matches(
-            new Regex("Path=\"Background\"[\\s\\S]*RelativeSource=\"\\{RelativeSource TemplatedParent\\}\"", RegexOptions.Singleline),
-            style);
+        Assert.Equal(2, style.Split(
+            "<Binding ElementName=\"PART_Shape\" Path=\"Fill\" />",
+            StringSplitOptions.None).Length - 1);
+        Assert.DoesNotContain("<Binding Path=\"Background\" RelativeSource=\"{RelativeSource TemplatedParent}\" />", style);
         Assert.Contains("Path=\"Foreground\" RelativeSource=\"{RelativeSource TemplatedParent}\"", style);
         Assert.Contains("<MultiBinding Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\">", style);
         Assert.Contains("<Path.Fill>", style);
         Assert.Contains("<TextBlock.Foreground>", style);
+    }
+
+    [Fact]
+    public void BalloonButtonDefaultTemplate_BindsStrokeToBalloonShape()
+    {
+        var style = ReadDefaultBalloonButtonStyle();
+
+        Assert.Matches(
+            new Regex("PART_Shape[\\s\\S]*Stroke=\"\\{TemplateBinding StrokeBrush\\}\"[\\s\\S]*StrokeThickness=\"\\{TemplateBinding StrokeThickness\\}\"", RegexOptions.Singleline),
+            style);
     }
 
     [Fact]
