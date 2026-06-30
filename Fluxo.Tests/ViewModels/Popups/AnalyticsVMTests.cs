@@ -19,6 +19,15 @@ namespace Fluxo.Tests.ViewModels.Popups;
 public sealed class AnalyticsVMTests
 {
     [Fact]
+    public void InitialDateRange_CoversSevenInclusiveDatesEndingToday()
+    {
+        var vm = CreateVm();
+
+        Assert.Equal(DateTime.Today.AddDays(-6), vm.StartDate.Date);
+        Assert.Equal(DateTime.Today, vm.EndDate.Date);
+    }
+
+    [Fact]
     public void DateRangeOver31Days_AdjustsEndDateAndShowsWarning()
     {
         var vm = CreateVm();

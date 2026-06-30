@@ -42,7 +42,7 @@ public sealed partial class AnalyticsVM(
         bool IsSecondaryExpenseSeries,
         bool IsSecondaryIncomeSeries);
 
-    [ObservableProperty] private DateTime _startDate = DateTime.Today;
+    [ObservableProperty] private DateTime _startDate = DateTime.Today.AddDays(-6);
     [ObservableProperty] private DateTime _endDate = DateTime.Today;
     [ObservableProperty] private AnalyticsTrendMode _selectedTrendMode = AnalyticsTrendMode.Both;
 

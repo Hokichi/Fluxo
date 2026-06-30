@@ -11,6 +11,29 @@ public sealed class MainWindowPageRegressionTests
     private static readonly XNamespace XamlNamespace = "http://schemas.microsoft.com/winfx/2006/xaml";
 
     [Fact]
+    public void OrdinaryAnalyticsNavigation_PreservesAnalyticsDateSelection()
+    {
+        var source = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "MainWindow.xaml.cs"));
+        var prepareBody = ExtractMethodBodyBySignature(source, "private async Task PrepareMainPageContentAsync(MainPage page)");
+        var analyticsStart = prepareBody.IndexOf("case MainPage.Analytics:", StringComparison.Ordinal);
+        var calendarStart = prepareBody.IndexOf("case MainPage.Calendar:", analyticsStart, StringComparison.Ordinal);
+        var analyticsCase = prepareBody[analyticsStart..calendarStart];
+
+        Assert.DoesNotContain("ApplyOpenRange", analyticsCase);
+        Assert.Contains("PrepareForOpenAsync(showInternalToast: false)", analyticsCase);
+    }
+
+    [Fact]
+    public void DaySelector_IsCollapsedOutsideDashboard()
+    {
+        var source = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "MainWindow.xaml.cs"));
+
+        Assert.Contains("DaySpinnerControlHost.Visibility = page == MainPage.Dashboard", source);
+        Assert.Contains("? Visibility.Visible", source);
+        Assert.Contains(": Visibility.Collapsed", source);
+    }
+
+    [Fact]
     public void MainPages_AreStoredUnderPagesFolder()
     {
         foreach (var pageName in new[] { "Dashboard", "Analytics", "Calendar", "Ledger" })
@@ -117,14 +140,13 @@ public sealed class MainWindowPageRegressionTests
     }
 
     [Fact]
-    public void MainWindow_DisablesHeaderDateSelectorForAnalyticsAndCalendar()
+    public void MainWindow_HidesHeaderDateSelectorOutsideDashboard()
     {
         var source = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "MainWindow.xaml.cs"));
 
-        Assert.Contains("UpdateHeaderDateSelectorEnabledState(_activeMainPage);", source);
-        Assert.Contains("DaySpinnerControlHost.IsEnabled = page is not MainPage.Analytics and not MainPage.Calendar;", source);
-        Assert.DoesNotContain("DaySpinnerControlHost.IsHitTestVisible = page is not MainPage.Analytics and not MainPage.Calendar;", source);
-        Assert.DoesNotContain("UpdateHeaderDateSelectorEnabledState(null);", source);
+        Assert.Contains("UpdateHeaderDaySelectorVisibility(_activeMainPage);", source);
+        Assert.Contains("DaySpinnerControlHost.Visibility = page == MainPage.Dashboard", source);
+        Assert.DoesNotContain("UpdateHeaderDateSelectorEnabledState", source);
     }
 
     [Fact]
@@ -135,7 +157,7 @@ public sealed class MainWindowPageRegressionTests
         Assert.Contains("UpdateHeaderDaySpinnerPagePolicy(_activeMainPage);", source);
         Assert.Contains("private void UpdateHeaderDaySpinnerPagePolicy(MainPage page)", source);
         Assert.Contains("_mainVM.DaySpinner.AllowFuturePeriodNavigation = page == MainPage.Dashboard;", source);
-        Assert.Contains("UpdateHeaderDateSelectorEnabledState(_activeMainPage);", source);
+        Assert.Contains("UpdateHeaderDaySelectorVisibility(_activeMainPage);", source);
     }
 
     [Fact]

@@ -154,7 +154,7 @@ public partial class MainWindow : Window, IPopupHost
             SetDashboardMainContentHitTestVisible(!_mainVM.IsAppLocked);
             MainPageHost.Content = _dashboardPageView;
             UpdateMainNavigationCheckedState(_activeMainPage);
-            UpdateHeaderDateSelectorEnabledState(_activeMainPage);
+            UpdateHeaderDaySelectorVisibility(_activeMainPage);
             UpdateHeaderDaySpinnerPagePolicy(_activeMainPage);
             _currentBounds = new Rect(Left, Top, Width, Height);
             UpdateExpandRestoreButtonIcon();
@@ -1556,7 +1556,7 @@ public partial class MainWindow : Window, IPopupHost
                     _activeMainPage = page;
                     RefreshActivePageTitle();
                     UpdateMainNavigationCheckedState(_activeMainPage);
-                    UpdateHeaderDateSelectorEnabledState(_activeMainPage);
+                    UpdateHeaderDaySelectorVisibility(_activeMainPage);
                     UpdateHeaderDaySpinnerPagePolicy(_activeMainPage);
                 },
                 this);
@@ -1617,7 +1617,6 @@ public partial class MainWindow : Window, IPopupHost
                 return;
 
             case MainPage.Analytics:
-                ApplyMainWindowRangeToAnalyticsIfBounded();
                 await _analyticsPageView!.PrepareForOpenAsync(showInternalToast: false);
                 return;
 
@@ -1724,9 +1723,11 @@ public partial class MainWindow : Window, IPopupHost
         LedgerNavigationButton.IsChecked = page == MainPage.Ledger;
     }
 
-    private void UpdateHeaderDateSelectorEnabledState(MainPage page)
+    private void UpdateHeaderDaySelectorVisibility(MainPage page)
     {
-        DaySpinnerControlHost.IsEnabled = page is not MainPage.Analytics and not MainPage.Calendar;
+        DaySpinnerControlHost.Visibility = page == MainPage.Dashboard
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 
     private void UpdateHeaderDaySpinnerPagePolicy(MainPage page)
@@ -1846,30 +1847,6 @@ public partial class MainWindow : Window, IPopupHost
         var popupViewModel = new TransactionDetailVM(_mainVM, expenseLog, appData);
         await popupViewModel.BeginEditingAsync();
         _dialogService.ShowTransactionDetail(popupViewModel, this);
-    }
-
-    private void ApplyMainWindowRangeToAnalyticsIfBounded()
-    {
-        if (_analyticsPageView is null)
-            return;
-
-        var selectedMode = _mainVM.Dashboard.ViewModeToggle.SelectedMainContentViewMode;
-        if (selectedMode == MainContentViewMode.AllTime)
-            return;
-
-        if (selectedMode == MainContentViewMode.AllocationPeriod)
-        {
-            var allocationRange = _mainVM.BudgetPanel.GetCurrentAllocationPeriodRange(DateTime.Today);
-            _analyticsPageView.ApplyOpenRange(allocationRange.From, allocationRange.To);
-            return;
-        }
-
-        var selectedDate = _mainVM.DaySpinner.SelectedDay.Date;
-        if (selectedDate == default)
-            selectedDate = DateTime.Today;
-
-        var range = DateRangeResolver.Resolve(selectedDate, selectedMode);
-        _analyticsPageView.ApplyOpenRange(range.From, range.To);
     }
 
     private void ApplyMainWindowRangeToLedger()
