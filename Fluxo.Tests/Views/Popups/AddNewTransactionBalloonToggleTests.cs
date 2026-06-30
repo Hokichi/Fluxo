@@ -19,22 +19,19 @@ public sealed class AddNewTransactionBalloonToggleTests
     }
 
     [Fact]
-    public void TransactionModes_UseFiveStateBalloonToggles()
+    public void TransactionModes_UseIndependentExclusionAndFourRadioButtons()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml"));
         var codeBehind = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml.cs"));
 
-        Assert.Equal(1, xaml.Split("ToolTip=\"Transaction mode\"", StringSplitOptions.None).Length - 1);
-        Assert.Contains("ButtonText=\"Recurring\"", xaml);
-        Assert.Contains("ButtonText=\"Installments\"", xaml);
-        Assert.Equal(1, xaml.Split("ButtonText=\"Exclude\"", StringSplitOptions.None).Length - 1);
-        Assert.Contains("ButtonText=\"Exclude from budget\"", xaml);
-        Assert.Equal(1, xaml.Split("ButtonText=\"Set as Debt and Exclude\"", StringSplitOptions.None).Length - 1);
-        Assert.Equal(1, xaml.Split("ButtonText=\"Set as debt and exclude\"", StringSplitOptions.None).Length - 1);
-        Assert.Equal(2, xaml.Split("ButtonIcon=\"{StaticResource CreditCardOff}\"", StringSplitOptions.None).Length - 1);
-        Assert.Equal(2, xaml.Split("ButtonIcon=\"{StaticResource CreditCardXRegular}\"", StringSplitOptions.None).Length - 1);
-        Assert.Contains("OnChecked=\"{Binding HandleExcludeModeClickCommand}\"", xaml);
-        Assert.Contains("OnChecked=\"{Binding HandleExcludedIoUModeClickCommand}\"", xaml);
+        Assert.Contains("IsChecked=\"{Binding IsBudgetExcluded, Mode=TwoWay}\"", xaml);
+        Assert.Contains("UncheckedIcon=\"{StaticResource CreditCardOff}\"", xaml);
+        Assert.Equal(4, xaml.Split("GroupName=\"AddTransactionMode\"", StringSplitOptions.None).Length - 1);
+        Assert.Contains("UncheckedText=\"Regular\"", xaml);
+        Assert.Contains("UncheckedText=\"Recurring\"", xaml);
+        Assert.Contains("UncheckedText=\"Installment\"", xaml);
+        Assert.Contains("UncheckedText=\"Debt/IoU\"", xaml);
+        Assert.Contains("SelectedDate=\"{Binding StartDate, Mode=TwoWay}\"", xaml);
         Assert.DoesNotContain("OnRecurringModePreviewMouseLeftButtonDown", xaml + codeBehind);
         Assert.DoesNotContain("OnInstallmentsModePreviewMouseLeftButtonDown", xaml + codeBehind);
         Assert.DoesNotContain("OnIoUModePreviewMouseLeftButtonDown", xaml + codeBehind);

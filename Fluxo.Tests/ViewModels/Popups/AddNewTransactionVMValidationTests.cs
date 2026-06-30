@@ -1632,7 +1632,7 @@ public sealed class AddNewTransactionVMValidationTests
         RunInSta(() =>
         {
             var vm = CreateVm(kind, CreateCheckingSource(balance: 500m), isRecurring: true, amount: 21.5m);
-            vm.InstallmentCalculationDate = new DateTime(2026, 6, 20);
+            vm.StartDate = new DateTime(2026, 6, 20);
             vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
             vm.RecurringTimeText = "1";
             vm.InstallmentEndDate = new DateTime(2026, 10, 10);
@@ -1655,7 +1655,7 @@ public sealed class AddNewTransactionVMValidationTests
                 amount: 90m,
                 name: "Laptop",
                 appData: appData);
-            vm.InstallmentCalculationDate = new DateTime(2026, 6, 18);
+            vm.StartDate = new DateTime(2026, 6, 18);
             vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
             vm.RecurringTimeText = "20";
             vm.InstallmentEndDate = new DateTime(2026, 8, 21);
@@ -1676,7 +1676,7 @@ public sealed class AddNewTransactionVMValidationTests
         RunInSta(() =>
         {
             var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 30m), isRecurring: true, amount: 100m);
-            vm.InstallmentCalculationDate = new DateTime(2026, 6, 20);
+            vm.StartDate = new DateTime(2026, 6, 20);
             vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
             vm.RecurringTimeText = "1";
             vm.InstallmentEndDate = new DateTime(2026, 10, 10);
@@ -1693,7 +1693,7 @@ public sealed class AddNewTransactionVMValidationTests
         {
             var source = CreateCheckingSource(balance: 500m, maximumSpending: 100m, moneyOut: 70m);
             var vm = CreateVm(TransactionKind.Expense, source, isRecurring: true, amount: 100m);
-            vm.InstallmentCalculationDate = new DateTime(2026, 6, 20);
+            vm.StartDate = new DateTime(2026, 6, 20);
             vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
             vm.RecurringTimeText = "1";
             vm.InstallmentEndDate = new DateTime(2026, 10, 10);
@@ -1729,7 +1729,7 @@ public sealed class AddNewTransactionVMValidationTests
                 .Returns(Task.FromResult<Account?>(staleSource));
 
             var vm = CreateVm(TransactionKind.Expense, sourceVm, isRecurring: true, amount: 100m, appData: appData);
-            vm.InstallmentCalculationDate = new DateTime(2026, 6, 20);
+            vm.StartDate = new DateTime(2026, 6, 20);
             vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
             vm.RecurringTimeText = "1";
             vm.InstallmentEndDate = new DateTime(2026, 10, 10);
@@ -1748,7 +1748,7 @@ public sealed class AddNewTransactionVMValidationTests
         {
             var source = CreateCheckingSource(balance: 500m, maximumSpending: 100m, moneyOut: 70m);
             var vm = CreateVm(TransactionKind.Expense, source, isRecurring: true, amount: 100m);
-            vm.InstallmentCalculationDate = new DateTime(2026, 6, 20);
+            vm.StartDate = new DateTime(2026, 6, 20);
             vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
             vm.RecurringTimeText = "1";
             vm.InstallmentEndDate = new DateTime(2026, 6, 20);
@@ -1767,7 +1767,7 @@ public sealed class AddNewTransactionVMValidationTests
         RunInSta(() =>
         {
             var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 30m), isRecurring: true, amount: 100m);
-            vm.InstallmentCalculationDate = new DateTime(2026, 6, 20);
+            vm.StartDate = new DateTime(2026, 6, 20);
             vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
             vm.RecurringTimeText = "1";
             vm.InstallmentEndDate = new DateTime(2026, 10, 10);
@@ -1789,7 +1789,7 @@ public sealed class AddNewTransactionVMValidationTests
         RunInSta(() =>
         {
             var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 25m), isRecurring: true, amount: 90m);
-            vm.InstallmentCalculationDate = new DateTime(2026, 6, 18);
+            vm.StartDate = new DateTime(2026, 6, 18);
             vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
             vm.RecurringTimeText = "20";
             vm.InstallmentEndDate = new DateTime(2026, 8, 21);
@@ -1820,7 +1820,7 @@ public sealed class AddNewTransactionVMValidationTests
                 amount: 100m,
                 name: "Laptop",
                 appData: appData);
-            vm.InstallmentCalculationDate = new DateTime(2026, 6, 20);
+            vm.StartDate = new DateTime(2026, 6, 20);
             vm.SelectedRecurringPeriod = RecurringPeriod.Monthly;
             vm.RecurringTimeText = "1";
             vm.InstallmentEndDate = new DateTime(2026, 10, 10);
@@ -1980,6 +1980,38 @@ public sealed class AddNewTransactionVMValidationTests
             Assert.True(vm.IsPinned);
             Assert.True(vm.IsRecurring);
             Assert.Same(source, vm.SelectedAccount);
+        });
+    }
+
+    [Fact]
+    public void ModeBindings_DefaultToRegular_AndGoalForcesBudgetExclusion()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 500m), isRecurring: false);
+            Assert.True(vm.IsRegularMode);
+            vm.IsGoal = true;
+            Assert.True(vm.IsBudgetExcluded);
+            Assert.False(vm.CanToggleBudgetExclusion);
+            Assert.False(vm.CanUseInstallments);
+            Assert.False(vm.CanUseIoU);
+            vm.IsExpense = true;
+            Assert.False(vm.IsBudgetExcluded);
+            Assert.True(vm.CanToggleBudgetExclusion);
+        });
+    }
+
+    [Fact]
+    public void HasChanges_IgnoresGeneratedGoalName()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(TransactionKind.Goal, CreateCheckingSource(balance: 500m), isRecurring: false);
+            vm.BeginChangeTracking();
+            vm.NameText = "Generated replacement";
+            Assert.False(vm.HasChanges);
+            vm.AmountText = 1m;
+            Assert.True(vm.HasChanges);
         });
     }
 

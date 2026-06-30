@@ -133,6 +133,7 @@ public partial class QuickSetupWizardRecurringTransactionsVM : ObservableObject
                 persisted.TagId = tagId;
                 persisted.RecurringPeriod = draft.RecurringPeriod;
                 persisted.RecurringTime = draft.RecurringTime;
+                persisted.EndDate = draft.EndDate;
                 appData.UpdateRecurringTransaction(persisted);
             }
             else
@@ -147,7 +148,8 @@ public partial class QuickSetupWizardRecurringTransactionsVM : ObservableObject
                     Category = draft.Type == RecurringTransactionType.Expense ? draft.Category : null,
                     SourceId = mappedSourceId,
                     TagId = tagId,
-                    IsEnabled = true
+                    IsEnabled = true,
+                    EndDate = draft.EndDate
                 });
             }
         }
@@ -202,7 +204,8 @@ public partial class QuickSetupWizardRecurringTransactionsVM : ObservableObject
                 expense.TagId.HasValue && tagNamesById.TryGetValue(expense.TagId.Value, out var tagName)
                     ? tagName
                     : "General",
-                expense.IsEnabled);
+                expense.IsEnabled,
+                expense.EndDate);
         }
 
         _removedPersistedIds.Clear();
@@ -234,7 +237,8 @@ public partial class QuickSetupWizardRecurringTransactionsVM : ObservableObject
             input.RecurringTime,
             input.TagId ?? 0,
             tagName,
-            true);
+            true,
+            input.EndDate);
 
         if (id > 0)
             _removedPersistedIds.Remove(id);

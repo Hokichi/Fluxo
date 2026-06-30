@@ -84,6 +84,11 @@ public partial class TransactionDetailVM : ObservableObject
 
     public bool AreFieldsReadOnly => !IsEditing;
     public bool CanEditFields => IsEditing;
+    public bool IsRegularMode
+    {
+        get => !IsIoU;
+        set { if (value) IsIoU = false; }
+    }
     public bool IsExpense => _transaction.Type == TransactionType.Expense;
     public string IoUTooltip => IsExpense ? "Set as lend" : "Set as debt";
     public bool IsCategoryEnabled => IsEditing && IsExpense;
@@ -150,33 +155,7 @@ public partial class TransactionDetailVM : ObservableObject
         IsMoreTagsOpen = false;
     }
 
-    [RelayCommand]
-    public void HandleIoUModeClick()
-    {
-        ClearTransactionModes();
-        IsIoU = true;
-    }
-
-    [RelayCommand]
-    public void HandleExcludeModeClick()
-    {
-        ClearTransactionModes();
-        IsExcludedFromBudget = true;
-    }
-
-    [RelayCommand]
-    public void HandleExcludedIoUModeClick()
-    {
-        ClearTransactionModes();
-        IsIoU = true;
-        IsExcludedFromBudget = true;
-    }
-
-    private void ClearTransactionModes()
-    {
-        IsIoU = false;
-        IsExcludedFromBudget = false;
-    }
+    partial void OnIsIoUChanged(bool value) => OnPropertyChanged(nameof(IsRegularMode));
 
     public async Task BeginEditingAsync()
     {

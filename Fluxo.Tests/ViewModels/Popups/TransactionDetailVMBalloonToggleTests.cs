@@ -9,16 +9,15 @@ public sealed class TransactionDetailVMBalloonToggleTests
         "Fluxo", "ViewModels", "Popups", "TransactionDetailVM.cs");
 
     [Fact]
-    public void Commands_SetOnlySupportedUpdateModes()
+    public void RegularMode_MapsToInverseOfIoU()
     {
         var source = File.ReadAllText(ViewModelPath);
 
-        Assert.Contains("public void HandleIoUModeClick()", source);
-        Assert.Contains("public void HandleExcludeModeClick()", source);
-        Assert.Contains("public void HandleExcludedIoUModeClick()", source);
-        Assert.Contains("private void ClearTransactionModes()", source);
-        Assert.Contains("IsIoU = true;", source);
-        Assert.Contains("IsExcludedFromBudget = true;", source);
+        Assert.Contains("public bool IsRegularMode", source);
+        Assert.Contains("get => !IsIoU;", source);
+        Assert.Contains("if (value) IsIoU = false;", source);
+        Assert.DoesNotContain("public void HandleIoUModeClick()", source);
+        Assert.DoesNotContain("public void HandleExcludeModeClick()", source);
         Assert.DoesNotContain("public void HandleRecurringModeClick()", source);
         Assert.DoesNotContain("public void HandleInstallmentsModeClick()", source);
     }

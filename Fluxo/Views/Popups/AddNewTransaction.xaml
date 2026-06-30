@@ -352,47 +352,18 @@
                                 LostKeyboardFocus="OnTransactionNameTextBoxLostKeyboardFocus"
                                 Style="{StaticResource RoundedTextInputStyle}"
                                 Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                            <customControls:BalloonToggle
+                            <customControls:BalloonCheckBox
                                 Grid.Column="2"
                                 ButtonSize="38"
                                 CornerRadius="12"
                                 DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                                 HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                 IconSize="14"
-                                IsEnabled="{Binding CanToggleRecurring}">
-                                <customControls:BalloonToggle.States>
-                                    <customControls:BalloonToggleState
-                                        ButtonIcon="{StaticResource RegularRepeat}"
-                                        ButtonText="Set as Recurring"
-                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
-                                        HoverBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
-                                        OnChecked="{Binding HandleRecurringModeClickCommand}" />
-                                    <customControls:BalloonToggleState
-                                        ButtonIcon="{StaticResource CreditCardClockOutline}"
-                                        ButtonText="Set as Installments"
-                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
-                                        HoverBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
-                                        OnChecked="{Binding HandleInstallmentsModeClickCommand}" />
-                                    <customControls:BalloonToggleState
-                                        ButtonIcon="{StaticResource CreditCardMinusSolid}"
-                                        ButtonText="{Binding IoUTooltip}"
-                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
-                                        HoverBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
-                                        OnChecked="{Binding HandleIoUModeClickCommand}" />
-                                    <customControls:BalloonToggleState
-                                        ButtonIcon="{StaticResource CreditCardOff}"
-                                        ButtonText="Exclude from budget"
-                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
-                                        HoverBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
-                                        OnChecked="{Binding HandleExcludeModeClickCommand}" />
-                                    <customControls:BalloonToggleState
-                                        ButtonIcon="{StaticResource CreditCardXRegular}"
-                                        ButtonText="Set as debt and exclude"
-                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
-                                        HoverBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
-                                        OnChecked="{Binding HandleExcludedIoUModeClickCommand}" />
-                                </customControls:BalloonToggle.States>
-                            </customControls:BalloonToggle>
+                                IsChecked="{Binding IsBudgetExcluded, Mode=TwoWay}"
+                                IsEnabled="{Binding CanToggleBudgetExclusion}"
+                                ToolTip="Exclude from budget"
+                                UncheckedIcon="{StaticResource CreditCardOff}"
+                                UncheckedText="Exclude" />
                             <customControls:BalloonCheckBox
                                 Grid.Column="4"
                                 ButtonSize="38"
@@ -423,71 +394,173 @@
                                 SelectionChanged="OnTransactionNameSuggestionSelectionChanged"
                                 Style="{StaticResource TransactionNameSuggestionListBoxStyle}" />
                         </Popup>
+
+                        <Grid Margin="0,16,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <Grid Style="{StaticResource FieldHeaderGridStyle}">
+                                    <TextBlock
+                                        Margin="0"
+                                        Style="{StaticResource SectionLabelStyle}"
+                                        Text="Amount" />
+                                    <TextBlock Style="{StaticResource FieldValidationHintStyle}" Text="{Binding AmountValidationHint}" />
+                                </Grid>
+                                <customControls:MoneyTextBox
+                                    x:Name="ExpenseAmountTextBox"
+                                    LostKeyboardFocus="OnTransactionAmountTextBoxLostKeyboardFocus"
+                                    Style="{StaticResource RoundedMoneyTextInputStyle}"
+                                    Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}"
+                                    TextChanged="OnTransactionAmountTextBoxTextChanged" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" IsEnabled="{Binding ShowDateSelector}">
+                                <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Date" />
+                                <components:DateSelector x:Name="ExpenseTransactionDateSelector" SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Margin="0,16,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <customControls:BalloonRadioButton
+                                Grid.Column="0"
+                                CheckedBackground="{StaticResource Brush.Success}"
+                                CornerRadius="8"
+                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                                GroupName="AddTransactionMode"
+                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
+                                IconSize="14"
+                                IsChecked="{Binding IsRegularMode, Mode=TwoWay}"
+                                IsEnabled="{Binding CanToggleRecurring}"
+                                ShouldShowText="True"
+                                UncheckedIcon="{StaticResource CreditCardAlt}"
+                                UncheckedText="Regular" />
+                            <customControls:BalloonRadioButton
+                                Grid.Column="2"
+                                Margin="8,0,0,0"
+                                CheckedBackground="{StaticResource Brush.Success}"
+                                CornerRadius="8"
+                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                                GroupName="AddTransactionMode"
+                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
+                                IconSize="14"
+                                IsChecked="{Binding IsRecurring, Mode=TwoWay}"
+                                IsEnabled="{Binding CanToggleRecurring}"
+                                ShouldShowText="True"
+                                UncheckedIcon="{StaticResource RegularRepeat}"
+                                UncheckedText="Recurring" />
+                            <customControls:BalloonRadioButton
+                                Grid.Column="4"
+                                Margin="8,0,0,0"
+                                CheckedBackground="{StaticResource Brush.Success}"
+                                CornerRadius="8"
+                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                                GroupName="AddTransactionMode"
+                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
+                                IconSize="14"
+                                IsChecked="{Binding IsInstallments, Mode=TwoWay}"
+                                IsEnabled="{Binding CanUseInstallments}"
+                                ShouldShowText="True"
+                                UncheckedIcon="{StaticResource CreditCardClockOutline}"
+                                UncheckedText="Installment" />
+                            <customControls:BalloonRadioButton
+                                Grid.Column="6"
+                                Margin="8,0,0,0"
+                                CheckedBackground="{StaticResource Brush.Success}"
+                                CornerRadius="8"
+                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                                GroupName="AddTransactionMode"
+                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
+                                IconSize="14"
+                                IsChecked="{Binding IsIoU, Mode=TwoWay}"
+                                IsEnabled="{Binding CanUseIoU}"
+                                ShouldShowText="True"
+                                UncheckedIcon="{StaticResource CreditCardMinusSolid}"
+                                UncheckedText="Debt/IoU" />
+                        </Grid>
                     </StackPanel>
 
-                    <Grid Margin="0,16,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="16" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
+                    <Border
+                        Margin="0,16,0,0"
+                        Padding="16"
+                        Background="{DynamicResource Brush.Background.Surface}"
+                        BorderBrush="{DynamicResource Brush.Border.Subtle}"
+                        BorderThickness="1"
+                        CornerRadius="12"
+                        Visibility="{Binding ShowRecurringDayInput, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="16" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Recurrence" />
+                                    <ComboBox
+                                        ItemsSource="{Binding RecurringPeriods}"
+                                        SelectedItem="{Binding SelectedRecurringPeriod, Mode=TwoWay}"
+                                        Style="{StaticResource FluxoComboBoxStyle}" />
+                                </StackPanel>
 
-                        <StackPanel Grid.Column="0">
-                            <Grid Style="{StaticResource FieldHeaderGridStyle}">
-                                <TextBlock
-                                    Margin="0"
-                                    Style="{StaticResource SectionLabelStyle}"
-                                    Text="Amount" />
-                                <TextBlock Style="{StaticResource FieldValidationHintStyle}" Text="{Binding AmountValidationHint}" />
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Schedule" />
+                                    <ComboBox
+                                        DisplayMemberPath="Label"
+                                        ItemsSource="{Binding WeekdayOptions}"
+                                        SelectedValue="{Binding RecurringTimeText, Mode=TwoWay}"
+                                        SelectedValuePath="Value"
+                                        Style="{StaticResource FluxoComboBoxStyle}"
+                                        Visibility="{Binding ShowRecurringWeekdayInput, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                    <customControls:NumericUpDown
+                                        LowerLimit="1"
+                                        Step="1"
+                                        UpperLimit="28"
+                                        Visibility="{Binding ShowRecurringMonthlyInput, Converter={StaticResource BoolToVisibilityConverter}}"
+                                        Value="{Binding RecurringTimeText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                                <StackPanel
+                                    Grid.Row="1"
+                                    Margin="0,16,0,0"
+                                    Visibility="{Binding ShowInstallmentEndDate, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Start Date" />
+                                    <components:DateSelector SelectedDate="{Binding StartDate, Mode=TwoWay}" />
+                                </StackPanel>
+                                <StackPanel
+                                    Grid.Row="1"
+                                    Grid.Column="2"
+                                    Margin="0,16,0,0"
+                                    Visibility="{Binding ShowInstallmentEndDate, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <TextBlock Style="{StaticResource SectionLabelStyle}" Text="End Date" />
+                                    <components:DateSelector SelectedDate="{Binding InstallmentEndDate, Mode=TwoWay}" />
+                                </StackPanel>
                             </Grid>
-                            <customControls:MoneyTextBox
-                                x:Name="ExpenseAmountTextBox"
-                                LostKeyboardFocus="OnTransactionAmountTextBoxLostKeyboardFocus"
-                                Style="{StaticResource RoundedMoneyTextInputStyle}"
-                                Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}"
-                                TextChanged="OnTransactionAmountTextBoxTextChanged" />
                             <TextBlock
-                                Margin="0,8,0,0"
+                                Margin="0,16,0,0"
                                 FontFamily="{DynamicResource Regular}"
-                                FontSize="11"
+                                FontSize="12"
                                 Foreground="{DynamicResource Brush.Mint.Muted}"
                                 Text="{Binding InstallmentSummaryText}"
-                                TextWrapping="Wrap" />
+                                TextWrapping="Wrap"
+                                Visibility="{Binding ShowInstallmentEndDate, Converter={StaticResource BoolToVisibilityConverter}}" />
                         </StackPanel>
-
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="{Binding DateOrRecurrenceLabel}" />
-                            <components:DateSelector
-                                x:Name="ExpenseTransactionDateSelector"
-                                SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
-                                Visibility="{Binding ShowDateSelector, Converter={StaticResource BoolToVisibilityConverter}}" />
-                            <StackPanel Visibility="{Binding ShowRecurringDayInput, Converter={StaticResource BoolToVisibilityConverter}}">
-                                <ComboBox
-                                    ItemsSource="{Binding RecurringPeriods}"
-                                    SelectedItem="{Binding SelectedRecurringPeriod, Mode=TwoWay}"
-                                    Style="{StaticResource FluxoComboBoxStyle}" />
-                                <ComboBox
-                                    Margin="0,8,0,0"
-                                    DisplayMemberPath="Label"
-                                    ItemsSource="{Binding WeekdayOptions}"
-                                    SelectedValue="{Binding RecurringTimeText, Mode=TwoWay}"
-                                    SelectedValuePath="Value"
-                                    Style="{StaticResource FluxoComboBoxStyle}"
-                                    Visibility="{Binding ShowRecurringWeekdayInput, Converter={StaticResource BoolToVisibilityConverter}}" />
-                                <customControls:NumericUpDown
-                                    Margin="0,8,0,0"
-                                    LowerLimit="1"
-                                    Step="1"
-                                    UpperLimit="28"
-                                    Visibility="{Binding ShowRecurringMonthlyInput, Converter={StaticResource BoolToVisibilityConverter}}"
-                                    Value="{Binding RecurringTimeText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                            </StackPanel>
-                            <StackPanel Margin="0,16,0,0" Visibility="{Binding ShowInstallmentEndDate, Converter={StaticResource BoolToVisibilityConverter}}">
-                                <TextBlock Style="{StaticResource SectionLabelStyle}" Text="End Date" />
-                                <components:DateSelector SelectedDate="{Binding InstallmentEndDate, Mode=TwoWay}" />
-                            </StackPanel>
-                        </StackPanel>
-                    </Grid>
+                    </Border>
 
                     <Grid Margin="0,16,0,0">
                         <Grid.ColumnDefinitions>
@@ -904,9 +977,8 @@
                 <StackPanel Visibility="{Binding ShowNoteField, Converter={StaticResource BoolToVisibilityConverter}}">
                     <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Note" />
                     <Border Style="{StaticResource PopupFieldBorderStyle}">
-                        <RichTextBox
+                        <TextBox
                             x:Name="NoteRichTextBox"
-                            MinHeight="120"
                             Background="Transparent"
                             BorderThickness="0"
                             CaretBrush="{DynamicResource Brush.Text.Primary}"

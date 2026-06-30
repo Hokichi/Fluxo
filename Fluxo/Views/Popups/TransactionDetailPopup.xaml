@@ -313,36 +313,18 @@
                         IsReadOnly="{Binding AreFieldsReadOnly}"
                         Style="{StaticResource RoundedTextInputStyle}"
                         Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                    <customControls:BalloonToggle
+                    <customControls:BalloonCheckBox
                         Grid.Column="2"
                         ButtonSize="38"
                         CornerRadius="12"
                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                         IconSize="14"
+                        IsChecked="{Binding IsExcludedFromBudget, Mode=TwoWay}"
                         IsEnabled="{Binding CanEditFields}"
-                        ToolTip="Transaction mode">
-                        <customControls:BalloonToggle.States>
-                            <customControls:BalloonToggleState
-                                ButtonIcon="{StaticResource CreditCardMinusSolid}"
-                                ButtonText="{Binding IoUTooltip}"
-                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
-                                HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                                OnChecked="{Binding HandleIoUModeClickCommand}" />
-                            <customControls:BalloonToggleState
-                                ButtonIcon="{StaticResource CreditCardOff}"
-                                ButtonText="Exclude"
-                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
-                                HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                                OnChecked="{Binding HandleExcludeModeClickCommand}" />
-                            <customControls:BalloonToggleState
-                                ButtonIcon="{StaticResource CreditCardXRegular}"
-                                ButtonText="Set as Debt and Exclude"
-                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
-                                HoverBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                                OnChecked="{Binding HandleExcludedIoUModeClickCommand}" />
-                        </customControls:BalloonToggle.States>
-                    </customControls:BalloonToggle>
+                        ToolTip="Exclude from budget"
+                        UncheckedIcon="{StaticResource CreditCardOff}"
+                        UncheckedText="Exclude" />
                     <customControls:BalloonCheckBox
                         x:Name="TransactionPinButton"
                         Grid.Column="4"
@@ -358,6 +340,10 @@
                         UncheckedIcon="{StaticResource Pin}"
                         UncheckedText="Pinned" />
                 </Grid>
+                <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
+                    <customControls:BalloonRadioButton GroupName="TransactionDetailMode" IsChecked="{Binding IsRegularMode, Mode=TwoWay}" IsEnabled="{Binding CanEditFields}" ShouldShowText="True" UncheckedIcon="{StaticResource CreditCardAlt}" UncheckedText="Regular" />
+                    <customControls:BalloonRadioButton Margin="8,0,0,0" GroupName="TransactionDetailMode" IsChecked="{Binding IsIoU, Mode=TwoWay}" IsEnabled="{Binding CanEditFields}" ShouldShowText="True" UncheckedIcon="{StaticResource CreditCardMinusSolid}" UncheckedText="Debt/IoU" />
+                </StackPanel>
             </StackPanel>
 
             <StackPanel

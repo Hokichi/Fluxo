@@ -96,7 +96,7 @@ public partial class AddNewTransaction : BasePopup
             return;
         }
 
-        NoteRichTextBox.Document.Blocks.Clear();
+        NoteRichTextBox.Text = string.Empty;
         _viewModel.BeginChangeTracking();
         FocusPrimaryInput();
     }
@@ -170,9 +170,7 @@ public partial class AddNewTransaction : BasePopup
         if (_isSyncingNoteDocument)
             return;
 
-        _viewModel.NoteText = new TextRange(NoteRichTextBox.Document.ContentStart, NoteRichTextBox.Document.ContentEnd)
-            .Text
-            .Trim();
+        _viewModel.NoteText = NoteRichTextBox.Text;
     }
 
     private void ShowValidationMessage(string? message)
@@ -201,7 +199,7 @@ public partial class AddNewTransaction : BasePopup
         try
         {
             var noteText = _viewModel.NoteText ?? string.Empty;
-            new TextRange(NoteRichTextBox.Document.ContentStart, NoteRichTextBox.Document.ContentEnd).Text = noteText;
+            NoteRichTextBox.Text = noteText;
         }
         finally
         {

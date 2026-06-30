@@ -16,4 +16,5 @@ public partial class RecurringTransactionVM : ObservableObject
     [ObservableProperty] private TagVM? _tag;
     [ObservableProperty] private SavingGoalVM? _goal;
     [ObservableProperty] private bool _isEnabled = true;
+    [ObservableProperty] private DateTime? _endDate;
 }

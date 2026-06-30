@@ -64,6 +64,7 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     [ObservableProperty] private string _noteText = string.Empty;
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
+    [ObservableProperty] private DateTime _startDate = DateTime.Today;
     [ObservableProperty] private bool _isRecurring;
     [ObservableProperty] private bool _isInstallments;
     [ObservableProperty] private DateTime _installmentEndDate = DateTime.Today;
@@ -99,14 +100,6 @@ public partial class AddNewTransactionVM : ObservableValidator
     [NotifyDataErrorInfo]
     [CustomValidation(typeof(AddNewTransactionVM), nameof(ValidateSelectedTag))]
     private TagVM? _selectedTag;
-
-    private DateTime? _installmentCalculationDateOverride;
-
-    internal DateTime InstallmentCalculationDate
-    {
-        get => _installmentCalculationDateOverride ?? DateTime.Today;
-        set => _installmentCalculationDateOverride = value.Date;
-    }
 
     public AddNewTransactionVM(
         MainVM mainViewModel,
@@ -177,6 +170,11 @@ public partial class AddNewTransactionVM : ObservableValidator
     public bool HasChanges => _isChangeTrackingInitialized && HasPendingTransactionInputChanges();
     public bool HasTransactionNameSuggestions => TransactionNameSuggestions.Count > 0;
     public bool IsRecurringTransactionMode => IsRecurring || IsInstallments;
+    public bool IsRegularMode
+    {
+        get => !IsRecurring && !IsInstallments && !IsIoU;
+        set { if (value) ClearTransactionModes(); }
+    }
     public bool ShowRecurringDayInput => IsRecurringTransactionMode;
     public bool ShowRecurringNoneInput => IsRecurringTransactionMode && SelectedRecurringPeriod == RecurringPeriod.None;
     public bool ShowRecurringWeekdayInput => IsRecurringTransactionMode && IsWeekdayRecurringPeriod(SelectedRecurringPeriod);
@@ -185,6 +183,12 @@ public partial class AddNewTransactionVM : ObservableValidator
     public bool ShowInstallmentEndDate => IsInstallments;
     public bool CanUseInstallments => !IsGoal && CanToggleRecurring;
     public bool CanUseIoU => !IsGoal && CanToggleRecurring;
+    public bool CanToggleBudgetExclusion => !IsGoal && !IsRepayment;
+    public bool IsBudgetExcluded
+    {
+        get => IsGoal || IsRepayment || IsExcludedFromBudget;
+        set { if (CanToggleBudgetExclusion) IsExcludedFromBudget = value; }
+    }
     public string DateOrRecurrenceLabel => IsRecurringTransactionMode ? "Recurrence" : "Date";
     public string InstallmentSummaryText => BuildInstallmentSummaryText();
     public bool CanToggleRecurring => !IsRecurringModeLocked && !IsRepayment;
@@ -258,9 +262,12 @@ public partial class AddNewTransactionVM : ObservableValidator
 
             if (value)
             {
+                var resetExclusion = IsGoal || IsRepayment;
                 IsGoal = false;
                 IsExpense = false;
                 IsRepayment = false;
+                if (resetExclusion)
+                    IsExcludedFromBudget = false;
             }
             else if (IsIncome)
             {
@@ -343,6 +350,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(InstallmentSummaryText));
         OnPropertyChanged(nameof(CanPinTransaction));
         OnPropertyChanged(nameof(CanUseIoU));
+        OnPropertyChanged(nameof(IsRegularMode));
         RefreshActiveValidation(nameof(AmountText));
         NotifyFormStateChanged();
     }
@@ -372,7 +380,15 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(InstallmentSummaryText));
         OnPropertyChanged(nameof(CanPinTransaction));
         OnPropertyChanged(nameof(CanUseIoU));
+        OnPropertyChanged(nameof(IsRegularMode));
         RefreshActiveValidation(nameof(AmountText));
+        OnPropertyChanged(nameof(IsRegularMode));
+        NotifyFormStateChanged();
+    }
+
+    partial void OnIsExcludedFromBudgetChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsBudgetExcluded));
         NotifyFormStateChanged();
     }
 
@@ -567,10 +583,13 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     partial void OnIsExpenseChanged(bool value)
     {
+        var resetExclusion = value && (IsGoal || IsRepayment);
         if (value)
         {
             IsGoal = false;
             IsRepayment = false;
+            if (resetExclusion)
+                IsExcludedFromBudget = false;
         }
 
         OnPropertyChanged(nameof(IsIncome));
@@ -585,6 +604,8 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(CanUseIoU));
         OnPropertyChanged(nameof(InstallmentSummaryText));
         OnPropertyChanged(nameof(IoUTooltip));
+        OnPropertyChanged(nameof(IsBudgetExcluded));
+        OnPropertyChanged(nameof(CanToggleBudgetExclusion));
 
         if (!CanUseIoU)
             IsIoU = false;
@@ -626,6 +647,8 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(CanUseIoU));
         OnPropertyChanged(nameof(InstallmentSummaryText));
         OnPropertyChanged(nameof(IoUTooltip));
+        OnPropertyChanged(nameof(IsBudgetExcluded));
+        OnPropertyChanged(nameof(CanToggleBudgetExclusion));
 
         if (value)
         {
@@ -673,6 +696,8 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(ShowRepaymentAccountField));
         OnPropertyChanged(nameof(ShowDisabledCategoryField));
         OnPropertyChanged(nameof(CategoryFieldLabel));
+        OnPropertyChanged(nameof(IsBudgetExcluded));
+        OnPropertyChanged(nameof(CanToggleBudgetExclusion));
         RefreshAccounts();
         NotifyFormStateChanged();
     }
@@ -779,7 +804,8 @@ public partial class AddNewTransactionVM : ObservableValidator
                     input.AccountId,
                     input.IsExpense ? input.Category : null,
                     input.TagId,
-                    input.GoalId));
+                    input.GoalId,
+                    input.IsInstallments ? input.InstallmentEndDate : null));
                 if (!draftSaveResult.IsSuccess)
                     return draftSaveResult;
 
@@ -872,6 +898,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                 recurring.TagId = input.IsGoal ? null : input.TagId;
                 recurring.GoalId = input.IsGoal ? input.GoalId : null;
                 recurring.IsEnabled = true;
+                recurring.EndDate = input.IsInstallments ? input.InstallmentEndDate : null;
 
                 if (input.EditingRecurringTransactionId is > 0)
                     _appData.UpdateRecurringTransaction(recurring);
@@ -1068,6 +1095,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         NameText = string.Empty;
         NoteText = string.Empty;
         SelectedDate = DateTime.Today;
+        StartDate = DateTime.Today;
         InstallmentEndDate = DateTime.Today;
         IsInstallments = false;
         IsRecurring = false;
@@ -1156,7 +1184,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                 SelectedRecurringPeriod,
                 RecurringTimeText,
                 InstallmentEndDate,
-                InstallmentCalculationDate,
+                StartDate,
                 out _,
                 out validationMessage))
         {
@@ -1171,7 +1199,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             !IsRepayment && IsInstallments,
             !IsRepayment && IsPinned,
             !IsRepayment && IsIoU,
-            IsRepayment || IsExcludedFromBudget,
+            IsBudgetExcluded,
             _editingRecurringTransactionId,
             SelectedRecurringPeriod,
             NameText.Trim(),
@@ -1837,10 +1865,10 @@ public partial class AddNewTransactionVM : ObservableValidator
     private bool HasPendingTransactionInputChanges()
     {
         var initialInput = new PendingTransactionInputState(
-            _initialState.NameText ?? string.Empty,
+            IsGoal || IsRepayment ? string.Empty : _initialState.NameText ?? string.Empty,
             _initialState.AmountText);
         var currentInput = new PendingTransactionInputState(
-            NameText ?? string.Empty,
+            IsGoal || IsRepayment ? string.Empty : NameText ?? string.Empty,
             AmountText);
 
         return HasPendingTransactionInputValue(currentInput) && !currentInput.Equals(initialInput);
@@ -2026,7 +2054,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                    SelectedRecurringPeriod,
                    RecurringTimeText,
                    InstallmentEndDate,
-                   InstallmentCalculationDate,
+                   StartDate,
                    out _,
                    out _);
     }
@@ -2094,7 +2122,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                 viewModel.SelectedRecurringPeriod,
                 viewModel.RecurringTimeText,
                 viewModel.InstallmentEndDate,
-                viewModel.InstallmentCalculationDate,
+                viewModel.StartDate,
                 out var installmentCount,
                 out _))
             {
@@ -2295,7 +2323,8 @@ public partial class AddNewTransactionVM : ObservableValidator
         int AccountId,
         ExpenseCategory? Category,
         int? TagId,
-        int? GoalId);
+        int? GoalId,
+        DateTime? EndDate);
 
     public readonly record struct RecurringDraftSnapshot(
         int? EditingRecurringTransactionId,
@@ -2466,7 +2495,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                 SelectedRecurringPeriod,
                 RecurringTimeText,
                 InstallmentEndDate,
-                InstallmentCalculationDate,
+                StartDate,
                 out var count,
                 out _))
             return string.Empty;
@@ -2493,7 +2522,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                 input.RecurringPeriod,
                 input.RecurringTimeText,
                 input.InstallmentEndDate,
-                InstallmentCalculationDate,
+                StartDate,
                 out var count,
                 out validationMessage))
             return false;

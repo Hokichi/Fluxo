@@ -102,9 +102,9 @@ public sealed class TransactionDetailPopupSplitLayoutTests
 
         Assert.DoesNotContain("HandleRecurringModeClickCommand", xaml);
         Assert.DoesNotContain("HandleInstallmentsModeClickCommand", xaml);
-        Assert.Contains("OnChecked=\"{Binding HandleIoUModeClickCommand}\"", xaml);
-        Assert.Contains("OnChecked=\"{Binding HandleExcludeModeClickCommand}\"", xaml);
-        Assert.Contains("OnChecked=\"{Binding HandleExcludedIoUModeClickCommand}\"", xaml);
+        Assert.Contains("IsChecked=\"{Binding IsExcludedFromBudget, Mode=TwoWay}\"", xaml);
+        Assert.Contains("IsChecked=\"{Binding IsRegularMode, Mode=TwoWay}\"", xaml);
+        Assert.Contains("IsChecked=\"{Binding IsIoU, Mode=TwoWay}\"", xaml);
         Assert.Contains("IsEnabled=\"{Binding CanEditFields}\"", xaml);
     }
 

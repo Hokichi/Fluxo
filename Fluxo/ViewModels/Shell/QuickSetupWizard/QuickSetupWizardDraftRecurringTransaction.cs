@@ -13,4 +13,5 @@ public sealed record QuickSetupWizardDraftRecurringTransaction(
     int RecurringTime,
     int TagId,
     string TagName,
-    bool IsActive);
+    bool IsActive,
+    DateTime? EndDate = null);
