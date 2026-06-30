@@ -16,5 +16,7 @@ public sealed class BalloonCheckBoxStyleTests
         Assert.Contains("ControlTemplate TargetType=\"{x:Type c:BalloonControl}\"", xaml);
         Assert.Contains("x:Name=\"PART_Icon\"", xaml);
         Assert.DoesNotContain("ActiveBackground", xaml);
+        Assert.Contains("TargetType=\"{x:Type c:BalloonRadioButton}\"", xaml);
+        Assert.Contains("BasedOn=\"{StaticResource {x:Type c:BalloonCheckBox}}\"", xaml);
     }
 }

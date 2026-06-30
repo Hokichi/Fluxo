@@ -90,9 +90,12 @@ public class BalloonCheckBox : BalloonControl
         remove => RemoveHandler(UncheckedEvent, value);
     }
 
+    protected virtual bool CanUncheckOnClick => true;
+
     protected override void OnClick()
     {
-        SetCurrentValue(IsCheckedProperty, !IsChecked);
+        if (!IsChecked || CanUncheckOnClick)
+            SetCurrentValue(IsCheckedProperty, !IsChecked);
         base.OnClick();
     }
 

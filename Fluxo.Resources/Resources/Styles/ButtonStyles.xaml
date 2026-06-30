@@ -154,6 +154,8 @@
         </Style.Triggers>
     </Style>
 
+    <Style BasedOn="{StaticResource {x:Type c:BalloonCheckBox}}" TargetType="{x:Type c:BalloonRadioButton}" />
+
     <Style
         x:Key="MainWindowBalloonButtonChromeStyle"
         BasedOn="{StaticResource {x:Type c:BalloonButton}}"
