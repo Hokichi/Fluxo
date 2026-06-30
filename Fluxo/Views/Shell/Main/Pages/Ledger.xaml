@@ -1332,12 +1332,7 @@
     </UserControl.Resources>
 
     <Grid Margin="24,0,24,0">
-        <controls:MainViewModeToggleControl
-            HorizontalAlignment="Center"
-            VerticalAlignment="Top"
-            DataContext="{Binding ViewModeToggle}" />
-
-        <Grid x:Name="LedgerContentGrid" Margin="0,48,0,0">
+        <Grid x:Name="LedgerContentGrid">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -1414,6 +1409,14 @@
                 Margin="0,0,0,2"
                 HorizontalAlignment="Right"
                 Orientation="Horizontal">
+                <customControls:BalloonButton
+                    Margin="0,0,14,0"
+                    ButtonText="View all transactions"
+                    Command="{Binding LoadAllTransactionsCommand}"
+                    CornerRadius="8"
+                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                    ShouldExpand="True" />
                 <TextBlock
                     Margin="0,0,8,0"
                     VerticalAlignment="Center"

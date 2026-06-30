@@ -134,7 +134,7 @@ public partial class MainWindow : Window, IPopupHost
         _logMemoryManager = new LogMemoryManager(_mainVM, _dataOperationRunner);
         WeakReferenceMessenger.Default.Register<MainWindow, NavigateToLedgerRequestedMessage>(
             this,
-            static (recipient, message) => _ = recipient.NavigateToMainPageAsync(MainPage.Ledger));
+            static (recipient, message) => _ = recipient.NavigateToLedgerFromDashboardAsync());
 
         HeaderSearchResultsList.ItemsSource = _headerSearchResults;
         DataContext = _mainVM;
@@ -907,12 +907,6 @@ public partial class MainWindow : Window, IPopupHost
             return;
         }
 
-        if (await TryHandleLedgerPeriodShortcut(e.Key, Keyboard.Modifiers))
-        {
-            e.Handled = true;
-            return;
-        }
-
         if (await TryHandleViewModeShortcut(e.Key, Keyboard.Modifiers))
         {
             e.Handled = true;
@@ -982,41 +976,15 @@ public partial class MainWindow : Window, IPopupHost
         return false;
     }
 
-    private async Task<bool> TryHandleLedgerPeriodShortcut(Key key, ModifierKeys modifiers)
-    {
-        if (_activeMainPage != MainPage.Ledger || _mainVM.Ledger is null)
-            return false;
-
-        if (!MainWindowShortcutMatcher.IsNavigateDashboardCurrentPeriodShortcut(key, modifiers))
-            return false;
-
-        if (_mainVM.Ledger.ViewModeToggle.IsAtCurrentPeriod)
-            return true;
-
-        await _mainVM.Ledger.ViewModeToggle.MoveToCurrentPeriodFromUserAsync(this);
-        ApplyMainWindowRangeToLedger();
-        return true;
-    }
-
     private async Task<bool> TryHandleViewModeShortcut(Key key, ModifierKeys modifiers)
     {
         if (!MainWindowShortcutMatcher.TryGetViewModeShortcut(key, modifiers, out var viewMode))
             return false;
 
-        var viewModeToggle = _activeMainPage switch
-        {
-            MainPage.Dashboard => _mainVM.Dashboard.ViewModeToggle,
-            MainPage.Ledger => _mainVM.Ledger?.ViewModeToggle,
-            _ => null
-        };
-
-        if (viewModeToggle is null)
+        if (_activeMainPage != MainPage.Dashboard)
             return false;
 
-        await viewModeToggle.SetSelectedMainContentViewFromUserAsync(viewMode, this);
-        if (_activeMainPage == MainPage.Ledger)
-            ApplyMainWindowRangeToLedger();
-
+        await _mainVM.Dashboard.ViewModeToggle.SetSelectedMainContentViewFromUserAsync(viewMode, this);
         return true;
     }
 
@@ -1524,6 +1492,29 @@ public partial class MainWindow : Window, IPopupHost
         await NavigateToMainPageAsync(MainPage.Analytics);
     }
 
+    private async Task NavigateToLedgerFromDashboardAsync()
+    {
+        var selectedMode = _mainVM.Dashboard.ViewModeToggle.SelectedMainContentViewMode;
+        if (selectedMode == MainContentViewMode.AllTime)
+        {
+            WeakReferenceMessenger.Default.Send(new LedgerAllTimeRequestedMessage());
+        }
+        else
+        {
+            var range = selectedMode == MainContentViewMode.AllocationPeriod
+                ? _mainVM.BudgetPanel.GetCurrentAllocationPeriodRange(DateTime.Today)
+                : DateRangeResolver.Resolve(
+                    _mainVM.DaySpinner.SelectedDay.Date == default
+                        ? DateTime.Today
+                        : _mainVM.DaySpinner.SelectedDay.Date,
+                    selectedMode);
+            WeakReferenceMessenger.Default.Send(
+                new LedgerDateRangeRequestedMessage(range.From, range.To));
+        }
+
+        await NavigateToMainPageAsync(MainPage.Ledger);
+    }
+
     private async Task NavigateToMainPageAsync(MainPage page)
     {
         if (page != MainPage.Dashboard && IsSufficientFundsActionGateLocked())
@@ -1625,8 +1616,6 @@ public partial class MainWindow : Window, IPopupHost
                 return;
 
             case MainPage.Ledger:
-                _ledgerPageView!.PublishViewMode();
-                ApplyMainWindowRangeToLedger();
                 await _ledgerPageView!.PrepareForOpenAsync();
                 return;
 
@@ -1847,33 +1836,6 @@ public partial class MainWindow : Window, IPopupHost
         var popupViewModel = new TransactionDetailVM(_mainVM, expenseLog, appData);
         await popupViewModel.BeginEditingAsync();
         _dialogService.ShowTransactionDetail(popupViewModel, this);
-    }
-
-    private void ApplyMainWindowRangeToLedger()
-    {
-        if (_ledgerPageView is null || _mainVM.Ledger is null)
-            return;
-
-        var selectedMode = _mainVM.Ledger.ViewModeToggle.SelectedMainContentViewMode;
-        if (selectedMode == MainContentViewMode.AllTime)
-        {
-            _ledgerPageView.ApplyAllTimeRange();
-            return;
-        }
-
-        if (selectedMode == MainContentViewMode.AllocationPeriod)
-        {
-            var allocationRange = _mainVM.BudgetPanel.GetCurrentAllocationPeriodRange(DateTime.Today);
-            _ledgerPageView.ApplyOpenRange(allocationRange.From, allocationRange.To);
-            return;
-        }
-
-        var selectedDate = _mainVM.DaySpinner.SelectedDay.Date;
-        if (selectedDate == default)
-            selectedDate = DateTime.Today;
-
-        var range = DateRangeResolver.Resolve(selectedDate, selectedMode);
-        _ledgerPageView.ApplyOpenRange(range.From, range.To);
     }
 
     private void PublishDashboardViewMode()

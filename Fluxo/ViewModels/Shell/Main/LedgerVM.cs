@@ -7,6 +7,7 @@ using AutoMapper;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Core.DTO;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
@@ -20,8 +21,8 @@ using Fluxo.ViewModels.Popups;
 namespace Fluxo.ViewModels.Shell.Main;
 
 public partial class LedgerVM : ObservableRecipient,
-    IRecipient<DateRangeSelectionChangedMessage>,
-    IRecipient<AllTimeViewModeMessage>,
+    IRecipient<LedgerDateRangeRequestedMessage>,
+    IRecipient<LedgerAllTimeRequestedMessage>,
     IRecipient<LedgerSearchTextChangedMessage>
 {
     private readonly IDataOperationRunner _dataOperationRunner;
@@ -33,6 +34,7 @@ public partial class LedgerVM : ObservableRecipient,
     private readonly Dictionary<(LedgerTransactionKind Kind, int Id), BatchPreviewSnapshot> _batchPreviewSnapshots = [];
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
     private LedgerFilterSelectionSnapshot _appliedFilterSelection = LedgerFilterSelectionSnapshot.Empty;
+    private bool _loadAllTransactionsOnNextLoad;
     private bool _isApplyingExternalRange;
     private bool _isSynchronizingFilters;
     private (DateTime From, DateTime To)? _selectedRange;
@@ -63,25 +65,6 @@ public partial class LedgerVM : ObservableRecipient,
         IDataOperationRunner dataOperationRunner,
         IMapper mapper,
         IMessenger? messenger = null)
-        : this(
-            transactionService,
-            accountService,
-            tagService,
-            dataOperationRunner,
-            mapper,
-            new MainViewModeToggleVM(messenger ?? WeakReferenceMessenger.Default),
-            messenger)
-    {
-    }
-
-    public LedgerVM(
-        ITransactionService transactionService,
-        IAccountService accountService,
-        ITagService tagService,
-        IDataOperationRunner dataOperationRunner,
-        IMapper mapper,
-        MainViewModeToggleVM viewModeToggle,
-        IMessenger? messenger = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
         _transactionService = transactionService;
@@ -89,7 +72,6 @@ public partial class LedgerVM : ObservableRecipient,
         _tagService = tagService;
         _dataOperationRunner = dataOperationRunner;
         _mapper = mapper;
-        ViewModeToggle = viewModeToggle;
         TypeFilterPresentation = new LedgerFilterSelectionPresentation(
             "Type",
             () => TypeFilterSelectionCount,
@@ -114,7 +96,6 @@ public partial class LedgerVM : ObservableRecipient,
         IsActive = true;
     }
 
-    public MainViewModeToggleVM ViewModeToggle { get; }
     public ICollectionView TransactionsView { get; }
     public string EmptyStatePeriodText => BuildSelectedPeriodText();
     public ObservableCollection<LedgerFilterOption<LedgerTransactionKind>> TypeFilters { get; } = [];
@@ -164,7 +145,15 @@ public partial class LedgerVM : ObservableRecipient,
         await _reloadGate.WaitAsync(cancellationToken);
         try
         {
-            await ReloadPeriodAsync(cancellationToken);
+            if (_loadAllTransactionsOnNextLoad)
+            {
+                _loadAllTransactionsOnNextLoad = false;
+                await ReloadAllTransactionsAsync(cancellationToken);
+            }
+            else
+            {
+                await ReloadPeriodAsync(cancellationToken);
+            }
         }
         finally
         {
@@ -172,9 +161,10 @@ public partial class LedgerVM : ObservableRecipient,
         }
     }
 
-    public void Receive(DateRangeSelectionChangedMessage message)
+    public void Receive(LedgerDateRangeRequestedMessage message)
     {
-        ApplyExternalDateRange(message.Value.From, message.Value.To, refresh: true);
+        _loadAllTransactionsOnNextLoad = false;
+        ApplyExternalDateRange(message.Value.From, message.Value.To, refresh: false);
     }
 
     public void ApplyExternalDateRange(DateTime from, DateTime to, bool refresh)
@@ -185,28 +175,24 @@ public partial class LedgerVM : ObservableRecipient,
             _ = LoadAsync();
     }
 
-    public void Receive(AllTimeViewModeMessage message)
+    public void Receive(LedgerAllTimeRequestedMessage message)
     {
-        ApplyAllTimeRange(refresh: true);
+        _loadAllTransactionsOnNextLoad = true;
     }
 
-    public void ApplyAllTimeRange(bool refresh)
+    [RelayCommand]
+    public async Task LoadAllTransactionsAsync(CancellationToken cancellationToken = default)
     {
-        _selectedRange = null;
-        OnPropertyChanged(nameof(EmptyStatePeriodText));
-        _isApplyingExternalRange = true;
+        await _reloadGate.WaitAsync(cancellationToken);
         try
         {
-            StartDate = DateTime.Today;
-            EndDate = DateTime.Today;
+            _loadAllTransactionsOnNextLoad = false;
+            await ReloadAllTransactionsAsync(cancellationToken);
         }
         finally
         {
-            _isApplyingExternalRange = false;
+            _reloadGate.Release();
         }
-
-        if (refresh)
-            _ = LoadAsync();
     }
 
     public void Receive(LedgerSearchTextChangedMessage message)
@@ -375,10 +361,22 @@ public partial class LedgerVM : ObservableRecipient,
         ApplyBatchPreview();
     }
 
-    private async Task ReloadPeriodAsync(CancellationToken cancellationToken)
+    private async Task ReloadAllTransactionsAsync(CancellationToken cancellationToken)
     {
-        var transactions = _mapper.Map<IReadOnlyList<TransactionVM>>(
-            await _transactionService.GetAllAsync(cancellationToken));
+        var source = await _transactionService.GetAllAsync(cancellationToken);
+        var range = DateRangeResolver.ResolveAllTransactions(
+            source.Where(transaction => !transaction.IsForDeletion).Select(transaction => transaction.OccurredOn),
+            DateTime.Today);
+        SetSelectedRange(range.From, range.To, updateSelectors: true);
+        await ReloadPeriodAsync(cancellationToken, source);
+    }
+
+    private async Task ReloadPeriodAsync(
+        CancellationToken cancellationToken,
+        IReadOnlyList<TransactionDto>? source = null)
+    {
+        source ??= await _transactionService.GetAllAsync(cancellationToken);
+        var transactions = _mapper.Map<IReadOnlyList<TransactionVM>>(source);
         var expenseLogs = transactions.Where(transaction => transaction.Type == TransactionType.Expense)
             .Select(ToExpenseLogVm).ToList();
         var incomeLogs = transactions.Where(transaction => transaction.Type == TransactionType.Income)

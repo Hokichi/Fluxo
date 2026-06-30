@@ -8,6 +8,18 @@ public sealed record DateRange(DateTime From, DateTime To);
 
 public static class DateRangeResolver
 {
+    public static DateRange ResolveAllTransactions(IEnumerable<DateTime> occurredDates, DateTime today)
+    {
+        var end = today.Date;
+        var start = occurredDates
+            .Select(date => date.Date)
+            .Where(date => date <= end)
+            .DefaultIfEmpty(end)
+            .Min();
+
+        return new DateRange(start, end);
+    }
+
     public static DateRange Resolve(DateTime selectedDate, MainContentViewMode viewMode)
     {
         var date = selectedDate.Date;

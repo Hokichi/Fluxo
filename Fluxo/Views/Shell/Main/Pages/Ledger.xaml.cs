@@ -37,25 +37,10 @@ public partial class Ledger : UserControl
             : Task.CompletedTask;
     }
 
-    public void PublishViewMode()
-    {
-        if (DataContext is not LedgerVM viewModel)
-            return;
-
-        viewModel.ViewModeToggle.SetSelectedMainContentViewCommand.Execute(
-            viewModel.ViewModeToggle.SelectedMainContentViewMode);
-    }
-
     public void ApplyOpenRange(DateTime from, DateTime to)
     {
         if (DataContext is LedgerVM viewModel)
             viewModel.ApplyExternalDateRange(from, to, refresh: false);
-    }
-
-    public void ApplyAllTimeRange()
-    {
-        if (DataContext is LedgerVM viewModel)
-            viewModel.ApplyAllTimeRange(refresh: false);
     }
 
     private void OnLedgerRowLoaded(object sender, RoutedEventArgs e)

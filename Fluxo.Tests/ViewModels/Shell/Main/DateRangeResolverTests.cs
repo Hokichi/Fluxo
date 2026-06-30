@@ -9,6 +9,30 @@ namespace Fluxo.Tests.ViewModels.Shell.Main;
 public class DateRangeResolverTests
 {
     [Fact]
+    public void ResolveAllTransactions_UsesEarliestDateThroughToday()
+    {
+        var today = new DateTime(2026, 6, 30);
+
+        var result = DateRangeResolver.ResolveAllTransactions(
+            [new DateTime(2026, 6, 20, 12, 0, 0), new DateTime(2026, 5, 4), new DateTime(2026, 7, 1)],
+            today);
+
+        Assert.Equal(new DateTime(2026, 5, 4), result.From);
+        Assert.Equal(today, result.To);
+    }
+
+    [Fact]
+    public void ResolveAllTransactions_WithoutPastTransactions_UsesTodayForBothBounds()
+    {
+        var today = new DateTime(2026, 6, 30);
+
+        var result = DateRangeResolver.ResolveAllTransactions([], today);
+
+        Assert.Equal(today, result.From);
+        Assert.Equal(today, result.To);
+    }
+
+    [Fact]
     public void Resolve_Daily_ReturnsSameFromAndTo()
     {
         var selected = new DateTime(2026, 4, 16);

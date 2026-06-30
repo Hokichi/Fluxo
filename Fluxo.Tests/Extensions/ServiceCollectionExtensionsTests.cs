@@ -13,6 +13,17 @@ namespace Fluxo.Tests.Extensions;
 public sealed class ServiceCollectionExtensionsTests
 {
     [Fact]
+    public void AddUIData_RegistersLedgerViewModelAsSingleton()
+    {
+        var services = new ServiceCollection();
+
+        services.AddUIData();
+
+        var descriptor = Assert.Single(services, service => service.ServiceType == typeof(LedgerVM));
+        Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
+    }
+
+    [Fact]
     public void AddUIData_RegistersStartupNotificationSummaryService()
     {
         var services = new ServiceCollection();

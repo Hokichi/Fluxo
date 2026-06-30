@@ -237,7 +237,7 @@ public sealed class MainWindowShortcutRoutingTests
         var method = Slice(
             source,
             "private async Task<bool> TryHandleDashboardPeriodShortcut",
-            "private async Task<bool> TryHandleLedgerPeriodShortcut");
+            "private async Task<bool> TryHandleViewModeShortcut");
 
         Assert.Contains("TryHandleDashboardPeriodShortcut(e.Key, Keyboard.Modifiers)", source);
         Assert.Contains("if (_activeMainPage != MainPage.Dashboard)", method);
@@ -250,34 +250,24 @@ public sealed class MainWindowShortcutRoutingTests
     }
 
     [Fact]
-    public void LedgerCurrentPeriodShortcut_IsLedgerOnlyAndAppliesCurrentRange()
+    public void Ledger_DoesNotHandlePeriodShortcuts()
     {
         var source = ReadMainWindowSource();
-        var keyDownMethod = Slice(
-            source,
-            "private async void OnPreviewKeyDown(object sender, KeyEventArgs e)",
-            "private async Task<bool> TryHandleDashboardPeriodShortcut");
-        var method = Slice(
-            source,
-            "private async Task<bool> TryHandleLedgerPeriodShortcut",
-            "private async Task<bool> TryHandleViewModeShortcut");
 
-        Assert.Contains("TryHandleLedgerPeriodShortcut(e.Key, Keyboard.Modifiers)", keyDownMethod);
-        Assert.Contains("if (_activeMainPage != MainPage.Ledger || _mainVM.Ledger is null)", method);
-        Assert.Contains("IsNavigateDashboardCurrentPeriodShortcut(key, modifiers)", method);
-        Assert.Contains("if (_mainVM.Ledger.ViewModeToggle.IsAtCurrentPeriod)", method);
-        Assert.Contains("await _mainVM.Ledger.ViewModeToggle.MoveToCurrentPeriodFromUserAsync(this);", method);
-        Assert.Contains("ApplyMainWindowRangeToLedger();", method);
+        Assert.DoesNotContain("TryHandleLedgerPeriodShortcut", source);
+        Assert.DoesNotContain("_mainVM.Ledger.ViewModeToggle", source);
+        Assert.DoesNotContain("ApplyMainWindowRangeToLedger", source);
     }
 
     [Fact]
-    public void ViewModeShortcuts_TargetDashboardAndLedger()
+    public void ViewModeShortcuts_TargetDashboardOnly()
     {
         var source = ReadMainWindowSource();
 
         Assert.Contains("TryHandleViewModeShortcut(e.Key, Keyboard.Modifiers)", source);
         Assert.Contains("_mainVM.Dashboard.ViewModeToggle", source);
-        Assert.Contains("_mainVM.Ledger?.ViewModeToggle", source);
+        Assert.Contains("if (_activeMainPage != MainPage.Dashboard)", source);
+        Assert.DoesNotContain("_mainVM.Ledger?.ViewModeToggle", source);
         Assert.Contains("SetSelectedMainContentViewFromUserAsync(viewMode, this)", source);
     }
 

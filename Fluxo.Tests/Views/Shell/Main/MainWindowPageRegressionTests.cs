@@ -34,6 +34,41 @@ public sealed class MainWindowPageRegressionTests
     }
 
     [Fact]
+    public void Ledger_ReplacesViewModeToggleWithAllTransactionsButton()
+    {
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
+
+        Assert.DoesNotContain("MainViewModeToggleControl", xaml);
+        Assert.Contains("ButtonText=\"View all transactions\"", xaml);
+        Assert.Contains("Command=\"{Binding LoadAllTransactionsCommand}\"", xaml);
+        var buttonTextIndex = xaml.IndexOf("ButtonText=\"View all transactions\"", StringComparison.Ordinal);
+        Assert.DoesNotContain("ButtonIcon=", xaml[(buttonTextIndex - 300)..buttonTextIndex]);
+    }
+
+    [Fact]
+    public void ViewInLedger_DispatchesOneDedicatedLedgerPeriodMessage()
+    {
+        var source = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "MainWindow.xaml.cs"));
+
+        Assert.Contains("NavigateToLedgerFromDashboardAsync()", source);
+        Assert.Contains("new LedgerDateRangeRequestedMessage(range.From, range.To)", source);
+        Assert.Contains("new LedgerAllTimeRequestedMessage()", source);
+        Assert.Contains("NavigateToMainPageAsync(MainPage.Ledger)", source);
+    }
+
+    [Fact]
+    public void OrdinaryLedgerNavigation_PreservesLedgerSelection()
+    {
+        var source = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "MainWindow.xaml.cs"));
+        var prepareBody = ExtractMethodBodyBySignature(source, "private async Task PrepareMainPageContentAsync(MainPage page)");
+
+        Assert.Contains("await _ledgerPageView!.PrepareForOpenAsync();", prepareBody);
+        Assert.DoesNotContain("_ledgerPageView!.PublishViewMode()", prepareBody);
+        Assert.DoesNotContain("LedgerDateRangeRequestedMessage", prepareBody);
+        Assert.DoesNotContain("LedgerAllTimeRequestedMessage", prepareBody);
+    }
+
+    [Fact]
     public void MainPages_AreStoredUnderPagesFolder()
     {
         foreach (var pageName in new[] { "Dashboard", "Analytics", "Calendar", "Ledger" })
@@ -242,31 +277,25 @@ public sealed class MainWindowPageRegressionTests
     }
 
     [Fact]
-    public void Ledger_UsesOwnViewModeToggleAndDisablesFiltersWhenNoTransactions()
+    public void Ledger_RemovesViewModeToggleAndDisablesFiltersWhenNoTransactions()
     {
         var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
 
-        Assert.Contains("DataContext=\"{Binding ViewModeToggle}\"", ledgerXaml);
-        Assert.DoesNotContain("DataContext=\"{Binding DataContext.ViewModeToggle, RelativeSource={RelativeSource AncestorType=Window}}\"", ledgerXaml);
+        Assert.DoesNotContain("ViewModeToggle", ledgerXaml);
         Assert.Contains("x:Name=\"LedgerFiltersRow\"", ledgerXaml);
         Assert.Contains("IsEnabled=\"{Binding HasTransactions}\"", ledgerXaml);
     }
 
     [Fact]
-    public void Ledger_ViewModeToggleIsTopOverlayAndContentUsesFixedTopOffset()
+    public void Ledger_ContentUsesReclaimedTopSpace()
     {
         var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
         var rootGrid = ExtractSection(ledgerXaml, "<Grid Margin=\"24,0,24,0\">", "</UserControl>");
-        var toggleIndex = rootGrid.IndexOf("<controls:MainViewModeToggleControl", StringComparison.Ordinal);
         var contentIndex = rootGrid.IndexOf("x:Name=\"LedgerContentGrid\"", StringComparison.Ordinal);
 
-        Assert.True(toggleIndex >= 0);
-        Assert.True(contentIndex > toggleIndex);
-        Assert.Contains("HorizontalAlignment=\"Center\"", rootGrid);
-        Assert.Contains("VerticalAlignment=\"Top\"", rootGrid);
-        Assert.Contains("x:Name=\"LedgerContentGrid\"", rootGrid);
-        Assert.Contains("Margin=\"0,48,0,0\"", rootGrid);
-        Assert.DoesNotContain("Margin=\"0,16\"", rootGrid);
+        Assert.True(contentIndex >= 0);
+        Assert.DoesNotContain("MainViewModeToggleControl", rootGrid);
+        Assert.DoesNotContain("x:Name=\"LedgerContentGrid\" Margin=", rootGrid);
     }
 
     [Fact]
