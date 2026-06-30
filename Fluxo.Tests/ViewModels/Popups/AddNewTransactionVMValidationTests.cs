@@ -901,6 +901,33 @@ public sealed class AddNewTransactionVMValidationTests
     }
 
     [Fact]
+    public void SaveAsync_ResetAfterSave_RestoresAllNonSystemTags()
+    {
+        RunInSta(() =>
+        {
+            var source = CreateCheckingSource(balance: 500m);
+            var appData = CreateAppData();
+            appData.GetTagsAsync(Arg.Any<CancellationToken>()).Returns(
+            [
+                new Tag { Id = 1, Name = "zeta", HexCode = "#111111" },
+                new Tag { Id = 2, Name = "Alpha", HexCode = "#222222" },
+                new Tag { Id = 3, Name = "System", HexCode = "#333333", IsSystemTag = true }
+            ]);
+            var vm = new AddNewTransactionVM(CreateMainViewModel([source]), appData);
+            vm.EnsureTagsLoadedAsync().GetAwaiter().GetResult();
+            vm.SelectedTag = vm.VisibleTags.Concat(vm.OverflowTags).Single(tag => tag.Id == 1);
+            vm.NameText = "Groceries";
+            vm.AmountText = 10m;
+
+            var result = vm.SaveAsync(resetAfterSave: true).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess, result.ErrorMessage);
+            Assert.Equal([2, 1], vm.VisibleTags.Concat(vm.OverflowTags).Select(tag => tag.Id));
+            Assert.Equal(2, vm.SelectedTag?.Id);
+        });
+    }
+
+    [Fact]
     public void SaveAsync_KeepsStaleMaximumSpendingCheck_ForNonCreditSource()
     {
         RunInSta(() =>

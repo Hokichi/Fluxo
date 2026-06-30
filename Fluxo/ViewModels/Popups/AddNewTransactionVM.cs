@@ -812,6 +812,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                 if (resetAfterSave)
                 {
                     ReloadChoicesFromMainViewModel();
+                    await EnsureTagsLoadedAsync();
                     ResetForm(true);
                 }
 
@@ -1025,6 +1026,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             if (resetAfterSave)
             {
                 ReloadChoicesFromMainViewModel();
+                await EnsureTagsLoadedAsync();
                 ResetForm(true);
             }
 
