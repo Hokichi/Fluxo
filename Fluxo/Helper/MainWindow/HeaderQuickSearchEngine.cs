@@ -1,7 +1,7 @@
 using Fluxo.Core.Enums;
 using Fluxo.ViewModels.Entities;
 
-namespace Fluxo.Views.Shell.Main;
+namespace Fluxo.Helper.MainWindow;
 
 public sealed record HeaderQuickSearchResult(TransactionVM Transaction)
 {

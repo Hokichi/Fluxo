@@ -2,8 +2,9 @@ using System.Windows;
 using Fluxo.Resources.CustomControls;
 using Fluxo.Services.Updates;
 using Fluxo.ViewModels.Popups.Settings;
+using Fluxo.Views.Popups.Settings;
 
-namespace Fluxo.Views.Popups.Settings;
+namespace Fluxo.Helper.Settings;
 
 public static class SettingsUpdateCheckFlow
 {

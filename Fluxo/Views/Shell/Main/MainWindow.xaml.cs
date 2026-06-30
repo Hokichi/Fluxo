@@ -14,6 +14,8 @@ using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Services;
+using Fluxo.Helper.MainWindow;
+using Fluxo.Helper.Settings;
 using Fluxo.Resources.Infrastructure;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.Dialogs;

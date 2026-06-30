@@ -2,7 +2,7 @@ using System.Windows;
 using Fluxo.Resources.CustomControls;
 using Fluxo.ViewModels.Popups.Settings;
 
-namespace Fluxo.Views.Popups.Settings;
+namespace Fluxo.Helper.Settings;
 
 public static class SettingsSetupWizardFlow
 {

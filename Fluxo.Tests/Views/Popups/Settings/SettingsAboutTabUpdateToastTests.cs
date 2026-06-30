@@ -10,8 +10,7 @@ public sealed class SettingsAboutTabUpdateToastTests
     {
         var source = File.ReadAllText(RepositoryPaths.File(
             "Fluxo",
-            "Views",
-            "Popups",
+            "Helper",
             "Settings",
             "SettingsUpdateCheckFlow.cs"));
 
@@ -26,8 +25,7 @@ public sealed class SettingsAboutTabUpdateToastTests
     {
         var source = File.ReadAllText(RepositoryPaths.File(
             "Fluxo",
-            "Views",
-            "Popups",
+            "Helper",
             "Settings",
             "SettingsUpdateCheckFlow.cs"));
 

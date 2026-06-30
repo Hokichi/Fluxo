@@ -3,6 +3,7 @@ using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.ViewModels.Entities;
 using Fluxo.Views.Shell.Main;
+using Fluxo.Helper.MainWindow;
 using NSubstitute;
 using Xunit;
 

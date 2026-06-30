@@ -8,7 +8,7 @@ using Fluxo.Core.Enums;
 using Fluxo.Resources.Infrastructure;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups.Planning;
-using Fluxo.Views.Behaviors;
+using Fluxo.Helper.Behaviors;
 
 namespace Fluxo.Views.Popups.Planning;
 

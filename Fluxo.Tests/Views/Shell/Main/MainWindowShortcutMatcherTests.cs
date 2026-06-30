@@ -1,5 +1,6 @@
 using System.Windows.Input;
 using Fluxo.Views.Shell.Main;
+using Fluxo.Helper.MainWindow;
 using Xunit;
 
 namespace Fluxo.Tests.Views.Shell.Main;

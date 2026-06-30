@@ -2,7 +2,7 @@ using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.ViewModels.Entities;
 
-namespace Fluxo.Views.Shell.Main;
+namespace Fluxo.Helper.MainWindow;
 
 internal static class TransactionDetailTargetResolver
 {

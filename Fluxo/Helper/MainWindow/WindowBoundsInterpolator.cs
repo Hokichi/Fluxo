@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace Fluxo.Views.Shell.Main;
+namespace Fluxo.Helper.MainWindow;
 
 public static class WindowBoundsInterpolator
 {

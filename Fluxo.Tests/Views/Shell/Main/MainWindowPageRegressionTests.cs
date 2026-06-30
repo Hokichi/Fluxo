@@ -11,6 +11,17 @@ public sealed class MainWindowPageRegressionTests
     private static readonly XNamespace XamlNamespace = "http://schemas.microsoft.com/winfx/2006/xaml";
 
     [Fact]
+    public void ViewsFolder_ContainsOnlyViewsAndCodeBehindCSharpFiles()
+    {
+        var views = RepositoryPaths.File("Fluxo", "Views");
+        var standaloneFiles = Directory.GetFiles(views, "*.cs", SearchOption.AllDirectories)
+            .Where(path => !path.EndsWith(".xaml.cs", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        Assert.Empty(standaloneFiles);
+    }
+
+    [Fact]
     public void OrdinaryAnalyticsNavigation_PreservesAnalyticsDateSelection()
     {
         var source = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "MainWindow.xaml.cs"));
