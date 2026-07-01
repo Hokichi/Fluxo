@@ -36,6 +36,17 @@
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         </Style>
 
+        <Style
+            x:Key="AmountFieldHintStyle"
+            BasedOn="{StaticResource FieldValidationHintStyle}"
+            TargetType="TextBlock">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsAmountWarning, Mode=OneWay}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource Brush.Warning}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="PopupFieldBorderStyle" TargetType="Border">
             <Setter Property="Padding" Value="12,10" />
             <Setter Property="Background" Value="{DynamicResource Brush.Background.Elevated}" />
@@ -408,7 +419,7 @@
                                         Margin="0"
                                         Style="{StaticResource SectionLabelStyle}"
                                         Text="Amount" />
-                                    <TextBlock Style="{StaticResource FieldValidationHintStyle}" Text="{Binding AmountValidationHint}" />
+                                    <TextBlock Style="{StaticResource AmountFieldHintStyle}" Text="{Binding AmountFieldHint, Mode=OneWay}" />
                                 </Grid>
                                 <customControls:MoneyTextBox
                                     x:Name="ExpenseAmountTextBox"
@@ -735,7 +746,7 @@
                                     Margin="0"
                                     Style="{StaticResource SectionLabelStyle}"
                                     Text="Amount" />
-                                <TextBlock Style="{StaticResource FieldValidationHintStyle}" Text="{Binding AmountValidationHint}" />
+                                <TextBlock Style="{StaticResource AmountFieldHintStyle}" Text="{Binding AmountFieldHint, Mode=OneWay}" />
                             </Grid>
                             <customControls:MoneyTextBox
                                 x:Name="IncomeAmountTextBox"
@@ -816,7 +827,7 @@
                                 Margin="0"
                                 Style="{StaticResource SectionLabelStyle}"
                                 Text="Amount" />
-                            <TextBlock Style="{StaticResource FieldValidationHintStyle}" Text="{Binding AmountValidationHint}" />
+                            <TextBlock Style="{StaticResource AmountFieldHintStyle}" Text="{Binding AmountFieldHint, Mode=OneWay}" />
                         </Grid>
                         <customControls:MoneyTextBox
                             x:Name="GoalAmountTextBox"

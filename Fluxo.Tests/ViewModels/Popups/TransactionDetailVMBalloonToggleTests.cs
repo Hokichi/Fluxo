@@ -1,4 +1,7 @@
 using Fluxo.Tests.TestSupport;
+using Fluxo.Core.Entities;
+using Fluxo.Core.Enums;
+using Fluxo.ViewModels.Popups;
 using Xunit;
 
 namespace Fluxo.Tests.ViewModels.Popups;
@@ -45,5 +48,43 @@ public sealed class TransactionDetailVMBalloonToggleTests
         Assert.Contains("input.IsExcludedFromBudget != savedState.IsExcludedFromBudget", source);
         Assert.Contains("IsIoU = _savedState.IsIoU;", source);
         Assert.Contains("IsExcludedFromBudget = _savedState.IsExcludedFromBudget;", source);
+    }
+
+    [Theory]
+    [InlineData(1, 1, 100, 95, 10, false, false)]
+    [InlineData(1, 2, 100, 90, 10, false, false)]
+    [InlineData(1, 2, 100, 95, 10, false, true)]
+    [InlineData(1, 2, 100, 95, 10, true, false)]
+    public void MaximumSpendingConfirmation_RequiresChangedOverflowingUnapprovedAccount(
+        int currentAccountId,
+        int destinationAccountId,
+        decimal maximumSpending,
+        decimal destinationSpending,
+        decimal amount,
+        bool overflowApproved,
+        bool expected)
+    {
+        Assert.Equal(expected, TransactionDetailVM.RequiresMaximumSpendingConfirmation(
+            currentAccountId,
+            destinationAccountId,
+            maximumSpending,
+            destinationSpending,
+            amount,
+            overflowApproved));
+    }
+
+    [Fact]
+    public void CalculateAccountSpending_IncludesExcludedButNotDeletedOrSplitParents()
+    {
+        var transactions = new[]
+        {
+            new Transaction { Id = 1, AccountId = 2, Type = TransactionType.Expense, Amount = 30m },
+            new Transaction { Id = 2, AccountId = 2, Type = TransactionType.Expense, Amount = 20m, IsExcludedFromBudget = true },
+            new Transaction { Id = 3, AccountId = 2, Type = TransactionType.Expense, Amount = 50m, IsForDeletion = true },
+            new Transaction { Id = 4, AccountId = 3, Type = TransactionType.Expense, Amount = 100m },
+            new Transaction { Id = 5, AccountId = 2, Type = TransactionType.Expense, Amount = 10m, ParentTransactionId = 1 }
+        };
+
+        Assert.Equal(30m, TransactionDetailVM.CalculateAccountSpending(transactions, accountId: 2));
     }
 }

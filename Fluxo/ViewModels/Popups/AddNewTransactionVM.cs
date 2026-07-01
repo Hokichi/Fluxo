@@ -16,6 +16,7 @@ using Fluxo.Services.Transactions;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups.Helpers;
 using Fluxo.ViewModels.Shell;
+using Fluxo.ViewModels.Shell.Main;
 using System.Globalization;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
@@ -40,6 +41,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     private FormState _initialState;
     private bool _isChangeTrackingInitialized;
     private bool _isAmountValidationActive;
+    private string _amountWarningHint = string.Empty;
     private bool _isNameValidationActive;
     private TransactionPopupPurpose _popupPurpose = TransactionPopupPurpose.AddNewTransaction;
     private bool _isTransactionTypeLocked;
@@ -119,7 +121,10 @@ public partial class AddNewTransactionVM : ObservableValidator
                 OnPropertyChanged(nameof(NameValidationHint));
 
             if (e.PropertyName == nameof(AmountText))
+            {
                 OnPropertyChanged(nameof(AmountValidationHint));
+                NotifyAmountPresentationChanged();
+            }
         };
         AccountsView = AccountComboBoxViewFactory.CreateGroupedByProperty(
             Accounts,
@@ -216,6 +221,12 @@ public partial class AddNewTransactionVM : ObservableValidator
     public string CategoryFieldLabel => IsRepayment ? "Credit Account" : "Category";
     public string NameValidationHint => GetValidationHint(nameof(NameText));
     public string AmountValidationHint => GetValidationHint(nameof(AmountText));
+    public string AmountWarningHint => _amountWarningHint;
+    public string AmountFieldHint => string.IsNullOrWhiteSpace(AmountValidationHint)
+        ? AmountWarningHint
+        : AmountValidationHint;
+    public bool IsAmountWarning => string.IsNullOrWhiteSpace(AmountValidationHint) &&
+                                   !string.IsNullOrWhiteSpace(AmountWarningHint);
 
     public void BeginChangeTracking()
     {
@@ -320,6 +331,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         _isRepaymentAmountInvalid = false;
         RefreshActiveValidation(nameof(AmountText));
         OnPropertyChanged(nameof(InstallmentSummaryText));
+        RefreshAmountWarning();
         NotifyFormStateChanged();
     }
 
@@ -352,6 +364,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(CanUseIoU));
         OnPropertyChanged(nameof(IsRegularMode));
         RefreshActiveValidation(nameof(AmountText));
+        RefreshAmountWarning();
         NotifyFormStateChanged();
     }
 
@@ -389,6 +402,9 @@ public partial class AddNewTransactionVM : ObservableValidator
     partial void OnIsExcludedFromBudgetChanged(bool value)
     {
         OnPropertyChanged(nameof(IsBudgetExcluded));
+        RefreshActiveValidation(nameof(AmountText));
+        RefreshAmountWarning();
+        _ = RefreshExpenseCategoryAvailabilityAsync();
         NotifyFormStateChanged();
     }
 
@@ -455,6 +471,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     partial void OnSelectedDateChanged(DateTime value)
     {
         RefreshActiveValidation(nameof(AmountText));
+        RefreshAmountWarning();
         NotifyFormStateChanged();
     }
 
@@ -616,6 +633,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         RefreshAccounts();
         ClearNameValidation();
         RefreshActiveValidation(nameof(AmountText));
+        RefreshAmountWarning();
         _ = RefreshTransactionNameSuggestionsAsync();
         ResetHistoryLists();
         if (IsHistoryOpen)
@@ -661,6 +679,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         RefreshAccounts();
         ClearNameValidation();
         RefreshActiveValidation(nameof(AmountText));
+        RefreshAmountWarning();
         _ = RefreshTransactionNameSuggestionsAsync();
         ResetHistoryLists();
         if (IsHistoryOpen)
@@ -920,12 +939,15 @@ public partial class AddNewTransactionVM : ObservableValidator
                 if (goal is null)
                     return AddNewTransactionSubmissionResult.Failure("Please select a valid goal.");
 
-                var budgetPolicyResult = await ApplyExpenseBudgetPolicyAsync(
-                    ExpenseCategory.Savings,
-                    input.Amount,
-                    input.Date);
-                if (!budgetPolicyResult.IsSuccess)
-                    return budgetPolicyResult;
+                if (!input.IsExcludedFromBudget)
+                {
+                    var budgetPolicyResult = await ApplyExpenseBudgetPolicyAsync(
+                        ExpenseCategory.Savings,
+                        input.Amount,
+                        input.Date);
+                    if (!budgetPolicyResult.IsSuccess)
+                        return budgetPolicyResult;
+                }
 
                 var goalUpdateTag = await GoalUpdateTransactionSupport.ResolveGoalUpdateTagAsync(_appData);
                 var transaction = new Transaction
@@ -963,9 +985,12 @@ public partial class AddNewTransactionVM : ObservableValidator
                 if (tag is null)
                     return AddNewTransactionSubmissionResult.Failure("Please select a valid tag.");
 
-                var budgetPolicyResult = await ApplyExpenseBudgetPolicyAsync(input.Category!.Value, input.Amount, input.Date);
-                if (!budgetPolicyResult.IsSuccess)
-                    return budgetPolicyResult;
+                if (!input.IsExcludedFromBudget)
+                {
+                    var budgetPolicyResult = await ApplyExpenseBudgetPolicyAsync(input.Category!.Value, input.Amount, input.Date);
+                    if (!budgetPolicyResult.IsSuccess)
+                        return budgetPolicyResult;
+                }
 
                 var transaction = new Transaction
                 {
@@ -1250,6 +1275,12 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     private async Task RefreshExpenseCategoryAvailabilityAsync()
     {
+        if (IsExcludedFromBudget)
+        {
+            SetAllExpenseCategoriesEnabled(true);
+            return;
+        }
+
         try
         {
             var allocation = await _appData.GetBudgetAllocationAsync();
@@ -1864,6 +1895,50 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(HasChanges));
     }
 
+    private void RefreshAmountWarning()
+    {
+        var warning = GetDailyAllowanceWarning();
+        if (_amountWarningHint != warning)
+        {
+            _amountWarningHint = warning;
+            OnPropertyChanged(nameof(AmountWarningHint));
+        }
+
+        NotifyAmountPresentationChanged();
+    }
+
+    private void NotifyAmountPresentationChanged()
+    {
+        OnPropertyChanged(nameof(AmountFieldHint));
+        OnPropertyChanged(nameof(IsAmountWarning));
+    }
+
+    private string GetDailyAllowanceWarning()
+    {
+        if (!IsExpense || IsRecurring || IsExcludedFromBudget || AmountText <= 0m)
+            return string.Empty;
+
+        try
+        {
+            var allocation = _appData.GetBudgetAllocationAsync().GetAwaiter().GetResult();
+            var spent = BudgetEffectiveTransactionFilter
+                .Select(_appData.GetTransactionsAsync().GetAwaiter().GetResult())
+                .Where(transaction => transaction.Type == TransactionType.Expense &&
+                                      transaction.OccurredOn.Date == SelectedDate.Date)
+                .Sum(transaction => transaction.Amount);
+            var allowance = BudgetAllocationCalculator.CalculateDailyAllowance(
+                allocation,
+                SelectedDate.Date,
+                _mainViewModel.BudgetPanel.TotalIncomeAmount);
+
+            return spent + AmountText > allowance ? "Over Daily Allowance" : string.Empty;
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
     private bool HasPendingTransactionInputChanges()
     {
         var initialInput = new PendingTransactionInputState(
@@ -2147,7 +2222,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     {
         validationMessage = string.Empty;
 
-        if (!IsExpense || IsRecurring || SelectedTag is not { SpendingLimit: > 0m } tag)
+        if (!IsExpense || IsRecurring || IsExcludedFromBudget || SelectedTag is not { SpendingLimit: > 0m } tag)
             return true;
 
         try

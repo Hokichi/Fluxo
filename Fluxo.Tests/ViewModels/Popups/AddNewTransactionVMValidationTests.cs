@@ -592,6 +592,90 @@ public sealed class AddNewTransactionVMValidationTests
     }
 
     [Fact]
+    public void AmountValidation_ForExcludedExpense_IgnoresTagSpendingLimit()
+    {
+        RunInSta(() =>
+        {
+            var source = CreateCheckingSource(balance: 500m);
+            var appData = CreateAppData(expenseLogs:
+            [
+                CreateTransaction("Groceries", 90m, tagId: 1, sourceId: source.Id)
+            ]);
+            var vm = CreateVm(TransactionKind.Expense, source, isRecurring: false, amount: 15m, appData: appData);
+            vm.SelectedTag = new TagVM
+            {
+                Id = 1,
+                Name = "General",
+                HexCode = "#22C55E",
+                SpendingLimit = 100m
+            };
+            vm.IsExcludedFromBudget = true;
+
+            vm.ValidateAmountField();
+
+            Assert.DoesNotContain(vm.GetErrors(nameof(AddNewTransactionVM.AmountText)),
+                error => error.ErrorMessage == "General spending limit exceeded.");
+        });
+    }
+
+    [Fact]
+    public void AmountWarning_UsesSelectedDateAndIgnoresExcludedTransactions()
+    {
+        RunInSta(() =>
+        {
+            var selectedDate = new DateTime(2026, 7, 1);
+            var included = CreateTransaction("Lunch", 8m, sourceId: 1);
+            included.OccurredOn = selectedDate;
+            var excluded = CreateTransaction("Transfer", 100m, sourceId: 1);
+            excluded.OccurredOn = selectedDate;
+            excluded.IsExcludedFromBudget = true;
+            var otherDay = CreateTransaction("Yesterday", 100m, sourceId: 1);
+            otherDay.OccurredOn = selectedDate.AddDays(-1);
+            var allocation = new BudgetAllocation
+            {
+                AllocationLimit = 70m,
+                AllocationPeriod = AllocationPeriod.Weekly
+            };
+            var vm = CreateVm(
+                TransactionKind.Expense,
+                CreateCheckingSource(balance: 500m),
+                isRecurring: false,
+                amount: 3m,
+                appData: CreateAppData(allocation, [included, excluded, otherDay]));
+            vm.SelectedDate = selectedDate;
+
+            Assert.Equal("Over Daily Allowance", vm.AmountWarningHint);
+            Assert.True(vm.CanSave);
+        });
+    }
+
+    [Fact]
+    public void AmountWarning_ExcludedCandidate_HasNoWarning()
+    {
+        RunInSta(() =>
+        {
+            var selectedDate = new DateTime(2026, 7, 1);
+            var included = CreateTransaction("Lunch", 10m, sourceId: 1);
+            included.OccurredOn = selectedDate;
+            var allocation = new BudgetAllocation
+            {
+                AllocationLimit = 70m,
+                AllocationPeriod = AllocationPeriod.Weekly
+            };
+            var vm = CreateVm(
+                TransactionKind.Expense,
+                CreateCheckingSource(balance: 500m),
+                isRecurring: false,
+                amount: 1m,
+                appData: CreateAppData(allocation, [included]));
+            vm.SelectedDate = selectedDate;
+            vm.IsExcludedFromBudget = true;
+
+            Assert.Equal(string.Empty, vm.AmountWarningHint);
+        });
+    }
+
+    [Fact]
     public void ValidateNameField_DoesNotValidateAmountField()
     {
         RunInSta(() =>
@@ -1307,6 +1391,33 @@ public sealed class AddNewTransactionVMValidationTests
     }
 
     [Fact]
+    public void ExcludedExpense_HardStop_DoesNotBlockOrAddDebt()
+    {
+        RunInSta(() =>
+        {
+            var source = CreateCheckingSource(balance: 500m);
+            var allocation = new BudgetAllocation
+            {
+                AllocationLimit = 100m,
+                AllocationPeriod = AllocationPeriod.Monthly,
+                NeedsThreshold = 50,
+                WantsThreshold = 30,
+                InvestThreshold = 20,
+                OverspendPolicy = OverspendPolicy.HardStop
+            };
+            var appData = CreateAppData(allocation, CreateTransactionsForBudget(ExpenseCategory.Wants, 30m));
+            var vm = CreateVm(TransactionKind.Expense, source, isRecurring: false, amount: 10m, appData: appData);
+            vm.SelectedExpenseCategory = ExpenseCategory.Wants;
+            vm.IsExcludedFromBudget = true;
+
+            var result = vm.SaveAsync(resetAfterSave: false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess, result.ErrorMessage);
+            Assert.Equal(0m, allocation.WantsDebt);
+        });
+    }
+
+    [Fact]
     public void Expense_HardStop_UsesExpenseDateAllocationPeriod()
     {
         RunInSta(() =>
@@ -1364,7 +1475,7 @@ public sealed class AddNewTransactionVMValidationTests
     }
 
     [Fact]
-    public void GoalUpdate_HardStop_BlocksOverspendingInvestCategory()
+    public void GoalUpdate_HardStop_DoesNotBlockExcludedTransaction()
     {
         RunInSta(() =>
         {
@@ -1383,9 +1494,8 @@ public sealed class AddNewTransactionVMValidationTests
 
             var result = vm.SaveAsync(resetAfterSave: false).GetAwaiter().GetResult();
 
-            Assert.False(result.IsSuccess);
-            Assert.Equal("Invest budget is exhausted for this allocation period.", result.ErrorMessage);
-            appData.DidNotReceiveWithAnyArgs().AddTransactionAsync(default!, default);
+            Assert.True(result.IsSuccess, result.ErrorMessage);
+            appData.ReceivedWithAnyArgs().AddTransactionAsync(default!, default);
         });
     }
 

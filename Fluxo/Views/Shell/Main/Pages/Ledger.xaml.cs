@@ -152,7 +152,7 @@ public partial class Ledger : UserControl
             case LedgerFilterOption<int> integerOption:
                 integerOption.IsChecked = !integerOption.IsChecked;
                 break;
-            case LedgerFilterOption<ExpenseCategory> category:
+            case LedgerFilterOption<LedgerCategoryFilter> category:
                 category.IsChecked = !category.IsChecked;
                 break;
         }

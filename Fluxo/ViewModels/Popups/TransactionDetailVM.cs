@@ -324,7 +324,9 @@ public partial class TransactionDetailVM : ObservableObject
             SelectedTag?.Id);
     }
 
-    public async Task<TransactionDetailSaveResult> SaveAsync(bool keepParentExpenseWhenRemainder = false)
+    public async Task<TransactionDetailSaveResult> SaveAsync(
+        bool keepParentExpenseWhenRemainder = false,
+        bool allowMaximumSpendingOverflow = false)
     {
         if (IsSaving)
             return TransactionDetailSaveResult.Failure("This expense is already being saved.");
@@ -369,6 +371,26 @@ public partial class TransactionDetailVM : ObservableObject
             var resolvedName = BuildTransactionName(input.Name, input.Note, tag.Name);
 
             var sourceChanged = currentAccount.Id != newAccount.Id;
+            var destinationSpending = 0m;
+            if (sourceChanged && newAccount.MaximumSpending > 0m)
+            {
+                destinationSpending = newAccount.AccountType == AccountType.Credit
+                    ? newAccount.SpentAmount
+                    : CalculateAccountSpending(await _appData.GetTransactionsAsync(), newAccount.Id);
+            }
+            if (transaction.Type == TransactionType.Expense &&
+                RequiresMaximumSpendingConfirmation(
+                    currentAccount.Id,
+                    newAccount.Id,
+                    newAccount.MaximumSpending,
+                    destinationSpending,
+                    input.Amount,
+                    allowMaximumSpendingOverflow))
+            {
+                return TransactionDetailSaveResult.Confirmation(
+                    $"This expense exceeds {newAccount.Name}'s maximum spending limit. Save anyway?");
+            }
+
             if (!sourceChanged)
             {
                 LogMemoryPersistence.RevertTransactionFromAccount(currentAccount, transaction.Type, transaction.Amount);
@@ -1067,16 +1089,53 @@ public partial class TransactionDetailVM : ObservableObject
 
     public sealed record ExpenseCategoryOption(string Label, ExpenseCategory Value);
 
-    public readonly record struct TransactionDetailSaveResult(bool IsSuccess, string? ErrorMessage)
+    internal static bool RequiresMaximumSpendingConfirmation(
+        int currentAccountId,
+        int destinationAccountId,
+        decimal maximumSpending,
+        decimal destinationSpending,
+        decimal amount,
+        bool overflowApproved)
+    {
+        return !overflowApproved &&
+               currentAccountId != destinationAccountId &&
+               maximumSpending > 0m &&
+               destinationSpending + amount > maximumSpending;
+    }
+
+    internal static decimal CalculateAccountSpending(IEnumerable<Transaction> transactions, int accountId)
+    {
+        var expenses = transactions
+            .Where(transaction => transaction.AccountId == accountId &&
+                                  transaction.Type == TransactionType.Expense &&
+                                  !transaction.IsForDeletion)
+            .ToList();
+        var parentIds = expenses
+            .Where(transaction => transaction.ParentTransactionId.HasValue)
+            .Select(transaction => transaction.ParentTransactionId!.Value)
+            .ToHashSet();
+
+        return expenses.Where(transaction => !parentIds.Contains(transaction.Id)).Sum(transaction => transaction.Amount);
+    }
+
+    public readonly record struct TransactionDetailSaveResult(
+        bool IsSuccess,
+        string? ErrorMessage,
+        bool RequiresConfirmation)
     {
         public static TransactionDetailSaveResult Success()
         {
-            return new TransactionDetailSaveResult(true, null);
+            return new TransactionDetailSaveResult(true, null, false);
         }
 
         public static TransactionDetailSaveResult Failure(string? errorMessage)
         {
-            return new TransactionDetailSaveResult(false, errorMessage);
+            return new TransactionDetailSaveResult(false, errorMessage, false);
+        }
+
+        public static TransactionDetailSaveResult Confirmation(string message)
+        {
+            return new TransactionDetailSaveResult(false, message, true);
         }
     }
 

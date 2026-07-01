@@ -100,7 +100,7 @@ public partial class LedgerVM : ObservableRecipient,
     public string EmptyStatePeriodText => BuildSelectedPeriodText();
     public ObservableCollection<LedgerFilterOption<LedgerTransactionKind>> TypeFilters { get; } = [];
     public ObservableCollection<LedgerFilterOption<int>> AccountFilters { get; } = [];
-    public ObservableCollection<LedgerFilterOption<ExpenseCategory>> CategoryFilters { get; } = [];
+    public ObservableCollection<LedgerFilterOption<LedgerCategoryFilter>> CategoryFilters { get; } = [];
     public ObservableCollection<LedgerFilterOption<int>> TagFilters { get; } = [];
     public ObservableCollection<AccountVM> EditableAccounts { get; } = [];
     public ObservableCollection<TagVM> EditableTags { get; } = [];
@@ -500,10 +500,11 @@ public partial class LedgerVM : ObservableRecipient,
 
         RebuildFilter(CategoryFilters,
         [
-            new LedgerFilterOption<ExpenseCategory>("All", default, isAll: true, isChecked: true),
-            new LedgerFilterOption<ExpenseCategory>("Needs", ExpenseCategory.Needs),
-            new LedgerFilterOption<ExpenseCategory>("Wants", ExpenseCategory.Wants),
-            new LedgerFilterOption<ExpenseCategory>("Invest", ExpenseCategory.Savings)
+            new LedgerFilterOption<LedgerCategoryFilter>("All", default, isAll: true, isChecked: true),
+            new LedgerFilterOption<LedgerCategoryFilter>("Needs", LedgerCategoryFilter.Needs),
+            new LedgerFilterOption<LedgerCategoryFilter>("Wants", LedgerCategoryFilter.Wants),
+            new LedgerFilterOption<LedgerCategoryFilter>("Invest", LedgerCategoryFilter.Invest),
+            new LedgerFilterOption<LedgerCategoryFilter>("Excluded", LedgerCategoryFilter.Excluded)
         ]);
 
         RebuildFilter(TagFilters,
@@ -570,7 +571,7 @@ public partial class LedgerVM : ObservableRecipient,
             case LedgerFilterOption<int> tag when TagFilters.Contains(tag):
                 NormalizeFilterSelection(TagFilters, tag);
                 break;
-            case LedgerFilterOption<ExpenseCategory> category:
+            case LedgerFilterOption<LedgerCategoryFilter> category:
                 NormalizeFilterSelection(CategoryFilters, category);
                 break;
         }
@@ -878,8 +879,8 @@ public partial class LedgerVM : ObservableRecipient,
             case ObservableCollection<LedgerFilterOption<int>> tagCollection when ReferenceEquals(tagCollection, TagFilters):
                 RefreshTagFilterSelectionPresentation();
                 break;
-            case LedgerFilterOption<ExpenseCategory>:
-            case ObservableCollection<LedgerFilterOption<ExpenseCategory>>:
+            case LedgerFilterOption<LedgerCategoryFilter>:
+            case ObservableCollection<LedgerFilterOption<LedgerCategoryFilter>>:
                 RefreshCategoryFilterSelectionPresentation();
                 break;
         }
@@ -954,9 +955,7 @@ public partial class LedgerVM : ObservableRecipient,
         if (!MatchesFilter(AccountFilters, transaction.AccountId))
             return false;
 
-        if (transaction.Kind == LedgerTransactionKind.Expense &&
-            transaction.Category is { } category &&
-            !MatchesFilter(CategoryFilters, category))
+        if (!MatchesCategoryFilter(transaction))
             return false;
 
         if (transaction.Kind == LedgerTransactionKind.Expense &&
@@ -971,6 +970,27 @@ public partial class LedgerVM : ObservableRecipient,
         var selectedOptions = options.Where(option => option.IsChecked).ToList();
         return selectedOptions.Any(option => option.IsAll) ||
                selectedOptions.Any(option => EqualityComparer<T>.Default.Equals(option.Value, value));
+    }
+
+    private bool MatchesCategoryFilter(LedgerTransactionItemVM transaction)
+    {
+        var selected = CategoryFilters.Where(option => option.IsChecked).ToList();
+        if (selected.Any(option => option.IsAll))
+            return true;
+
+        if (transaction.IsExcludedFromBudget)
+            return selected.Any(option => option.Value == LedgerCategoryFilter.Excluded);
+
+        if (transaction.Kind != LedgerTransactionKind.Expense)
+            return false;
+
+        var category = transaction.Category switch
+        {
+            ExpenseCategory.Wants => LedgerCategoryFilter.Wants,
+            ExpenseCategory.Savings => LedgerCategoryFilter.Invest,
+            _ => LedgerCategoryFilter.Needs
+        };
+        return selected.Any(option => option.Value == category);
     }
 
     private bool IsInSelectedRange(TransactionVM log)
@@ -991,6 +1011,7 @@ public partial class LedgerVM : ObservableRecipient,
             OccurredOn = log.OccurredOn,
             LoggedOn = log.LoggedOn,
             Category = log.ExpenseCategory ?? ExpenseCategory.Needs,
+            IsExcludedFromBudget = log.IsExcludedFromBudget,
             ParentTransactionId = log.ParentTransactionId,
             IsChildTransaction = isChildTransaction,
             AccountId = log.Account?.Id ?? 0,
@@ -1013,6 +1034,7 @@ public partial class LedgerVM : ObservableRecipient,
             Amount = log.Amount,
             OccurredOn = log.OccurredOn,
             LoggedOn = log.LoggedOn,
+            IsExcludedFromBudget = log.IsExcludedFromBudget,
             AccountId = log.Account?.Id ?? 0,
             AccountName = log.Account?.Name ?? string.Empty
         };

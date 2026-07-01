@@ -553,7 +553,19 @@ public partial class TransactionDetailPopup : BasePopup
 
     private async Task<TransactionDetailVM.TransactionDetailSaveResult?> TrySaveWithSplitRemainderConfirmationAsync()
     {
-        return await _viewModel.SaveAsync();
+        var result = await _viewModel.SaveAsync();
+        if (!result.RequiresConfirmation)
+            return result;
+
+        var saveAnyway = _dialogService.ShowWarning(
+            result.ErrorMessage ?? "This expense exceeds the destination account's maximum spending limit. Save anyway?",
+            "Transaction Detail",
+            this,
+            MessageBoxButton.YesNo) == MessageBoxResult.Yes;
+        if (!saveAnyway)
+            return null;
+
+        return await _viewModel.SaveAsync(allowMaximumSpendingOverflow: true);
     }
 
 }

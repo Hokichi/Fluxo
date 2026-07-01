@@ -82,7 +82,9 @@ public sealed class AddNewTransactionSuggestionStyleTests
 
         Assert.Contains("x:Key=\"FieldHeaderGridStyle\"", xaml);
         Assert.Equal(2, xaml.Split("Text=\"{Binding NameValidationHint}\"").Length - 1);
-        Assert.Equal(3, xaml.Split("Text=\"{Binding AmountValidationHint}\"").Length - 1);
+        Assert.Equal(3, xaml.Split("Text=\"{Binding AmountFieldHint, Mode=OneWay}\"").Length - 1);
+        Assert.Contains("Binding=\"{Binding IsAmountWarning, Mode=OneWay}\"", xaml);
+        Assert.Contains("Value=\"{DynamicResource Brush.Warning}\"", xaml);
         Assert.Contains("Property=\"HorizontalAlignment\" Value=\"Right\"", xaml);
         Assert.Contains("Property=\"Foreground\" Value=\"{DynamicResource Brush.Danger}\"", xaml);
     }
