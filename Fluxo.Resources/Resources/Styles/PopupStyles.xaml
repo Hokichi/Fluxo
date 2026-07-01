@@ -79,13 +79,17 @@
                             DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}" />
 
                                     <!--  Split  -->
-                                    <c:BalloonButton
+                                    <c:BalloonCheckBox
                                         x:Name="PART_SplitButton"
-                                        ButtonIcon="{StaticResource ArrowsOutLineVertical}"
-                                        ButtonText="Split"
+                                        CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                        CheckedIcon="{StaticResource ArrowsOutLineVertical}"
+                                        CheckedText="Split"
                                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                        IsChecked="{Binding IsSplitButtonChecked, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                                         ShouldExpand="True"
-                                        Style="{StaticResource HeaderButtonStyle}"
+                                        Style="{StaticResource HeaderCheckBoxStyle}"
+                                        UncheckedIcon="{StaticResource ArrowsOutLineVertical}"
+                                        UncheckedText="Split"
                                         Visibility="{TemplateBinding ShowSplitButton,
                                                                      Converter={StaticResource PopupBoolToVisibility}}"
                             DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}" />

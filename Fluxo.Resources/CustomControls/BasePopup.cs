@@ -79,6 +79,10 @@ public class BasePopup : Window, IPopupHost
         DependencyProperty.Register(nameof(ShowSplitButton), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(false));
 
+    public static readonly DependencyProperty IsSplitButtonCheckedProperty =
+        DependencyProperty.Register(nameof(IsSplitButtonChecked), typeof(bool), typeof(BasePopup),
+            new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
+
     public static readonly DependencyProperty ShowCancelButtonProperty =
         DependencyProperty.Register(nameof(ShowCancelButton), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(false));
@@ -263,6 +267,12 @@ public class BasePopup : Window, IPopupHost
     {
         if (GetTemplateChild(partName) is ButtonBase btn)
             btn.Click += (_, e) => handler(e);
+    }
+
+    public bool IsSplitButtonChecked
+    {
+        get => (bool)GetValue(IsSplitButtonCheckedProperty);
+        set => SetValue(IsSplitButtonCheckedProperty, value);
     }
 
     // Virtual button handlers (override in child popups)

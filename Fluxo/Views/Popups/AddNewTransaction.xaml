@@ -406,7 +406,7 @@
                                 Style="{StaticResource TransactionNameSuggestionListBoxStyle}" />
                         </Popup>
 
-                        <Grid Margin="0,16,0,0">
+                        <Grid Margin="0,16,0,0" Visibility="{Binding ShowTransactionModes, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="16" />
@@ -580,7 +580,7 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="0">
+                        <StackPanel Grid.Column="0" Visibility="{Binding ShowCategoryOrRepaymentField, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                             <TextBlock Style="{StaticResource SectionLabelStyle}" Text="{Binding CategoryFieldLabel}" />
                             <Grid>
                                 <ComboBox
@@ -592,16 +592,7 @@
                                     SelectedValue="{Binding SelectedExpenseCategory, Mode=TwoWay}"
                                     SelectedValuePath="Value"
                                     Style="{StaticResource FluxoComboBoxStyle}"
-                                    Visibility="{Binding CanEditCategory, Converter={StaticResource BoolToVisibilityConverter}}" />
-                                <Border
-                                    MinHeight="38"
-                                    Background="{DynamicResource Brush.Background.Surface}"
-                                    BorderBrush="{DynamicResource Brush.Border.Subtle}"
-                                    BorderThickness="1"
-                                    CornerRadius="12"
-                                    IsEnabled="False"
-                                    Opacity="0.4"
-                                    Visibility="{Binding ShowDisabledCategoryField, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                    Visibility="{Binding ShowCategoryField, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
                                 <ComboBox
                                     DisplayMemberPath="Name"
                                     IsEnabled="{Binding CanChangeRepaymentAccount}"
@@ -612,7 +603,18 @@
                             </Grid>
                         </StackPanel>
 
-                        <StackPanel Grid.Column="2">
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Grid.Column" Value="2" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ShouldExpandAccountField, Mode=OneWay}" Value="True">
+                                            <Setter Property="Grid.Column" Value="0" />
+                                            <Setter Property="Grid.ColumnSpan" Value="3" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
                             <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Account" />
                             <ComboBox
                                 x:Name="ExpenseAccountComboBox"

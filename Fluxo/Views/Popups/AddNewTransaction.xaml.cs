@@ -55,6 +55,8 @@ public partial class AddNewTransaction : BasePopup
         Loaded += async (_, _) =>
         {
             await _viewModel.EnsureTagsLoadedAsync();
+            if (_viewModel.IsHistoryOpen)
+                await _viewModel.LoadHistoryAsync();
             RecalculateTagLayout();
             SyncMoreTagsPopupState();
             SyncNameSuggestionsPopupState();

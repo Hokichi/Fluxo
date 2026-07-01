@@ -38,6 +38,7 @@ public partial class TransactionDetailVM : ObservableObject
     [ObservableProperty] private bool _isSaving;
     [ObservableProperty] private TransactionSplitRowVM? _negativeRemainderRow;
     private bool _isApplyingSplitRemainder;
+    private bool _areSplitRowsLoaded;
     private bool _isUpdatingTagCollections;
     private int _visibleTagSlots = DefaultVisibleTagSlots;
     [ObservableProperty] private string _nameText = string.Empty;
@@ -92,6 +93,8 @@ public partial class TransactionDetailVM : ObservableObject
     public bool IsExpense => _transaction.Type == TransactionType.Expense;
     public string IoUTooltip => IsExpense ? "Set as lend" : "Set as debt";
     public bool IsCategoryEnabled => IsEditing && IsExpense;
+    public bool ShowCategoryField => IsExpense && !IsExcludedFromBudget;
+    public bool ShouldExpandAccountField => !ShowCategoryField;
     public bool HasMoreTags => OverflowTags.Count > 0;
     public bool HasSplitRows => SplitRows.Count > 0;
     public bool HasSplitRowsWithAmounts => SplitRows.Any(row => row.HasAmount);
@@ -99,12 +102,20 @@ public partial class TransactionDetailVM : ObservableObject
     public bool HasChildTransactions => ChildTransactions.Count > 0;
     public bool ShowChildTransactions => HasChildTransactions && !IsSplitMode;
     public int DetailPopupWidth => ShowChildTransactions ? 916 : 640;
-    public bool ShowSplitButton => !IsSplitMode;
+    public bool ShowSplitButton => true;
+    public bool HasPendingSplitChanges =>
+        _areSplitRowsLoaded && (HasSplitRowsWithAmounts || _removedSplitRows.Count > 0);
     public bool ShowNormalTransactionFields => !IsSplitMode;
     public IEnumerable<TagVM> AllSplitTags => _orderedTags.Where(tag => !tag.IsSystemTag);
     public bool HasSplitParentRemainder => IsSplitMode && AmountText > 0m;
     public bool CanCloseSplitModeWithoutSaving => IsSplitMode && !HasSplitRows;
-    public bool RequiresEmptySplitConfirmationOnClose => IsSplitMode && HasSplitRowsWithoutAmounts;
+    public bool RequiresEmptySplitConfirmationOnClose => _areSplitRowsLoaded && HasSplitRowsWithoutAmounts;
+
+    partial void OnIsExcludedFromBudgetChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShowCategoryField));
+        OnPropertyChanged(nameof(ShouldExpandAccountField));
+    }
 
     partial void OnIsEditingChanged(bool value)
     {
@@ -181,7 +192,17 @@ public partial class TransactionDetailVM : ObservableObject
     public async Task BeginSplitModeAsync(CancellationToken cancellationToken = default)
     {
         BeginSplitMode();
+        if (_areSplitRowsLoaded)
+            return;
+
         await LoadChildTransactionsIntoSplitRowsAsync(cancellationToken);
+        _areSplitRowsLoaded = true;
+    }
+
+    public void ShowParentTransaction()
+    {
+        IsSplitMode = false;
+        IsEditing = false;
     }
 
     public void AddSplitRow()
@@ -263,6 +284,7 @@ public partial class TransactionDetailVM : ObservableObject
 
         SplitRows.Clear();
         _removedSplitRows.Clear();
+        _areSplitRowsLoaded = false;
         IsSplitMode = false;
         HasNegativeSplitRemainder = false;
         NegativeRemainderRow = null;
@@ -331,7 +353,7 @@ public partial class TransactionDetailVM : ObservableObject
         if (IsSaving)
             return TransactionDetailSaveResult.Failure("This expense is already being saved.");
 
-        if (IsSplitMode)
+        if (IsSplitMode || HasPendingSplitChanges)
             return await SaveSplitAsync(keepParentExpenseWhenRemainder);
 
         if (!TryBuildInput(out var input, out var validationMessage))
@@ -459,11 +481,11 @@ public partial class TransactionDetailVM : ObservableObject
 
     public bool HasValidChangesToPersistOnClose()
     {
+        if (HasPendingSplitChanges)
+            return true;
+
         if (!IsEditing)
             return false;
-
-        if (IsSplitMode)
-            return HasSplitRowsWithAmounts;
 
         if (!TryBuildInput(out var input, out _))
             return false;
@@ -1061,6 +1083,7 @@ public partial class TransactionDetailVM : ObservableObject
         OnPropertyChanged(nameof(HasSplitRowsWithoutAmounts));
         OnPropertyChanged(nameof(CanCloseSplitModeWithoutSaving));
         OnPropertyChanged(nameof(RequiresEmptySplitConfirmationOnClose));
+        OnPropertyChanged(nameof(HasPendingSplitChanges));
     }
 
     private void OnSplitRowPropertyChanged(object? sender, PropertyChangedEventArgs e)

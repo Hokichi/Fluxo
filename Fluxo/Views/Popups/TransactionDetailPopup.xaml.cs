@@ -147,10 +147,18 @@ public partial class TransactionDetailPopup : BasePopup
 
     protected override async void OnSplitButtonClick()
     {
-        await _viewModel.BeginSplitModeAsync();
+        if (IsSplitButtonChecked)
+        {
+            await _viewModel.BeginSplitModeAsync();
+            SplitTransactionAmountTextBox.Focus();
+        }
+        else
+        {
+            _viewModel.ShowParentTransaction();
+        }
+
         UpdateButtonStates();
         SyncMoreTagsPopupState();
-        SplitTransactionAmountTextBox.Focus();
     }
 
     protected override void OnCancelButtonClick()

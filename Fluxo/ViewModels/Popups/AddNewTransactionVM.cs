@@ -73,7 +73,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     [ObservableProperty] private bool _isPinned;
     [ObservableProperty] private bool _isIoU;
     [ObservableProperty] private bool _isExcludedFromBudget;
-    [ObservableProperty] private bool _isHistoryOpen;
+    [ObservableProperty] private bool _isHistoryOpen = true;
     [ObservableProperty] private AddNewTransactionHistoryItemVM? _selectedPinnedHistoryItem;
     [ObservableProperty] private AddNewTransactionHistoryItemVM? _selectedHistoryItem;
     [ObservableProperty] private RecurringPeriod _selectedRecurringPeriod = RecurringPeriod.Monthly;
@@ -217,7 +217,10 @@ public partial class AddNewTransactionVM : ObservableValidator
     public bool ShowNoteField => !IsGoal && !IsRepayment;
     public bool ShowGoalField => IsGoal;
     public bool ShowRepaymentAccountField => IsRepayment;
-    public bool ShowDisabledCategoryField => !CanEditCategory && !IsRepayment;
+    public bool ShowCategoryField => IsExpense && !IsExcludedFromBudget;
+    public bool ShowCategoryOrRepaymentField => ShowCategoryField || IsRepayment;
+    public bool ShouldExpandAccountField => !ShowCategoryOrRepaymentField;
+    public bool ShowTransactionModes => !IsRepayment;
     public string CategoryFieldLabel => IsRepayment ? "Credit Account" : "Category";
     public string NameValidationHint => GetValidationHint(nameof(NameText));
     public string AmountValidationHint => GetValidationHint(nameof(AmountText));
@@ -402,6 +405,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     partial void OnIsExcludedFromBudgetChanged(bool value)
     {
         OnPropertyChanged(nameof(IsBudgetExcluded));
+        NotifyLayoutStateChanged();
         RefreshActiveValidation(nameof(AmountText));
         RefreshAmountWarning();
         _ = RefreshExpenseCategoryAvailabilityAsync();
@@ -613,7 +617,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(CanUseHistory));
         OnPropertyChanged(nameof(CanEditTransactionName));
         OnPropertyChanged(nameof(CanEditCategory));
-        OnPropertyChanged(nameof(ShowDisabledCategoryField));
+        NotifyLayoutStateChanged();
         OnPropertyChanged(nameof(CanEditTags));
         OnPropertyChanged(nameof(ShowNoteField));
         OnPropertyChanged(nameof(ShowGoalField));
@@ -657,7 +661,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(CanUseHistory));
         OnPropertyChanged(nameof(CanEditTransactionName));
         OnPropertyChanged(nameof(CanEditCategory));
-        OnPropertyChanged(nameof(ShowDisabledCategoryField));
+        NotifyLayoutStateChanged();
         OnPropertyChanged(nameof(CanEditTags));
         OnPropertyChanged(nameof(ShowNoteField));
         OnPropertyChanged(nameof(ShowGoalField));
@@ -713,12 +717,20 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(CanEditTags));
         OnPropertyChanged(nameof(ShowNoteField));
         OnPropertyChanged(nameof(ShowRepaymentAccountField));
-        OnPropertyChanged(nameof(ShowDisabledCategoryField));
+        NotifyLayoutStateChanged();
         OnPropertyChanged(nameof(CategoryFieldLabel));
         OnPropertyChanged(nameof(IsBudgetExcluded));
         OnPropertyChanged(nameof(CanToggleBudgetExclusion));
         RefreshAccounts();
         NotifyFormStateChanged();
+    }
+
+    private void NotifyLayoutStateChanged()
+    {
+        OnPropertyChanged(nameof(ShowCategoryField));
+        OnPropertyChanged(nameof(ShowCategoryOrRepaymentField));
+        OnPropertyChanged(nameof(ShouldExpandAccountField));
+        OnPropertyChanged(nameof(ShowTransactionModes));
     }
 
     partial void OnSelectedRepaymentAccountChanged(AccountVM? oldValue, AccountVM? newValue)

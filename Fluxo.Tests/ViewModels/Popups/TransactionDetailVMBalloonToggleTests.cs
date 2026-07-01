@@ -50,6 +50,19 @@ public sealed class TransactionDetailVMBalloonToggleTests
         Assert.Contains("IsExcludedFromBudget = _savedState.IsExcludedFromBudget;", source);
     }
 
+    [Fact]
+    public void SplitState_IsPreservedWhileParentIsShownAndSavedOnClose()
+    {
+        var source = File.ReadAllText(ViewModelPath);
+
+        Assert.Contains("private bool _areSplitRowsLoaded;", source);
+        Assert.Contains("public bool HasPendingSplitChanges", source);
+        Assert.Contains("if (_areSplitRowsLoaded)", source);
+        Assert.Contains("public void ShowParentTransaction()", source);
+        Assert.Contains("if (IsSplitMode || HasPendingSplitChanges)", source);
+        Assert.Contains("if (HasPendingSplitChanges)", source);
+    }
+
     [Theory]
     [InlineData(1, 1, 100, 95, 10, false, false)]
     [InlineData(1, 2, 100, 90, 10, false, false)]

@@ -19,6 +19,18 @@ public sealed class BasePopupSplitButtonTests
     }
 
     [Fact]
+    public void BasePopup_DefinesSplitCheckedDependencyPropertyAndClrAccessor()
+    {
+        var source = File.ReadAllText(ResolveBasePopupPath());
+
+        Assert.Contains("public static readonly DependencyProperty IsSplitButtonCheckedProperty =", source);
+        Assert.Contains("DependencyProperty.Register(nameof(IsSplitButtonChecked), typeof(bool), typeof(BasePopup)", source);
+        Assert.Contains("public bool IsSplitButtonChecked", source);
+        Assert.Contains("get => (bool)GetValue(IsSplitButtonCheckedProperty);", source);
+        Assert.Contains("set => SetValue(IsSplitButtonCheckedProperty, value);", source);
+    }
+
+    [Fact]
     public void OnApplyTemplate_WiresSplitButtonToVirtualHandler()
     {
         var source = File.ReadAllText(ResolveBasePopupPath());
@@ -42,7 +54,11 @@ public sealed class BasePopupSplitButtonTests
         var source = File.ReadAllText(ResolvePopupStylesPath());
 
         Assert.Contains("x:Name=\"PART_SplitButton\"", source);
-        Assert.Contains("ButtonIcon=\"{StaticResource ArrowsOutLineVertical}\"", source);
+        Assert.Contains("<c:BalloonCheckBox", source);
+        Assert.Contains("UncheckedIcon=\"{StaticResource ArrowsOutLineVertical}\"", source);
+        Assert.Contains("UncheckedText=\"Split\"", source);
+        Assert.Contains("CheckedText=\"Split\"", source);
+        Assert.Contains("IsChecked=\"{Binding IsSplitButtonChecked, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}\"", source);
         Assert.Contains("Visibility=\"{TemplateBinding ShowSplitButton,", source);
         Assert.Contains("PopupBoolToVisibility", source);
     }
@@ -53,7 +69,6 @@ public sealed class BasePopupSplitButtonTests
         var source = File.ReadAllText(ResolvePopupStylesPath());
 
         AssertHeaderButtonExpandsWithText(source, "PART_CloneButton", "Clone");
-        AssertHeaderButtonExpandsWithText(source, "PART_SplitButton", "Split");
         AssertHeaderButtonExpandsWithText(source, "PART_DeleteButton", "Delete");
         AssertHeaderButtonExpandsWithText(source, "PART_EditButton", "Edit");
         AssertHeaderButtonExpandsWithText(source, "PART_RevertButton", "Revert");

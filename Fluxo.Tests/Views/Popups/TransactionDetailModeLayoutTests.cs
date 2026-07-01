@@ -14,5 +14,11 @@ public sealed class TransactionDetailModeLayoutTests
         Assert.Equal(2, xaml.Split("GroupName=\"TransactionDetailMode\"", StringSplitOptions.None).Length - 1);
         Assert.Contains("UncheckedText=\"Regular\"", xaml);
         Assert.Contains("UncheckedText=\"Debt/IoU\"", xaml);
+        Assert.Contains("SelectedValue=\"{Binding SelectedExpenseCategory, Mode=TwoWay}\"", xaml);
+        Assert.Contains("ItemsSource=\"{Binding ExpenseCategories}\"", xaml);
+        Assert.DoesNotContain("SelectedTransactionCategory", xaml);
+        Assert.DoesNotContain("TransactionCategories", xaml);
+        Assert.Contains("Visibility=\"{Binding ShowCategoryField, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
+        Assert.Contains("DataTrigger Binding=\"{Binding ShouldExpandAccountField, Mode=OneWay}\" Value=\"True\"", xaml);
     }
 }

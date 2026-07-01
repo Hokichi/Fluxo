@@ -25,9 +25,12 @@ public sealed class TransactionDetailPopupSplitLayoutTests
         var xaml = File.ReadAllText(PopupXamlPath);
         var codeBehind = File.ReadAllText(PopupCodeBehindPath);
 
-        Assert.Contains("ShowSplitButton=\"{Binding ShowSplitButton}\"", xaml);
+        Assert.Contains("ShowSplitButton=\"{Binding ShowSplitButton, Mode=OneWay}\"", xaml);
+        Assert.Contains("IsSplitButtonChecked=\"{Binding IsSplitMode, Mode=TwoWay}\"", xaml);
         Assert.Contains("protected override async void OnSplitButtonClick()", codeBehind);
+        Assert.Contains("if (IsSplitButtonChecked)", codeBehind);
         Assert.Contains("await _viewModel.BeginSplitModeAsync();", codeBehind);
+        Assert.Contains("_viewModel.ShowParentTransaction();", codeBehind);
         Assert.Contains("SplitTransactionAmountTextBox.Focus();", codeBehind);
         Assert.Contains("ShowSplitButton = _viewModel.ShowSplitButton;", codeBehind);
         Assert.Contains("_viewModel.CanCloseSplitModeWithoutSaving", codeBehind);

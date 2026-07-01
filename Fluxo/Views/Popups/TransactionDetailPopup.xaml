@@ -10,7 +10,8 @@
     ShowCloneButton="True"
     ShowDeleteButton="True"
     ShowEditButton="True"
-    ShowSplitButton="{Binding ShowSplitButton}"
+    ShowSplitButton="{Binding ShowSplitButton, Mode=OneWay}"
+    IsSplitButtonChecked="{Binding IsSplitMode, Mode=TwoWay}"
     mc:Ignorable="d">
 
     <customControls:BasePopup.Resources>
@@ -415,19 +416,30 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Column="0">
+                    <StackPanel Grid.Column="0" Visibility="{Binding ShowCategoryField, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                         <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Category" />
                         <ComboBox
                             x:Name="TransactionCategoryComboBox"
                             DisplayMemberPath="Label"
                             IsEnabled="{Binding IsCategoryEnabled}"
-                            ItemsSource="{Binding TransactionCategories}"
-                            SelectedValue="{Binding SelectedTransactionCategory, Mode=TwoWay}"
+                            ItemsSource="{Binding ExpenseCategories}"
+                            SelectedValue="{Binding SelectedExpenseCategory, Mode=TwoWay}"
                             SelectedValuePath="Value"
                             Style="{StaticResource FluxoComboBoxStyle}" />
                     </StackPanel>
 
-                    <StackPanel Grid.Column="2">
+                    <StackPanel>
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Grid.Column" Value="2" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ShouldExpandAccountField, Mode=OneWay}" Value="True">
+                                        <Setter Property="Grid.Column" Value="0" />
+                                        <Setter Property="Grid.ColumnSpan" Value="3" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
                         <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Account" />
                         <ComboBox
                             x:Name="TransactionAccountComboBox"
