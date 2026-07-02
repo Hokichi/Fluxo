@@ -7,6 +7,7 @@ namespace Fluxo.ViewModels.Shell.Main;
 public partial class FloatingNotificationItemVM(
     Guid id,
     string header,
+    string headerAction,
     string message,
     IReadOnlyList<string> details,
     NotificationSeverity severity,
@@ -17,6 +18,7 @@ public partial class FloatingNotificationItemVM(
 
     public Guid Id { get; } = id;
     public string Header { get; } = header;
+    public string HeaderAction { get; } = headerAction;
     public string Message { get; } = message;
     public IReadOnlyList<string> Details { get; } = details;
     public NotificationSeverity Severity { get; } = severity;

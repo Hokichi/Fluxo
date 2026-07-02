@@ -22,13 +22,18 @@ public static class FloatingNotificationPublisher
             NotificationSeverity.Warning);
     }
 
-    public static void Success(IMessenger messenger, string header, string message, bool includeHistoryAction = false)
+    public static void Success(
+        IMessenger messenger,
+        string header,
+        string message,
+        bool includeHistoryAction = false,
+        string headerAction = "")
     {
         var body = includeHistoryAction
             ? $"{message.TrimEnd()} Click to view in History"
             : message;
         Publish(messenger, header, body, [], NotificationSeverity.Success,
-            includeHistoryAction ? OpenHistoryAsync : null);
+            includeHistoryAction ? OpenHistoryAsync : null, headerAction);
     }
 
     public static void Warning(IMessenger messenger, string header, string message) =>
@@ -37,8 +42,12 @@ public static class FloatingNotificationPublisher
     public static void Warning(string header, string message) =>
         Warning(WeakReferenceMessenger.Default, header, message);
 
-    public static void Success(string header, string message, bool includeHistoryAction = false) =>
-        Success(WeakReferenceMessenger.Default, header, message, includeHistoryAction);
+    public static void Success(
+        string header,
+        string message,
+        bool includeHistoryAction = false,
+        string headerAction = "") =>
+        Success(WeakReferenceMessenger.Default, header, message, includeHistoryAction, headerAction);
 
     public static void LoggedFailure(IMessenger messenger, Exception exception, string operation)
     {
@@ -54,7 +63,8 @@ public static class FloatingNotificationPublisher
         string message,
         IReadOnlyList<string> details,
         NotificationSeverity severity,
-        Func<Task>? clickAsync = null)
+        Func<Task>? clickAsync = null,
+        string headerAction = "")
     {
         ArgumentNullException.ThrowIfNull(messenger);
         if (string.IsNullOrWhiteSpace(header))
@@ -62,7 +72,8 @@ public static class FloatingNotificationPublisher
 
         var id = Guid.NewGuid();
         messenger.Send(new ShowFloatingNotificationMessage(new FloatingNotificationRequest(
-            header.Trim(), message?.Trim() ?? string.Empty, details, severity, clickAsync, id)));
+            header.Trim(), message?.Trim() ?? string.Empty, details, severity, clickAsync, id,
+            headerAction?.Trim() ?? string.Empty)));
         return id;
     }
 

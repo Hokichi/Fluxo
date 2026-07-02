@@ -8,7 +8,8 @@ public sealed record FloatingNotificationRequest(
     IReadOnlyList<string> Details,
     NotificationSeverity Severity,
     Func<Task>? ClickAsync = null,
-    Guid Id = default);
+    Guid Id = default,
+    string HeaderAction = "");
 
 public sealed class ShowFloatingNotificationMessage(FloatingNotificationRequest value)
     : ValueChangedMessage<FloatingNotificationRequest>(value);

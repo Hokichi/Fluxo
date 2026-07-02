@@ -35,7 +35,8 @@ public partial class FloatingNotificationListVM : ObservableObject,
     {
         var value = message.Value;
         var item = new FloatingNotificationItemVM(
-            value.Id, value.Header, value.Message, value.Details, value.Severity, value.ClickAsync, CloseAsync);
+            value.Id, value.Header, value.HeaderAction, value.Message, value.Details, value.Severity,
+            value.ClickAsync, CloseAsync);
         Items.Add(item);
         HasItems = true;
         ScrollTarget = item;

@@ -9,6 +9,20 @@ namespace Fluxo.Tests.Services.Notifications;
 public sealed class FloatingNotificationPublisherTests
 {
     [Fact]
+    public void Success_PreservesStructuredHeaderAction()
+    {
+        var messenger = new StrongReferenceMessenger();
+        ShowFloatingNotificationMessage? received = null;
+        messenger.Register<ShowFloatingNotificationMessage>(this, (_, message) => received = message);
+
+        FloatingNotificationPublisher.Success(
+            messenger, "Checking account", "Account details were saved.", true, "Updated");
+
+        Assert.Equal("Checking account", received!.Value.Header);
+        Assert.Equal("Updated", received.Value.HeaderAction);
+    }
+
+    [Fact]
     public void Publish_ReturnsRequestId()
     {
         var messenger = new StrongReferenceMessenger();

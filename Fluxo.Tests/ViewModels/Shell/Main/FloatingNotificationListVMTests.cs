@@ -59,6 +59,19 @@ public sealed class FloatingNotificationListVMTests
         Assert.Equal("Second", Assert.Single(vm.Items).Header);
     }
 
+    [Fact]
+    public void Receive_PreservesStructuredHeaderAction()
+    {
+        var messenger = new StrongReferenceMessenger();
+        using var vm = new FloatingNotificationListVM(messenger, TimeSpan.FromMinutes(1), TimeSpan.Zero);
+
+        messenger.Send(new ShowFloatingNotificationMessage(new FloatingNotificationRequest(
+            "Checking account", string.Empty, [], NotificationSeverity.Success,
+            HeaderAction: "Updated")));
+
+        Assert.Equal("Updated", Assert.Single(vm.Items).HeaderAction);
+    }
+
     private static ShowFloatingNotificationMessage Message(string header, Func<Task>? click = null) =>
         new(new FloatingNotificationRequest(header, string.Empty, [], NotificationSeverity.Info, click));
 }
