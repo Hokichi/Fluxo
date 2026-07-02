@@ -69,16 +69,38 @@ public class FadingScrollViewer : ScrollViewer
 
     private void FadingScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
     {
+        UpdateFadedEdgeMargins();
+    }
+
+    private void UpdateFadedEdgeMargins()
+    {
         if (InnerFadedBorder == null)
             return;
 
-        var topOffset = CalculateNewMarginBasedOnOffsetFromEdge(VerticalOffset);
-        ;
-        var bottomOffset = CalculateNewMarginBasedOnOffsetFromEdge(ScrollableHeight - VerticalOffset);
-        var leftOffset = CalculateNewMarginBasedOnOffsetFromEdge(HorizontalOffset);
-        var rightOffset = CalculateNewMarginBasedOnOffsetFromEdge(ScrollableWidth - HorizontalOffset);
+        InnerFadedBorder.Margin = CalculateFadedEdgeMargins(
+            HorizontalOffset,
+            VerticalOffset,
+            ScrollableWidth - HorizontalOffset,
+            ScrollableHeight - VerticalOffset);
+    }
 
-        InnerFadedBorder.Margin = new Thickness(leftOffset, topOffset, rightOffset, bottomOffset);
+    internal Thickness CalculateFadedEdgeMargins(
+        double leftEdgeOffset,
+        double topEdgeOffset,
+        double rightEdgeOffset,
+        double bottomEdgeOffset)
+    {
+        if (HorizontalScrollBarVisibility == ScrollBarVisibility.Disabled)
+            leftEdgeOffset = rightEdgeOffset = 0;
+
+        if (VerticalScrollBarVisibility == ScrollBarVisibility.Disabled)
+            topEdgeOffset = bottomEdgeOffset = 0;
+
+        return new Thickness(
+            CalculateNewMarginBasedOnOffsetFromEdge(leftEdgeOffset),
+            CalculateNewMarginBasedOnOffsetFromEdge(topEdgeOffset),
+            CalculateNewMarginBasedOnOffsetFromEdge(rightEdgeOffset),
+            CalculateNewMarginBasedOnOffsetFromEdge(bottomEdgeOffset));
     }
 
     private double CalculateNewMarginBasedOnOffsetFromEdge(double edgeOffset)
@@ -98,9 +120,17 @@ public class FadingScrollViewer : ScrollViewer
         OuterFadedBorder.Width = e.NewSize.Width;
         OuterFadedBorder.Height = e.NewSize.Height;
 
-        var innerFadedBorderBaseMarginThickness = FadedEdgeThickness / 2.0;
-        InnerFadedBorder.Margin = new Thickness(innerFadedBorderBaseMarginThickness);
         InnerFadedBorderEffect.Radius = FadedEdgeThickness;
+        UpdateFadedEdgeMargins();
+    }
+
+    protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+    {
+        base.OnPropertyChanged(e);
+
+        if (e.Property == HorizontalScrollBarVisibilityProperty ||
+            e.Property == VerticalScrollBarVisibilityProperty)
+            UpdateFadedEdgeMargins();
     }
 
     public override void OnApplyTemplate()
@@ -122,9 +152,8 @@ public class FadingScrollViewer : ScrollViewer
         var fadedEdgeByteOpacity = (byte)(FadedEdgeOpacity * 255);
         OuterFadedBorder.Background = new SolidColorBrush(Color.FromArgb(fadedEdgeByteOpacity, 0, 0, 0));
 
-        var innerFadedBorderBaseMarginThickness = FadedEdgeThickness / 2.0;
-        InnerFadedBorder.Margin = new Thickness(innerFadedBorderBaseMarginThickness);
         InnerFadedBorderEffect.Radius = FadedEdgeThickness;
+        UpdateFadedEdgeMargins();
     }
 
     private void BuildInnerFadedBorderEffectForOpacityMask()
