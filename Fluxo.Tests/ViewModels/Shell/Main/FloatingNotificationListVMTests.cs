@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Enums;
 using Fluxo.Resources.Resources.Messages;
+using Fluxo.Services.Notifications;
 using Fluxo.ViewModels.Shell.Main;
 using Xunit;
 
@@ -41,6 +42,21 @@ public sealed class FloatingNotificationListVMTests
 
         Assert.Equal(1, calls);
         Assert.Empty(vm.Items);
+    }
+
+    [Fact]
+    public void Dismiss_RemovesOnlyMatchingItem()
+    {
+        var messenger = new StrongReferenceMessenger();
+        using var vm = new FloatingNotificationListVM(messenger, TimeSpan.FromMinutes(1), TimeSpan.Zero);
+        var firstId = FloatingNotificationPublisher.Publish(
+            messenger, "First", string.Empty, [], NotificationSeverity.Info);
+        FloatingNotificationPublisher.Publish(
+            messenger, "Second", string.Empty, [], NotificationSeverity.Info);
+
+        FloatingNotificationPublisher.Dismiss(messenger, firstId);
+
+        Assert.Equal("Second", Assert.Single(vm.Items).Header);
     }
 
     private static ShowFloatingNotificationMessage Message(string header, Func<Task>? click = null) =>

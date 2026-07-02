@@ -5,6 +5,7 @@ using Fluxo.Core.Enums;
 namespace Fluxo.ViewModels.Shell.Main;
 
 public partial class FloatingNotificationItemVM(
+    Guid id,
     string header,
     string message,
     IReadOnlyList<string> details,
@@ -14,6 +15,7 @@ public partial class FloatingNotificationItemVM(
 {
     private int _activated;
 
+    public Guid Id { get; } = id;
     public string Header { get; } = header;
     public string Message { get; } = message;
     public IReadOnlyList<string> Details { get; } = details;

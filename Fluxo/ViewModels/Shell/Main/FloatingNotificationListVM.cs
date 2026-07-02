@@ -6,7 +6,7 @@ using Fluxo.Resources.Resources.Messages;
 namespace Fluxo.ViewModels.Shell.Main;
 
 public partial class FloatingNotificationListVM : ObservableObject,
-    IRecipient<ShowFloatingNotificationMessage>, IDisposable
+    IRecipient<ShowFloatingNotificationMessage>, IRecipient<DismissFloatingNotificationMessage>, IDisposable
 {
     private readonly IMessenger _messenger;
     private readonly TimeSpan _lifetime;
@@ -23,7 +23,7 @@ public partial class FloatingNotificationListVM : ObservableObject,
         _messenger = messenger;
         _lifetime = lifetime;
         _fadeDuration = fadeDuration;
-        messenger.Register(this);
+        messenger.RegisterAll(this);
     }
 
     public ObservableCollection<FloatingNotificationItemVM> Items { get; } = [];
@@ -35,11 +35,18 @@ public partial class FloatingNotificationListVM : ObservableObject,
     {
         var value = message.Value;
         var item = new FloatingNotificationItemVM(
-            value.Header, value.Message, value.Details, value.Severity, value.ClickAsync, CloseAsync);
+            value.Id, value.Header, value.Message, value.Details, value.Severity, value.ClickAsync, CloseAsync);
         Items.Add(item);
         HasItems = true;
         ScrollTarget = item;
         _ = ExpireAsync(item, _disposeToken.Token);
+    }
+
+    public void Receive(DismissFloatingNotificationMessage message)
+    {
+        var item = Items.FirstOrDefault(candidate => candidate.Id == message.Value);
+        if (item is not null)
+            _ = CloseAsync(item);
     }
 
     public void Dispose()

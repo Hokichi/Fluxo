@@ -9,6 +9,20 @@ namespace Fluxo.Tests.Services.Notifications;
 public sealed class FloatingNotificationPublisherTests
 {
     [Fact]
+    public void Publish_ReturnsRequestId()
+    {
+        var messenger = new StrongReferenceMessenger();
+        ShowFloatingNotificationMessage? received = null;
+        messenger.Register<ShowFloatingNotificationMessage>(this, (_, message) => received = message);
+
+        var id = FloatingNotificationPublisher.Publish(
+            messenger, "Checking for updates", string.Empty, [], NotificationSeverity.Info);
+
+        Assert.NotEqual(Guid.Empty, id);
+        Assert.Equal(id, received!.Value.Id);
+    }
+
+    [Fact]
     public void SaveFailed_PublishesOneDeduplicatedRequest()
     {
         var messenger = new StrongReferenceMessenger();

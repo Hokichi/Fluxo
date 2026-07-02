@@ -47,7 +47,7 @@ public static class FloatingNotificationPublisher
             NotificationSeverity.Danger, () => OpenInExplorerAsync(path));
     }
 
-    public static void Publish(
+    public static Guid Publish(
         IMessenger messenger,
         string header,
         string message,
@@ -59,8 +59,17 @@ public static class FloatingNotificationPublisher
         if (string.IsNullOrWhiteSpace(header))
             throw new ArgumentException("Header cannot be empty.", nameof(header));
 
+        var id = Guid.NewGuid();
         messenger.Send(new ShowFloatingNotificationMessage(new FloatingNotificationRequest(
-            header.Trim(), message?.Trim() ?? string.Empty, details, severity, clickAsync)));
+            header.Trim(), message?.Trim() ?? string.Empty, details, severity, clickAsync, id)));
+        return id;
+    }
+
+    public static void Dismiss(IMessenger messenger, Guid id)
+    {
+        ArgumentNullException.ThrowIfNull(messenger);
+        if (id != Guid.Empty)
+            messenger.Send(new DismissFloatingNotificationMessage(id));
     }
 
     private static Task OpenHistoryAsync()
