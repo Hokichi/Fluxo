@@ -21,6 +21,8 @@ using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.History;
 using Fluxo.Services.Logging;
+using Fluxo.Services.Notifications;
+using Fluxo.Services.Updates;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Helpers;
@@ -81,11 +83,16 @@ public partial class MainWindow : Window, IPopupHost
     private readonly MainVM _mainVM;
     private readonly IDialogService _dialogService;
     private readonly IServiceProvider _serviceProvider;
+    private readonly FloatingNotificationOverlayWindow _floatingNotificationOverlay;
+    private readonly IMessenger _messenger;
+    private readonly IAppUpdateService _appUpdateService;
+    private readonly IAppUpdateInteractionService _appUpdateInteractionService;
     private readonly PopupOverlayHandoffState _popupOverlayHandoffState = new();
     private readonly ObservableCollection<HeaderQuickSearchResult> _headerSearchResults = [];
     private Rect _currentBounds;
     private bool _hasCompletedPendingDeletionCleanup;
     private bool _hasInitializedDashboardPanels;
+    private bool _hasShownFloatingSummaries;
     private bool _isHeaderMenuPinned;
     private bool _isMaximized;
     private bool _isStateChangeTransitionActive;
@@ -125,7 +132,11 @@ public partial class MainWindow : Window, IPopupHost
         MainVM mainVM,
         IDataOperationRunner dataOperationRunner,
         IDialogService dialogService,
-        IServiceProvider serviceProvider)
+        IServiceProvider serviceProvider,
+        FloatingNotificationOverlayWindow floatingNotificationOverlay,
+        IMessenger messenger,
+        IAppUpdateService appUpdateService,
+        IAppUpdateInteractionService appUpdateInteractionService)
     {
         InitializeComponent();
 
@@ -133,6 +144,10 @@ public partial class MainWindow : Window, IPopupHost
         _dataOperationRunner = dataOperationRunner;
         _dialogService = dialogService;
         _serviceProvider = serviceProvider;
+        _floatingNotificationOverlay = floatingNotificationOverlay;
+        _messenger = messenger;
+        _appUpdateService = appUpdateService;
+        _appUpdateInteractionService = appUpdateInteractionService;
         _logMemoryManager = new LogMemoryManager(_mainVM, _dataOperationRunner);
         WeakReferenceMessenger.Default.Register<MainWindow, NavigateToLedgerRequestedMessage>(
             this,
@@ -162,6 +177,9 @@ public partial class MainWindow : Window, IPopupHost
             UpdateExpandRestoreButtonIcon();
             RefreshAppLockVisualState();
             ResetAppAutoLockActivity();
+            _floatingNotificationOverlay.Attach(this);
+            ShowFloatingSummariesOnce();
+            await ShowUpdateCardAsync();
             FadeIn();
         };
 
@@ -655,11 +673,7 @@ public partial class MainWindow : Window, IPopupHost
         }
         catch (Exception exception)
         {
-            FluxoLogManager.LogError(exception, "Unable to initialize dashboard panels.");
-            _dialogService.ShowError(
-                FluxoLogManager.CreateFailureMessage("initialize dashboard panels"),
-                "Dashboard",
-                this);
+            FloatingNotificationPublisher.LoggedFailure(_messenger, exception, "initialize dashboard panels");
         }
     }
 
@@ -1028,6 +1042,54 @@ public partial class MainWindow : Window, IPopupHost
             return;
 
         ExpandHeaderSearch();
+    }
+
+    private async Task ShowUpdateCardAsync()
+    {
+        try
+        {
+            var update = await _appUpdateService.CheckForUpdatesAsync(AppVersionResolver.ResolveCurrentVersion());
+            if (update.Status != AppUpdateCheckStatus.UpdateAvailable || string.IsNullOrWhiteSpace(update.LatestVersion))
+                return;
+
+            FloatingNotificationPublisher.Publish(_messenger,
+                $"fluxo version {update.LatestVersion} is available",
+                "Click to start update", [], NotificationSeverity.Info,
+                () => _appUpdateInteractionService.HandleAvailableUpdateAsync(update, this));
+        }
+        catch (Exception exception)
+        {
+            FloatingNotificationPublisher.LoggedFailure(_messenger, exception, "check for updates");
+        }
+    }
+
+    private void ShowFloatingSummariesOnce()
+    {
+        if (_hasShownFloatingSummaries)
+            return;
+
+        _hasShownFloatingSummaries = true;
+        var upcomingCount = _mainVM.UpcomingEventsPanel.Events.Count;
+        if (upcomingCount > 0)
+        {
+            FloatingNotificationPublisher.Publish(_messenger,
+                $"You have {upcomingCount} upcoming events",
+                "Click to view upcoming events", [], NotificationSeverity.Info,
+                async () => await NavigateToMainPageAsync(MainPage.Dashboard));
+        }
+
+        var notificationCount = _mainVM.NotificationPanel.NotificationItems.Count;
+        if (notificationCount > 0)
+        {
+            FloatingNotificationPublisher.Publish(_messenger,
+                $"You have {notificationCount} notifications",
+                "Click to view notifications", [], NotificationSeverity.Info,
+                () =>
+                {
+                    HeaderNotificationPopup.IsOpen = true;
+                    return Task.CompletedTask;
+                });
+        }
     }
 
     private void OnHeaderQuickAddButtonClick(object sender, RoutedEventArgs e)
@@ -1557,11 +1619,7 @@ public partial class MainWindow : Window, IPopupHost
         catch (Exception exception)
         {
             var label = GetMainPageLabel(page);
-            FluxoLogManager.LogError(exception, $"Unable to navigate to {label}.");
-            _dialogService.ShowError(
-                FluxoLogManager.CreateFailureMessage($"open {label}"),
-                label,
-                this);
+            FloatingNotificationPublisher.LoggedFailure(_messenger, exception, $"open {label}");
             UpdateMainNavigationCheckedState(_activeMainPage);
         }
         finally
@@ -2039,8 +2097,7 @@ public partial class MainWindow : Window, IPopupHost
         }
         catch (Exception exception)
         {
-            FluxoLogManager.LogError(exception, "Unable to update account from settings workflow.");
-            _dialogService.ShowError(FluxoLogManager.CreateFailureMessage("update account"), "Settings", this);
+            FloatingNotificationPublisher.LoggedFailure(_messenger, exception, "update account");
         }
     }
 
@@ -2326,8 +2383,7 @@ public partial class MainWindow : Window, IPopupHost
         }
         catch (Exception exception)
         {
-            FluxoLogManager.LogError(exception, "Unable to undo the last action.");
-            _dialogService.ShowError(FluxoLogManager.CreateFailureMessage("undo last action"), "Undo", this);
+            FloatingNotificationPublisher.LoggedFailure(_messenger, exception, "undo last action");
         }
     }
 
@@ -2342,8 +2398,7 @@ public partial class MainWindow : Window, IPopupHost
         }
         catch (Exception exception)
         {
-            FluxoLogManager.LogError(exception, "Unable to redo the last action.");
-            _dialogService.ShowError(FluxoLogManager.CreateFailureMessage("redo last action"), "Redo", this);
+            FloatingNotificationPublisher.LoggedFailure(_messenger, exception, "redo last action");
         }
     }
 

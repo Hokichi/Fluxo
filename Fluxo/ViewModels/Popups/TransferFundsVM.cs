@@ -8,6 +8,7 @@ using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.Services.Logging;
+using Fluxo.Services.Notifications;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups.Helpers;
 using Fluxo.ViewModels.Shell;
@@ -127,12 +128,13 @@ public partial class TransferFundsVM : ObservableObject
                 DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
 
             await _mainViewModel.ReloadCurrentDataAsync();
+            FloatingNotificationPublisher.Success("Transfer complete", $"{input.Amount:N2} was transferred to {target.Name}.", true);
             return TransferFundsResult.Success();
         }
         catch (Exception exception)
         {
-            FluxoLogManager.LogError(exception, "Unable to save transfer funds transaction.");
-            return TransferFundsResult.Failure(FluxoLogManager.CreateFailureMessage("save transfer"));
+            FloatingNotificationPublisher.LoggedFailure(WeakReferenceMessenger.Default, exception, "save transfer");
+            return TransferFundsResult.Failure(string.Empty);
         }
         finally
         {
@@ -159,19 +161,18 @@ public partial class TransferFundsVM : ObservableObject
         input = default;
         validationMessage = string.Empty;
 
+        var failures = new List<string>();
         if (AmountText <= 0m)
-        {
-            validationMessage = "Please enter a valid transfer amount greater than zero.";
-            return false;
-        }
-
+            failures.Add("Please enter a valid transfer amount greater than zero.");
         if (SelectedTarget is null)
+            failures.Add("Please choose where the funds should go.");
+        if (failures.Count > 0)
         {
-            validationMessage = "Please choose where the funds should go.";
+            validationMessage = string.Join(Environment.NewLine, failures);
             return false;
         }
 
-        input = new TransferFundsInput(AmountText, SelectedTarget.Id, SelectedDate.Date, NoteText.Trim());
+        input = new TransferFundsInput(AmountText, SelectedTarget!.Id, SelectedDate.Date, NoteText.Trim());
         return true;
     }
 

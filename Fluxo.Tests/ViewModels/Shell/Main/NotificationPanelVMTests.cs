@@ -78,9 +78,9 @@ public class NotificationPanelVMTests
         persistedNotifications.Add(new Notification
         {
             Id = 1,
-            Type = $"GoalDeadline-1_{DateTime.Today.AddDays(7):yyyyMMdd}",
-            Header = "Goal Deadline - Vacation",
-            Message = "Vacation is due soon.",
+            Type = "BudgetThresholdNeeds",
+            Header = "Budget Threshold - Needs",
+            Message = "Needs has reached its allocation threshold.",
             CreatedOn = DateTime.Today,
             IsCleared = false,
             IsForDeletion = false
@@ -92,7 +92,7 @@ public class NotificationPanelVMTests
         Assert.Equal(0, vm.NotificationCount);
         Assert.Single(persistedNotifications);
         Assert.True(persistedNotifications[0].IsCleared);
-        Assert.False(persistedNotifications[0].IsForDeletion);
+        Assert.True(persistedNotifications[0].IsForDeletion);
     }
 
     [Fact]
@@ -210,32 +210,13 @@ public class NotificationPanelVMTests
     [Fact]
     public async Task LoadAsync_GroupsNotificationsIntoCards()
     {
-        var currentWeekday = DateTime.Today.DayOfWeek == DayOfWeek.Sunday
-            ? 7
-            : (int)DateTime.Today.DayOfWeek;
         var vm = CreateVm(
             expenses: [],
             expenseLogs: [],
             accounts: [],
-            out _,
-            recurringTransactions:
-            [
-                new RecurringTransaction
-                {
-                    Id = 1,
-                    Name = "Rent",
-                    Amount = 1200m,
-                    SourceId = 1,
-                    RecurringPeriod = RecurringPeriod.Weekly,
-                    RecurringTime = currentWeekday,
-                    Type = RecurringTransactionType.Income,
-                    IsEnabled = true
-                }
-            ],
-            userSettings:
-            [
-                new UserSettings { Name = UserSettingNames.IsRecurringTransactionsDeductionNotifEnabled, Value = "true" }
-            ]);
+            out var persistedNotifications);
+
+        SeedDistinctCategoryNotifications(persistedNotifications);
 
         await vm.LoadAsync();
 
@@ -305,7 +286,7 @@ public class NotificationPanelVMTests
         Assert.Contains(vm.Notifications, notification =>
             notification.Type == "BudgetThresholdNeeds" &&
             notification.Message == "Needs has reached 95% of its allocation.");
-        Assert.Contains(vm.Notifications, notification =>
+        Assert.DoesNotContain(vm.Notifications, notification =>
             notification.Type.StartsWith("RecurringTransactionDue-10_", StringComparison.Ordinal));
     }
 
@@ -355,7 +336,7 @@ public class NotificationPanelVMTests
 
 
     [Fact]
-    public async Task LoadAsync_CreatesNotificationForEachRecurringTransactionDueWithinReminderWindow()
+    public async Task LoadAsync_DoesNotCreateRecurringTransactionDueNotifications()
     {
         var currentWeekday = DateTime.Today.DayOfWeek == DayOfWeek.Sunday
             ? 7
@@ -404,9 +385,7 @@ public class NotificationPanelVMTests
         var recurringNotifications = vm.Notifications
             .Where(notification => notification.Type.StartsWith("RecurringTransactionDue-", StringComparison.Ordinal))
             .ToList();
-        Assert.Equal(2, recurringNotifications.Count);
-        Assert.Contains(recurringNotifications, notification => notification.Header == "Recurring Transaction Due - Rent");
-        Assert.Contains(recurringNotifications, notification => notification.Header == "Recurring Transaction Due - Utilities");
+        Assert.Empty(recurringNotifications);
     }
 
     [Fact]
@@ -510,7 +489,7 @@ public class NotificationPanelVMTests
         await vm.LoadAsync();
 
         var cardToClear = Assert.Single(vm.NotificationItems.Where(item =>
-            item.Category == NotificationGroupCategory.GoalDeadline));
+            item.Category == NotificationGroupCategory.BudgetThreshold));
 
         await vm.ClearNotificationGroupCommand.ExecuteAsync(cardToClear);
 
@@ -545,7 +524,7 @@ public class NotificationPanelVMTests
     }
 
     [Fact]
-    public async Task OpenNotificationActionAsync_RecurringTransactionDue_ForwardsActionDecisionsToService()
+    public async Task LoadAsync_ExcludesRecurringTransactionDueFromPersistentNotifications()
     {
         var currentWeekday = DateTime.Today.DayOfWeek == DayOfWeek.Sunday
             ? 7
@@ -611,19 +590,12 @@ public class NotificationPanelVMTests
 
         await vm.LoadAsync();
 
-        var recurringDueCard = Assert.Single(vm.NotificationItems.Where(item =>
-            item.Category == NotificationGroupCategory.RecurringTransactionDue));
-
-        await vm.OpenNotificationActionCommand.ExecuteAsync(recurringDueCard);
-
-        await actionService.Received(1).ExecuteChecklistActionAsync(
-            Arg.Is<NotificationItemVM>(card => card.Category == NotificationGroupCategory.RecurringTransactionDue),
+        Assert.DoesNotContain(vm.NotificationItems, item =>
+            item.Category == NotificationGroupCategory.RecurringTransactionDue);
+        await actionService.DidNotReceive().ExecuteChecklistActionAsync(
+            Arg.Any<NotificationItemVM>(),
             Arg.Any<IReadOnlyCollection<NotificationChecklistActionDecision>>(),
             Arg.Any<CancellationToken>());
-        var decision = Assert.Single(capturedDecisions!);
-        Assert.Equal(10, decision.EntityId);
-        Assert.Equal(NotificationChecklistItemActionType.Process, decision.Action);
-        Assert.Equal(1, decision.SelectedSourceId);
     }
 
     [Fact]
@@ -680,7 +652,7 @@ public class NotificationPanelVMTests
     }
 
     [Fact]
-    public async Task OpenNotificationActionAsync_AppUpdate_ParsesPayloadAndForwardsToInteractionService()
+    public async Task LoadAsync_ExcludesAppUpdateFromPersistentNotifications()
     {
         var interactionService = Substitute.For<IAppUpdateInteractionService>();
         var vm = CreateVm(
@@ -706,18 +678,10 @@ public class NotificationPanelVMTests
 
         await vm.LoadAsync();
 
-        var appUpdateCard = Assert.Single(vm.NotificationItems.Where(item =>
-            item.Category == NotificationGroupCategory.AppUpdate));
-
-        await vm.OpenNotificationActionCommand.ExecuteAsync(appUpdateCard);
-
-        await interactionService.Received(1).HandleAvailableUpdateAsync(
-            Arg.Is<AppUpdateCheckResult>(update =>
-                update.Status == AppUpdateCheckStatus.UpdateAvailable
-                && update.LatestVersion == "3.4.5"
-                && update.InstallerAssetName == "fluxo-3.4.5-Installer.exe"
-                && update.InstallerDownloadUrl == "https://example.test/fluxo-3.4.5-Installer.exe"),
-            null);
+        Assert.Empty(vm.NotificationItems);
+        Assert.True(persistedNotifications[0].IsForDeletion);
+        await interactionService.DidNotReceive()
+            .HandleAvailableUpdateAsync(Arg.Any<AppUpdateCheckResult>(), Arg.Any<System.Windows.Window?>());
     }
 
     [Fact]
@@ -744,18 +708,10 @@ public class NotificationPanelVMTests
 
         await vm.LoadAsync();
 
-        var appUpdateCard = Assert.Single(vm.NotificationItems.Where(item =>
-            item.Category == NotificationGroupCategory.AppUpdate));
-
-        await vm.OpenNotificationActionCommand.ExecuteAsync(appUpdateCard);
-
-        await interactionService.Received(1).HandleAvailableUpdateAsync(
-            Arg.Is<AppUpdateCheckResult>(update =>
-                update.Status == AppUpdateCheckStatus.UpdateAvailable
-                && update.LatestVersion == "2.9.1"
-                && update.InstallerAssetName == string.Empty
-                && update.InstallerDownloadUrl == string.Empty),
-            null);
+        Assert.Empty(vm.NotificationItems);
+        Assert.True(persistedNotifications[0].IsForDeletion);
+        await interactionService.DidNotReceive()
+            .HandleAvailableUpdateAsync(Arg.Any<AppUpdateCheckResult>(), Arg.Any<System.Windows.Window?>());
     }
 
     [Fact]
@@ -782,10 +738,8 @@ public class NotificationPanelVMTests
 
         await vm.LoadAsync();
 
-        var appUpdateCard = Assert.Single(vm.NotificationItems.Where(item =>
-            item.Category == NotificationGroupCategory.AppUpdate));
-
-        await vm.OpenNotificationActionCommand.ExecuteAsync(appUpdateCard);
+        Assert.Empty(vm.NotificationItems);
+        Assert.True(persistedNotifications[0].IsForDeletion);
 
         await interactionService
             .DidNotReceive()
@@ -816,10 +770,8 @@ public class NotificationPanelVMTests
 
         await vm.LoadAsync();
 
-        var appUpdateCard = Assert.Single(vm.NotificationItems.Where(item =>
-            item.Category == NotificationGroupCategory.AppUpdate));
-
-        await vm.OpenNotificationActionCommand.ExecuteAsync(appUpdateCard);
+        Assert.Empty(vm.NotificationItems);
+        Assert.True(persistedNotifications[0].IsForDeletion);
 
         await interactionService
             .DidNotReceive()
@@ -1122,9 +1074,9 @@ public class NotificationPanelVMTests
             new Notification
             {
                 Id = 1,
-                Type = $"GoalDeadline-1_{DateTime.Today.AddDays(7):yyyyMMdd}",
-                Header = "Goal Deadline - Vacation",
-                Message = "Vacation is due soon.",
+                Type = "BudgetThresholdNeeds",
+                Header = "Budget Threshold - Needs",
+                Message = "Needs has reached its allocation threshold.",
                 CreatedOn = DateTime.Today.AddMinutes(-1),
                 IsCleared = false,
                 IsForDeletion = false

@@ -11,6 +11,7 @@ using Fluxo.Resources.Infrastructure;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.Dialogs;
 using Fluxo.Services.Logging;
+using Fluxo.Services.Notifications;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Settings;
 
@@ -482,6 +483,8 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
             var result = await _viewModel.SaveConfigurationChangesAsync();
             if (!result.IsSuccess)
                 ShowMessage(result.ErrorMessage, "Settings");
+            else
+                FloatingNotificationPublisher.Success(_messenger, "Settings saved", "Your settings were saved.");
 
             return result;
         }

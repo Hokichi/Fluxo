@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Fluxo.Core.Enums;
+using Fluxo.Services.Notifications;
 using Fluxo.ViewModels.Popups;
 
 namespace Fluxo.Views.Popups;
@@ -68,12 +68,6 @@ public partial class AddAccountPopup : BasePopup
         if (result.IsSuccess)
             return false;
 
-        if (result.FailurePresentation == AddAccountVM.AddAccountFailurePresentation.ToastWarning)
-        {
-            ShowWarningToast(result.ErrorMessage);
-            return true;
-        }
-
         ShowValidationMessage(result.ErrorMessage);
         return true;
     }
@@ -121,24 +115,7 @@ public partial class AddAccountPopup : BasePopup
         if (string.IsNullOrWhiteSpace(message))
             return;
 
-        FluxoMessageBox.Show(this, message, _viewModel.ValidationDialogTitle, MessageBoxButton.OK,
-            MessageBoxImage.Information);
-    }
-
-    private void ShowWarningToast(string? message)
-    {
-        if (string.IsNullOrWhiteSpace(message))
-            return;
-
-        var popup = new ToastPopup(
-            message,
-            () => Task.Delay(1800),
-            NotificationSeverity.Warning)
-        {
-            Owner = this
-        };
-
-        popup.Show();
+        FloatingNotificationPublisher.SaveFailed([message]);
     }
 
 }

@@ -60,7 +60,7 @@ public sealed class AddAccountPopupCallsiteTests
     }
 
     [Fact]
-    public void AddAccountPopup_SaveFailure_UsesToastWarningBranch_AndNonModalWarningToast()
+    public void AddAccountPopup_SaveFailure_UsesFloatingNotification()
     {
         var source = File.ReadAllText(Path.Combine(
             GetRepositoryRootPath(),
@@ -69,11 +69,8 @@ public sealed class AddAccountPopupCallsiteTests
             "Popups",
             "AddAccountPopup.xaml.cs"));
 
-        Assert.Contains(
-            "result.FailurePresentation == AddAccountVM.AddAccountFailurePresentation.ToastWarning",
-            source);
-        Assert.Contains("ShowWarningToast(result.ErrorMessage);", source);
-        Assert.Contains("popup.Show();", source);
+        Assert.Contains("FloatingNotificationPublisher.SaveFailed([message]);", source);
+        Assert.DoesNotContain("ShowWarningToast(result.ErrorMessage);", source);
     }
 
     [Fact]

@@ -10,6 +10,7 @@ using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.Services.Logging;
+using Fluxo.Services.Notifications;
 using Fluxo.ViewModels.Shell;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 using Fluxo.ViewModels.Popups.Helpers;
@@ -506,13 +507,13 @@ public partial class AddAccountVM : ObservableValidator
                 DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
 
             await _mainViewModel.ReloadCurrentDataAsync();
+            FloatingNotificationPublisher.Success($"{input.Name} added", "The account is ready to use.", true);
             return AddAccountResult.Success(true);
         }
         catch (Exception exception)
         {
-            FluxoLogManager.LogError(exception, "Unable to create this account.");
-            return AddAccountResult.Failure(
-                FluxoLogManager.CreateFailureMessage("create account"));
+            FloatingNotificationPublisher.LoggedFailure(WeakReferenceMessenger.Default, exception, "create account");
+            return AddAccountResult.Failure(string.Empty);
         }
         finally
         {

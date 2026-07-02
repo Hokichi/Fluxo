@@ -151,7 +151,7 @@ public partial class App : Application
                 LogStartupStage("startup registration sync", StartupStageState.Completed);
                 await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
                 LogStartupStage("startup update check", StartupStageState.Started);
-                await _startupUpdateNotificationService.CheckAndSyncAsync();
+                // Floating update card is checked after MainWindow becomes visible.
                 LogStartupStage("startup update check", StartupStageState.Completed);
                 await _uiSettleAwaiter.WaitForUiReadyAsync(loaderPopup);
 

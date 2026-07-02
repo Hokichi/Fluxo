@@ -333,10 +333,7 @@ public partial class NotificationPanelVM : ObservableRecipient,
     {
         var notifications = new List<NotificationCandidate>();
 
-        notifications.AddRange(GetRecurringTransactionDueNotifications());
-        notifications.AddRange(GetGoalDeadlineNotifications());
         notifications.AddRange(GetLatePaymentNotifications());
-        notifications.AddRange(GetAutoExpenseNotifications());
         notifications.AddRange(GetBudgetThresholdNotifications());
         notifications.AddRange(GetCreditThresholdNotifications());
         notifications.AddRange(GetLowAccountNotifications());
@@ -653,16 +650,18 @@ public partial class NotificationPanelVM : ObservableRecipient,
 
     private bool ShouldMarkForDeletion(Notification notification, bool isActiveCondition)
     {
+        if (notification.Type.StartsWith("AppUpdate", StringComparison.OrdinalIgnoreCase) ||
+            notification.Type.StartsWith("AutoExpenseProcessed", StringComparison.OrdinalIgnoreCase))
+            return true;
+
         var category = GetNotificationCategory(notification.Type);
 
         return category switch
         {
             NotificationCategory.UpcomingPayment => true,
-            NotificationCategory.GoalDeadline =>
-                IsDeadlinePassed(notification.Type) ||
-                (!TryExtractNotificationDate(notification.Type, out _) && !isActiveCondition),
+            NotificationCategory.GoalDeadline => true,
             NotificationCategory.LatePayment => IsLatePaymentProcessed(notification.Type),
-            NotificationCategory.RecurringTransactionDue => IsRecurringTransactionNotificationStale(notification.Type),
+            NotificationCategory.RecurringTransactionDue => true,
             _ => notification.IsCleared
         };
     }

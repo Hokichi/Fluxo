@@ -4,6 +4,8 @@ using System.Runtime.ExceptionServices;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Services.Dialogs;
+using Fluxo.Services.Notifications;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace Fluxo.Views.Popups;
 
@@ -78,7 +80,8 @@ public partial class NotificationChecklistActionPopup : BasePopup
         }
         catch (Exception exception)
         {
-            _dialogService.ShowError(exception.Message, "Pending Transactions", this);
+            FloatingNotificationPublisher.LoggedFailure(WeakReferenceMessenger.Default, exception,
+                "process pending transactions");
         }
         finally
         {

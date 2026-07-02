@@ -4,6 +4,7 @@ using Fluxo.Core.Entities;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.Logging;
+using Fluxo.Services.Notifications;
 using Fluxo.ViewModels.Shell;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
@@ -105,12 +106,14 @@ public partial class AddSavingGoalVM : ObservableObject
             WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.SavingGoals));
 
+            FloatingNotificationPublisher.Success($"{input.Name} saved", "The saving goal was updated.", true);
             return AddSavingGoalResult.Success(true);
         }
         catch (Exception exception)
         {
-            FluxoLogManager.LogError(exception, "Unable to create this saving goal.");
-            return AddSavingGoalResult.Failure(FluxoLogManager.CreateFailureMessage("create saving goal"));
+            FloatingNotificationPublisher.LoggedFailure(WeakReferenceMessenger.Default, exception,
+                "create saving goal");
+            return AddSavingGoalResult.Failure(string.Empty);
         }
         finally
         {
@@ -124,21 +127,16 @@ public partial class AddSavingGoalVM : ObservableObject
         validationMessage = string.Empty;
 
         var name = (NameText ?? string.Empty).Trim();
+        var failures = new List<string>();
         if (name.Length == 0)
-        {
-            validationMessage = "Please enter a goal name.";
-            return false;
-        }
-
+            failures.Add("Please enter a goal name.");
         if (TargetAmountText <= 0m)
-        {
-            validationMessage = "Please enter a target amount greater than zero.";
-            return false;
-        }
-
+            failures.Add("Please enter a target amount greater than zero.");
         if (CurrentAmountText < 0m)
+            failures.Add("Current amount must be zero or greater.");
+        if (failures.Count > 0)
         {
-            validationMessage = "Current amount must be zero or greater.";
+            validationMessage = string.Join(Environment.NewLine, failures);
             return false;
         }
 

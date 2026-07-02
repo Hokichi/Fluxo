@@ -1,5 +1,6 @@
 using System.Windows;
 using Fluxo.ViewModels.Popups;
+using Fluxo.Services.Notifications;
 
 namespace Fluxo.Views.Popups;
 
@@ -52,7 +53,6 @@ public partial class AddSavingGoalPopup : BasePopup
     private void ShowValidationMessage(string? message)
     {
         if (!string.IsNullOrWhiteSpace(message))
-            FluxoMessageBox.Show(this, message, _viewModel.ValidationDialogTitle, MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            FloatingNotificationPublisher.SaveFailed([message]);
     }
 }

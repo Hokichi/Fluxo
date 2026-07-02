@@ -10,6 +10,7 @@ using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.Services.Logging;
+using Fluxo.Services.Notifications;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Shell;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
@@ -190,6 +191,16 @@ public partial class SettingsGoalsTabVM : ObservableObject
             await _mainViewModel.ReloadCurrentDataAsync();
             await RefreshSavingGoalsAsync(resetPagination: false);
 
+            var verb = action.ToString().ToLowerInvariant() switch
+            {
+                "delete" => "deleted",
+                "disable" => "disabled",
+                _ => "enabled"
+            };
+            var header = selectedItems.Length == 1
+                ? $"{selectedItems[0].Name} {verb}"
+                : $"{selectedItems.Length} goals {verb}";
+            FloatingNotificationPublisher.Success(_messenger, header, $"{header}.", true);
             return SettingsOperationResult.Success();
         }
         catch (Exception exception)

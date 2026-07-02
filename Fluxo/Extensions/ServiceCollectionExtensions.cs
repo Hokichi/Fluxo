@@ -31,6 +31,7 @@ using BudgetAllocationPanelVM = Fluxo.ViewModels.Shell.Main.BudgetAllocationPane
 using CalendarVM = Fluxo.ViewModels.Shell.Main.CalendarVM;
 using DashboardVM = Fluxo.ViewModels.Shell.Main.DashboardVM;
 using DaySpinnerVM = Fluxo.ViewModels.Shell.Main.DaySpinnerVM;
+using FloatingNotificationListVM = Fluxo.ViewModels.Shell.Main.FloatingNotificationListVM;
 using LedgerVM = Fluxo.ViewModels.Shell.Main.LedgerVM;
 using MainViewModeToggleVM = Fluxo.ViewModels.Shell.Main.MainViewModeToggleVM;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
@@ -89,6 +90,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<NotificationPanelVM>();
         services.AddSingleton<SavingGoalsPanelVM>();
         services.AddSingleton<UpcomingEventsPanelVM>();
+        services.AddSingleton<FloatingNotificationListVM>();
         services.AddSingleton<LedgerVM>();
         services.AddSingleton<DayOfWeekVM>();
         services.AddTransient<TransactionVM>();
@@ -149,6 +151,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IStartupNotificationSummaryService, StartupNotificationSummaryService>();
 
         services.AddSingleton<MainWindow>();
+        services.AddSingleton<FloatingNotificationOverlayWindow>();
 
         return services;
     }

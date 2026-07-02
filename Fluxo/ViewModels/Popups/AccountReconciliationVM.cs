@@ -9,6 +9,7 @@ using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.Services.Logging;
+using Fluxo.Services.Notifications;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups.Helpers;
 
@@ -114,13 +115,14 @@ public partial class AccountReconciliationVM : ObservableObject
                 DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
             await _reloadCurrentDataAsync();
 
+            FloatingNotificationPublisher.Success("Account reconciled", $"{input.Amount:N2} was reconciled against {account.Name}.", true);
             return AccountReconciliationSaveResult.Success(createdTransaction);
         }
         catch (Exception exception)
         {
-            FluxoLogManager.LogError(exception, "Unable to save account reconciliation.");
-            return AccountReconciliationSaveResult.Failure(
-                FluxoLogManager.CreateFailureMessage("save reconciliation"));
+            FloatingNotificationPublisher.LoggedFailure(WeakReferenceMessenger.Default, exception,
+                "save reconciliation");
+            return AccountReconciliationSaveResult.Failure(string.Empty);
         }
         finally
         {
@@ -164,19 +166,18 @@ public partial class AccountReconciliationVM : ObservableObject
         input = default;
         validationMessage = string.Empty;
 
+        var failures = new List<string>();
         if (AmountText <= 0m)
-        {
-            validationMessage = "Please enter a valid reconciliation amount greater than zero.";
-            return false;
-        }
-
+            failures.Add("Please enter a valid reconciliation amount greater than zero.");
         if (SelectedAccount is null)
+            failures.Add("Please choose a account.");
+        if (failures.Count > 0)
         {
-            validationMessage = "Please choose a account.";
+            validationMessage = string.Join(Environment.NewLine, failures);
             return false;
         }
 
-        input = new AccountReconciliationInput(AmountText, SelectedAccount.Id);
+        input = new AccountReconciliationInput(AmountText, SelectedAccount!.Id);
         return true;
     }
 

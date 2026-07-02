@@ -10,6 +10,7 @@ using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.Services.Logging;
+using Fluxo.Services.Notifications;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Helpers;
 using Fluxo.ViewModels.Shell;
@@ -222,10 +223,21 @@ public partial class SettingsAccountsTabVM : ObservableObject
             SettingsShared.RecordActions(actions, _messenger);
             _messenger.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
+            var affectedNames = Accounts.Where(item => selectedIds.Contains(item.Id)).Select(item => item.Name).ToArray();
             await _mainViewModel.ReloadCurrentDataAsync();
             await RefreshAccountsAsync();
             _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.Accounts));
 
+            var verb = action.ToString().ToLowerInvariant() switch
+            {
+                "delete" => "deleted",
+                "unpin" => "unpinned",
+                "pin" => "pinned",
+                "disable" => "disabled",
+                _ => "enabled"
+            };
+            var header = affectedNames.Length == 1 ? $"{affectedNames[0]} {verb}" : $"{affectedNames.Length} accounts {verb}";
+            FloatingNotificationPublisher.Success(_messenger, header, $"{header}.", true);
             return SettingsOperationResult.Success();
         }
         catch (Exception exception)

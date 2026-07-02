@@ -1,5 +1,6 @@
 using System.Windows;
 using Fluxo.ViewModels.Popups;
+using Fluxo.Services.Notifications;
 
 namespace Fluxo.Views.Popups;
 
@@ -20,8 +21,7 @@ public partial class TransferFundsPopup : BasePopup
         var result = await _viewModel.SaveAsync();
         if (!result.IsSuccess)
         {
-            FluxoMessageBox.Show(this, result.ErrorMessage ?? "Unable to save this transfer.", "Transfer Funds",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            FloatingNotificationPublisher.SaveFailed([result.ErrorMessage ?? "Unable to save this transfer."]);
             return;
         }
 

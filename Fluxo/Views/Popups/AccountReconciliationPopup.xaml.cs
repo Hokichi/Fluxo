@@ -1,5 +1,6 @@
 using System.Windows;
 using Fluxo.ViewModels.Popups;
+using Fluxo.Services.Notifications;
 using Fluxo.Views.Shell.Main;
 
 namespace Fluxo.Views.Popups;
@@ -21,12 +22,8 @@ public partial class AccountReconciliationPopup : BasePopup
         var result = await _viewModel.SaveAsync();
         if (!result.IsSuccess)
         {
-            FluxoMessageBox.Show(
-                this,
-                result.ErrorMessage ?? "Unable to save this reconciliation.",
-                "Account Reconciliation",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            FloatingNotificationPublisher.SaveFailed(
+                [result.ErrorMessage ?? "Unable to save this reconciliation."]);
             return;
         }
 

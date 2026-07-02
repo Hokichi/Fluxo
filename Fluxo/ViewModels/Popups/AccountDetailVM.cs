@@ -9,6 +9,7 @@ using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.Services.Logging;
+using Fluxo.Services.Notifications;
 using Fluxo.ViewModels.Popups.Helpers;
 using Fluxo.ViewModels.Shell;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
@@ -214,13 +215,13 @@ public partial class AccountDetailVM : ObservableObject
             await RefreshAsync(true);
             IsEditing = false;
 
+            FloatingNotificationPublisher.Success($"{input.Name} saved", "The account was updated.", true);
             return AccountDetailResult.Success();
         }
         catch (Exception exception)
         {
-            FluxoLogManager.LogError(exception, "Unable to save this account.");
-            return AccountDetailResult.Failure(
-                FluxoLogManager.CreateFailureMessage("save account"));
+            FloatingNotificationPublisher.LoggedFailure(WeakReferenceMessenger.Default, exception, "save account");
+            return AccountDetailResult.Failure(string.Empty);
         }
         finally
         {
@@ -292,13 +293,15 @@ public partial class AccountDetailVM : ObservableObject
             await MainViewModel.ReloadCurrentDataAsync();
             await RefreshAsync(true);
 
+            FloatingNotificationPublisher.Success(
+                $"{account.Name} {(account.PinnedOnUI ? "pinned" : "unpinned")}",
+                $"{account.Name} was {(account.PinnedOnUI ? "pinned" : "unpinned")}.", true);
             return AccountDetailResult.Success();
         }
         catch (Exception exception)
         {
-            FluxoLogManager.LogError(exception, "Unable to update this account.");
-            return AccountDetailResult.Failure(
-                FluxoLogManager.CreateFailureMessage("update account"));
+            FloatingNotificationPublisher.LoggedFailure(WeakReferenceMessenger.Default, exception, "update account");
+            return AccountDetailResult.Failure(string.Empty);
         }
         finally
         {
@@ -338,13 +341,15 @@ public partial class AccountDetailVM : ObservableObject
             await MainViewModel.ReloadCurrentDataAsync();
             await RefreshAsync(true);
 
+            FloatingNotificationPublisher.Success(
+                $"{account.Name} {(account.IsEnabled ? "enabled" : "disabled")}",
+                $"{account.Name} was {(account.IsEnabled ? "enabled" : "disabled")}.", true);
             return AccountDetailResult.Success();
         }
         catch (Exception exception)
         {
-            FluxoLogManager.LogError(exception, "Unable to adjust this account.");
-            return AccountDetailResult.Failure(
-                FluxoLogManager.CreateFailureMessage("adjust account"));
+            FloatingNotificationPublisher.LoggedFailure(WeakReferenceMessenger.Default, exception, "adjust account");
+            return AccountDetailResult.Failure(string.Empty);
         }
         finally
         {
@@ -382,13 +387,13 @@ public partial class AccountDetailVM : ObservableObject
 
             await MainViewModel.ReloadCurrentDataAsync();
 
+            FloatingNotificationPublisher.Success($"{account.Name} deleted", "The account was deleted.", true);
             return AccountDetailResult.Success(true);
         }
         catch (Exception exception)
         {
-            FluxoLogManager.LogError(exception, "Unable to delete this account.");
-            return AccountDetailResult.Failure(
-                FluxoLogManager.CreateFailureMessage("delete account"));
+            FloatingNotificationPublisher.LoggedFailure(WeakReferenceMessenger.Default, exception, "delete account");
+            return AccountDetailResult.Failure(string.Empty);
         }
         finally
         {

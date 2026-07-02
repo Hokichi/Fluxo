@@ -1,6 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
+using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Resources.Resources.Messages;
+using Fluxo.Services.Notifications;
 using Fluxo.ViewModels.Popups.Settings;
 using Fluxo.Helper.Settings;
 using Fluxo.Views.Popups;
@@ -50,6 +52,9 @@ public partial class SettingsAboutTab : UserControl
         if (!result.IsSuccess && !string.IsNullOrWhiteSpace(result.ErrorMessage))
             FluxoMessageBox.Show(Window.GetWindow(this), result.ErrorMessage, "Reset Settings", MessageBoxButton.OK,
                 MessageBoxImage.Information);
+        else if (result.IsSuccess)
+            FloatingNotificationPublisher.Success(WeakReferenceMessenger.Default,
+                "Settings reset", "Your settings were reset to defaults.");
     }
 
     private async void OnDeleteAllDataClick(object sender, RoutedEventArgs e)

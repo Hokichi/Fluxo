@@ -1,0 +1,14 @@
+<Window
+    x:Class="Fluxo.Views.Shell.Main.FloatingNotificationOverlayWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sections="clr-namespace:Fluxo.Views.Shell.Main.Sections"
+    AllowsTransparency="True"
+    Background="Transparent"
+    ShowActivated="False"
+    ShowInTaskbar="False"
+    SizeToContent="WidthAndHeight"
+    Topmost="True"
+    WindowStyle="None">
+    <sections:FloatingNotificationList x:Name="NotificationList" />
+</Window>

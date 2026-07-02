@@ -10,6 +10,7 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using Fluxo.Resources.Infrastructure;
 using Fluxo.Services.Dialogs;
+using Fluxo.Services.Notifications;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Settings;
@@ -293,7 +294,7 @@ public partial class TransactionDetailPopup : BasePopup
         if (string.IsNullOrWhiteSpace(message))
             return;
 
-        FluxoMessageBox.Show(this, message, "Transaction Detail", MessageBoxButton.OK, MessageBoxImage.Information);
+        FloatingNotificationPublisher.SaveFailed([message]);
     }
 
     private void SyncNoteDocumentFromViewModel()

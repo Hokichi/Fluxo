@@ -12,6 +12,7 @@ using Fluxo.Resources.CustomControls;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.Services.Logging;
+using Fluxo.Services.Notifications;
 using Fluxo.Services.Transactions;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups.Helpers;
@@ -847,6 +848,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                     ResetForm(true);
                 }
 
+                FloatingNotificationPublisher.Success("Recurring transaction saved", $"{input.Name} was saved.", true);
                 return AddNewTransactionSubmissionResult.Success();
             }
 
@@ -1067,12 +1069,14 @@ public partial class AddNewTransactionVM : ObservableValidator
                 ResetForm(true);
             }
 
+            var savedType = input.IsGoal ? "Goal contribution" : input.IsExpense ? "Expense" : "Income";
+            FloatingNotificationPublisher.Success($"{savedType} added", $"{input.Name} was recorded.", true);
             return AddNewTransactionSubmissionResult.Success();
         }
         catch (Exception exception)
         {
-            FluxoLogManager.LogError(exception, "Unable to save quick-add transaction.");
-            return AddNewTransactionSubmissionResult.Failure(FluxoLogManager.CreateFailureMessage("save transaction"));
+            FloatingNotificationPublisher.LoggedFailure(WeakReferenceMessenger.Default, exception, "save transaction");
+            return AddNewTransactionSubmissionResult.Failure(string.Empty);
         }
         finally
         {
@@ -1111,7 +1115,8 @@ public partial class AddNewTransactionVM : ObservableValidator
         }
         catch (Exception exception)
         {
-            FluxoLogManager.LogError(exception, "Unable to check for similar quick-add transaction.");
+            FloatingNotificationPublisher.LoggedFailure(WeakReferenceMessenger.Default, exception,
+                "check for similar transactions");
             return false;
         }
     }
@@ -1851,7 +1856,7 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     private string GetFirstValidationMessage()
     {
-        foreach (var propertyName in new[]
+        var messages = new[]
                  {
                      nameof(NameText),
                      nameof(AmountText),
@@ -1859,23 +1864,18 @@ public partial class AddNewTransactionVM : ObservableValidator
                      nameof(SelectedGoal),
                      nameof(SelectedTag),
                      nameof(RecurringTimeText)
-                 })
-        {
-            var propertyMessage = GetErrors(propertyName)
+                 }
+            .SelectMany(propertyName => GetErrors(propertyName)
                 .OfType<ValidationResult>()
-                .Select(result => result.ErrorMessage)
-                .FirstOrDefault(message => !string.IsNullOrWhiteSpace(message));
+                .Select(result => result.ErrorMessage))
+            .Concat(GetErrors().OfType<ValidationResult>().Select(result => result.ErrorMessage))
+            .Where(message => !string.IsNullOrWhiteSpace(message))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
 
-            if (!string.IsNullOrWhiteSpace(propertyMessage))
-                return propertyMessage;
-        }
-
-        var fallbackMessage = GetErrors()
-            .OfType<ValidationResult>()
-            .Select(result => result.ErrorMessage)
-            .FirstOrDefault(message => !string.IsNullOrWhiteSpace(message));
-
-        return fallbackMessage ?? "Please fix the highlighted fields.";
+        return messages.Length == 0
+            ? "Please fix the highlighted fields."
+            : string.Join(Environment.NewLine, messages!);
     }
 
     private FormState CaptureState()
@@ -2003,7 +2003,8 @@ public partial class AddNewTransactionVM : ObservableValidator
         }
         catch (Exception exception)
         {
-            FluxoLogManager.LogError(exception, "Unable to load add transaction history.");
+            FloatingNotificationPublisher.LoggedFailure(WeakReferenceMessenger.Default, exception,
+                "load transaction history");
             ResetHistoryLists();
         }
     }
