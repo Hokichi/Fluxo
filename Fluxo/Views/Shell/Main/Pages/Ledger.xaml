@@ -1411,11 +1411,13 @@
                 Orientation="Horizontal">
                 <customControls:BalloonButton
                     Margin="0,0,14,0"
+                    ButtonIcon="{StaticResource CashRegister}"
                     ButtonText="View all transactions"
                     Command="{Binding LoadAllTransactionsCommand}"
                     CornerRadius="8"
                     DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                     HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                    IconSize="14"
                     ShouldExpand="True" />
                 <TextBlock
                     Margin="0,0,8,0"

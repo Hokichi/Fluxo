@@ -6,12 +6,12 @@
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    IsSplitButtonChecked="{Binding IsSplitMode, Mode=TwoWay}"
     PopupTitle="Transaction Detail"
     ShowCloneButton="True"
     ShowDeleteButton="True"
     ShowEditButton="True"
     ShowSplitButton="{Binding ShowSplitButton, Mode=OneWay}"
-    IsSplitButtonChecked="{Binding IsSplitMode, Mode=TwoWay}"
     mc:Ignorable="d">
 
     <customControls:BasePopup.Resources>
@@ -341,10 +341,38 @@
                         UncheckedIcon="{StaticResource Pin}"
                         UncheckedText="Pinned" />
                 </Grid>
-                <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
-                    <customControls:BalloonRadioButton GroupName="TransactionDetailMode" IsChecked="{Binding IsRegularMode, Mode=TwoWay}" IsEnabled="{Binding CanEditFields}" ShouldShowText="True" UncheckedIcon="{StaticResource CreditCardAlt}" UncheckedText="Regular" />
-                    <customControls:BalloonRadioButton Margin="8,0,0,0" GroupName="TransactionDetailMode" IsChecked="{Binding IsIoU, Mode=TwoWay}" IsEnabled="{Binding CanEditFields}" ShouldShowText="True" UncheckedIcon="{StaticResource CreditCardMinusSolid}" UncheckedText="Debt/IoU" />
-                </StackPanel>
+                <Grid Margin="0,12,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <customControls:BalloonRadioButton
+                        CheckedBackground="{StaticResource Brush.Mint}"
+                        CornerRadius="8"
+                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                        GroupName="TransactionDetailMode"
+                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
+                        IconSize="14"
+                        IsChecked="{Binding IsRegularMode, Mode=TwoWay}"
+                        IsEnabled="{Binding CanEditFields}"
+                        ShouldShowText="True"
+                        UncheckedIcon="{StaticResource CreditCardAlt}"
+                        UncheckedText="Regular" />
+                    <customControls:BalloonRadioButton
+                        Grid.Column="1"
+                        Margin="8,0,0,0"
+                        CheckedBackground="{StaticResource Brush.Mint}"
+                        CornerRadius="8"
+                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                        GroupName="TransactionDetailMode"
+                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
+                        IconSize="14"
+                        IsChecked="{Binding IsIoU, Mode=TwoWay}"
+                        IsEnabled="{Binding CanEditFields}"
+                        ShouldShowText="True"
+                        UncheckedIcon="{StaticResource CreditCardMinusSolid}"
+                        UncheckedText="Debt/IoU" />
+                </Grid>
             </StackPanel>
 
             <StackPanel
