@@ -294,7 +294,7 @@ public partial class TransactionDetailPopup : BasePopup
         if (string.IsNullOrWhiteSpace(message))
             return;
 
-        FloatingNotificationPublisher.SaveFailed([message]);
+        FloatingNotificationPublisher.SaveFailed("Transaction changes not saved", [message]);
     }
 
     private void SyncNoteDocumentFromViewModel()

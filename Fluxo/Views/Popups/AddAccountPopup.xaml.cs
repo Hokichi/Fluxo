@@ -115,7 +115,7 @@ public partial class AddAccountPopup : BasePopup
         if (string.IsNullOrWhiteSpace(message))
             return;
 
-        FloatingNotificationPublisher.SaveFailed([message]);
+        FloatingNotificationPublisher.SaveFailed("Account not saved", [message]);
     }
 
 }

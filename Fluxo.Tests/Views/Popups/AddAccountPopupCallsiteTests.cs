@@ -69,7 +69,7 @@ public sealed class AddAccountPopupCallsiteTests
             "Popups",
             "AddAccountPopup.xaml.cs"));
 
-        Assert.Contains("FloatingNotificationPublisher.SaveFailed([message]);", source);
+        Assert.Contains("FloatingNotificationPublisher.SaveFailed(\"Account not saved\", [message]);", source);
         Assert.DoesNotContain("ShowWarningToast(result.ErrorMessage);", source);
     }
 

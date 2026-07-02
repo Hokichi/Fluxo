@@ -200,7 +200,13 @@ public partial class SettingsGoalsTabVM : ObservableObject
             var header = selectedItems.Length == 1
                 ? $"{selectedItems[0].Name} {verb}"
                 : $"{selectedItems.Length} goals {verb}";
-            FloatingNotificationPublisher.Success(_messenger, header, $"{header}.", true);
+            var message = action.ToString().ToLowerInvariant() switch
+            {
+                "delete" => "Selected goals were removed.",
+                "disable" => "Selected goals were disabled.",
+                _ => "Selected goals were enabled."
+            };
+            FloatingNotificationPublisher.Success(_messenger, header, message, true);
             return SettingsOperationResult.Success();
         }
         catch (Exception exception)

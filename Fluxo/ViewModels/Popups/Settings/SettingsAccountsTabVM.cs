@@ -237,7 +237,15 @@ public partial class SettingsAccountsTabVM : ObservableObject
                 _ => "enabled"
             };
             var header = affectedNames.Length == 1 ? $"{affectedNames[0]} {verb}" : $"{affectedNames.Length} accounts {verb}";
-            FloatingNotificationPublisher.Success(_messenger, header, $"{header}.", true);
+            var message = action.ToString().ToLowerInvariant() switch
+            {
+                "delete" => "Selected accounts were removed.",
+                "unpin" => "Selected accounts were removed from the dashboard.",
+                "pin" => "Selected accounts were added to the dashboard.",
+                "disable" => "Selected accounts were disabled.",
+                _ => "Selected accounts were enabled."
+            };
+            FloatingNotificationPublisher.Success(_messenger, header, message, true);
             return SettingsOperationResult.Success();
         }
         catch (Exception exception)

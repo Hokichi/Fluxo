@@ -9,11 +9,12 @@ namespace Fluxo.Services.Notifications;
 
 public static class FloatingNotificationPublisher
 {
-    public static void SaveFailed(IEnumerable<string> failures) => SaveFailed(WeakReferenceMessenger.Default, failures);
+    public static void SaveFailed(string header, IEnumerable<string> failures) =>
+        SaveFailed(WeakReferenceMessenger.Default, header, failures);
 
-    public static void SaveFailed(IMessenger messenger, IEnumerable<string> failures)
+    public static void SaveFailed(IMessenger messenger, string header, IEnumerable<string> failures)
     {
-        Publish(messenger, "Save failed", string.Empty,
+        Publish(messenger, header, string.Empty,
             failures.Where(value => !string.IsNullOrWhiteSpace(value))
                 .SelectMany(value => value.Split(["\r\n", "\n"], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                 .Distinct(StringComparer.Ordinal)

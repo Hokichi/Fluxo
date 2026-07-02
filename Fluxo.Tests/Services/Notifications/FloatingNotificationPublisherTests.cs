@@ -23,7 +23,7 @@ public sealed class FloatingNotificationPublisherTests
     }
 
     [Fact]
-    public void SaveFailed_PublishesOneDeduplicatedRequest()
+    public void SaveFailed_PublishesSpecificHeaderAndDeduplicatedDetails()
     {
         var messenger = new StrongReferenceMessenger();
         ShowFloatingNotificationMessage? received = null;
@@ -31,10 +31,11 @@ public sealed class FloatingNotificationPublisherTests
 
         FloatingNotificationPublisher.SaveFailed(
             messenger,
+            "Account not saved",
             ["Amount is required.", "Amount is required.", "Choose an account."]);
 
         Assert.NotNull(received);
-        Assert.Equal("Save failed", received!.Value.Header);
+        Assert.Equal("Account not saved", received!.Value.Header);
         Assert.Equal(["Amount is required.", "Choose an account."], received.Value.Details);
         Assert.Equal(NotificationSeverity.Warning, received.Value.Severity);
     }

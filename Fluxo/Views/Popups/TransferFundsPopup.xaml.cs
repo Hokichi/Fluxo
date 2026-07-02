@@ -21,7 +21,8 @@ public partial class TransferFundsPopup : BasePopup
         var result = await _viewModel.SaveAsync();
         if (!result.IsSuccess)
         {
-            FloatingNotificationPublisher.SaveFailed([result.ErrorMessage ?? "Unable to save this transfer."]);
+            FloatingNotificationPublisher.SaveFailed(
+                "Transfer not saved", [result.ErrorMessage ?? "Unable to save this transfer."]);
             return;
         }
 

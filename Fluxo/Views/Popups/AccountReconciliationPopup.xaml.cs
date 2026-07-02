@@ -23,6 +23,7 @@ public partial class AccountReconciliationPopup : BasePopup
         if (!result.IsSuccess)
         {
             FloatingNotificationPublisher.SaveFailed(
+                "Reconciliation not saved",
                 [result.ErrorMessage ?? "Unable to save this reconciliation."]);
             return;
         }

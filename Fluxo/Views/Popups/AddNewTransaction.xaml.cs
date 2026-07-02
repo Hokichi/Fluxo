@@ -181,7 +181,7 @@ public partial class AddNewTransaction : BasePopup
         if (string.IsNullOrWhiteSpace(message))
             return;
 
-        FloatingNotificationPublisher.SaveFailed([message]);
+        FloatingNotificationPublisher.SaveFailed("Transaction not saved", [message]);
     }
 
     private void FocusPrimaryInput()

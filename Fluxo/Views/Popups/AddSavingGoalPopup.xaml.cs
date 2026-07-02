@@ -53,6 +53,6 @@ public partial class AddSavingGoalPopup : BasePopup
     private void ShowValidationMessage(string? message)
     {
         if (!string.IsNullOrWhiteSpace(message))
-            FloatingNotificationPublisher.SaveFailed([message]);
+            FloatingNotificationPublisher.SaveFailed("Saving goal not saved", [message]);
     }
 }
