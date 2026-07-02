@@ -339,6 +339,12 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
 
     private async Task<bool> CanLeaveCurrentSettingsTabAsync()
     {
+        if (PreferencesTabButton.IsChecked.GetValueOrDefault() &&
+            _viewModel.HasPendingPersonalizationConfigurationChanges)
+        {
+            return (await SaveConfigurationChangesAsync()).IsSuccess;
+        }
+
         if (!BudgetTabButton.IsChecked.GetValueOrDefault() ||
             !_viewModel.HasPendingBudgetConfigurationChanges)
         {
@@ -416,6 +422,7 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         if (!_isLoaded ||
             message.Value.TabKey != SettingsTabKey.Personalization ||
             !message.Value.HasPendingChanges ||
+            _viewModel.PersonalizationTab.IsNotificationPageSelected ||
             IsPersonalizationTextInputFocused())
         {
             return;
@@ -480,11 +487,12 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         _isSavingConfiguration = true;
         try
         {
+            var notification = ResolveSaveNotification();
             var result = await _viewModel.SaveConfigurationChangesAsync();
             if (!result.IsSuccess)
                 ShowMessage(result.ErrorMessage, "Settings");
             else
-                FloatingNotificationPublisher.Success(_messenger, "Settings saved", "Your settings were saved.");
+                FloatingNotificationPublisher.Success(_messenger, notification.Header, notification.Message);
 
             return result;
         }
@@ -494,10 +502,22 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         }
     }
 
+    private (string Header, string Message) ResolveSaveNotification()
+    {
+        if (_viewModel.HasPendingBudgetConfigurationChanges)
+            return ("Budget updated", "Budget allocation settings were saved.");
+        if (_viewModel.PersonalizationTab.HasPendingPasswordChange)
+            return ("Password updated", "Unlock password was saved.");
+        if (_viewModel.PersonalizationTab.HasPendingNotificationChanges)
+            return ("Notifications updated", "Notification preferences were saved.");
+        return ("Preferences updated", "Personalization preferences were saved.");
+    }
+
     private bool IsPersonalizationTextInputFocused()
     {
-        return Keyboard.FocusedElement is TextBox textBox &&
-               ReferenceEquals(textBox.DataContext, _viewModel.PersonalizationTab);
+        return Keyboard.FocusedElement is FrameworkElement element &&
+               element is TextBox or PasswordBox &&
+               ReferenceEquals(element.DataContext, _viewModel.PersonalizationTab);
     }
 
     private static bool IsSettingsTextInputFocused()

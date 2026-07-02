@@ -569,6 +569,34 @@ public sealed class SettingsConfigTabVMTests
         Assert.Null(unitOfWork.GetValue(UserSettingNames.UILockingPassword));
     }
 
+    [Fact]
+    public async Task PersonalizationTab_ReportsPendingPasswordSeparately()
+    {
+        var vm = new SettingsPersonalizationTabVM(
+            new AppDataService(new TestSettingsUnitOfWork([])),
+            passwordProtector: new TestPasswordProtector());
+        await vm.LoadAsync();
+
+        vm.UiLockingPassword = "new-password";
+
+        Assert.True(vm.HasPendingPasswordChange);
+        Assert.False(vm.HasPendingNotificationChanges);
+    }
+
+    [Fact]
+    public async Task PersonalizationTab_ReportsPendingNotificationsSeparately()
+    {
+        var vm = new SettingsPersonalizationTabVM(
+            new AppDataService(new TestSettingsUnitOfWork([])),
+            passwordProtector: new TestPasswordProtector());
+        await vm.LoadAsync();
+
+        vm.NotificationSettings[0].IsEnabled = !vm.NotificationSettings[0].IsEnabled;
+
+        Assert.True(vm.HasPendingNotificationChanges);
+        Assert.False(vm.HasPendingPasswordChange);
+    }
+
     private sealed class PendingRecipient(List<SettingsPendingChangesChangedMessage> messages)
     {
         public List<SettingsPendingChangesChangedMessage> Messages { get; } = messages;

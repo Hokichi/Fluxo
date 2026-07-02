@@ -11,6 +11,7 @@ namespace Fluxo.Views.Popups.Settings.Tabs;
 public partial class SettingsPersonalizationTab : UserControl
 {
     private readonly DispatcherTimer _usernameAutosaveTimer = new() { Interval = TimeSpan.FromSeconds(10) };
+    private readonly DispatcherTimer _passwordAutosaveTimer = new() { Interval = TimeSpan.FromSeconds(2) };
     private bool _isLoaded;
     private bool _isSyncingUiLockPassword;
     private SettingsPersonalizationTabVM? _trackedViewModel;
@@ -20,6 +21,7 @@ public partial class SettingsPersonalizationTab : UserControl
         InitializeComponent();
 
         _usernameAutosaveTimer.Tick += OnUsernameAutosaveTimerTick;
+        _passwordAutosaveTimer.Tick += OnPasswordAutosaveTimerTick;
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
     }
@@ -35,6 +37,7 @@ public partial class SettingsPersonalizationTab : UserControl
     {
         _isLoaded = false;
         _usernameAutosaveTimer.Stop();
+        _passwordAutosaveTimer.Stop();
         TrackViewModel(null);
     }
 
@@ -87,6 +90,7 @@ public partial class SettingsPersonalizationTab : UserControl
         viewModel.UiLockingPassword = UiLockingPasswordBox.Password;
         UiLockingPasswordVisibleTextBox.Text = UiLockingPasswordBox.Password;
         _isSyncingUiLockPassword = false;
+        RestartPasswordAutosaveTimer();
     }
 
     private void OnUiLockingPasswordVisibleTextBoxTextChanged(object sender, TextChangedEventArgs e)
@@ -98,6 +102,28 @@ public partial class SettingsPersonalizationTab : UserControl
         viewModel.UiLockingPassword = UiLockingPasswordVisibleTextBox.Text;
         UiLockingPasswordBox.Password = UiLockingPasswordVisibleTextBox.Text;
         _isSyncingUiLockPassword = false;
+        RestartPasswordAutosaveTimer();
+    }
+
+    private void RestartPasswordAutosaveTimer()
+    {
+        if (!_isLoaded)
+            return;
+
+        _passwordAutosaveTimer.Stop();
+        _passwordAutosaveTimer.Start();
+    }
+
+    private void OnPasswordAutosaveTimerTick(object? sender, EventArgs e)
+    {
+        _passwordAutosaveTimer.Stop();
+        RequestPersonalizationAutosave();
+    }
+
+    private void OnUiLockingPasswordLostFocus(object sender, RoutedEventArgs e)
+    {
+        _passwordAutosaveTimer.Stop();
+        RequestPersonalizationAutosave();
     }
 
     private void TrackViewModel(SettingsPersonalizationTabVM? viewModel)

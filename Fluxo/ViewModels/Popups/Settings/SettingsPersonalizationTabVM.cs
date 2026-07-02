@@ -95,6 +95,16 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
                 ? savedValue != setting.IsEnabled
                 : setting.IsEnabled);
 
+    public bool HasPendingPasswordChange =>
+        !string.Equals(UiLockingPassword ?? string.Empty, _savedUiLockingPassword, StringComparison.Ordinal);
+
+    public bool HasPendingNotificationChanges =>
+        NotificationsSnoozePeriod != _savedNotificationsSnoozePeriod ||
+        NotificationSettings.Any(setting =>
+            _savedNotificationSettings.TryGetValue(setting.SettingName, out var savedValue)
+                ? savedValue != setting.IsEnabled
+                : setting.IsEnabled);
+
     public async Task LoadAsync()
     {
         var settingsByName = await SettingsShared.GetSettingsDictionaryAsync(_appData);
@@ -120,6 +130,8 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
         _savedNotificationsSnoozePeriod = NotificationsSnoozePeriod;
         _savedUiLockingPassword = UiLockingPassword;
         LoadNotificationSettings(settingsByName);
+        OnPropertyChanged(nameof(HasPendingPasswordChange));
+        OnPropertyChanged(nameof(HasPendingNotificationChanges));
         PublishPendingState();
     }
 
@@ -231,6 +243,8 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
         _savedNotificationSettings.Clear();
         foreach (var setting in NotificationSettings)
             _savedNotificationSettings[setting.SettingName] = setting.IsEnabled;
+        OnPropertyChanged(nameof(HasPendingPasswordChange));
+        OnPropertyChanged(nameof(HasPendingNotificationChanges));
         PublishPendingState();
     }
 
@@ -248,6 +262,8 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
         foreach (var setting in NotificationSettings)
             if (_savedNotificationSettings.TryGetValue(setting.SettingName, out var value))
                 setting.IsEnabled = value;
+        OnPropertyChanged(nameof(HasPendingPasswordChange));
+        OnPropertyChanged(nameof(HasPendingNotificationChanges));
         PublishPendingState();
     }
 
@@ -255,6 +271,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     {
         OnPropertyChanged(nameof(IsPersonalizationPageSelected));
         OnPropertyChanged(nameof(IsNotificationPageSelected));
+        PublishPendingState();
     }
 
     partial void OnPreferredAppNameChanged(string value)
@@ -322,6 +339,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
         if (IsCustomNotificationsSnoozePeriod)
             ApplyNotificationsSnoozePeriodToCustomFields();
 
+        OnPropertyChanged(nameof(HasPendingNotificationChanges));
         PublishPendingState();
     }
 
@@ -362,6 +380,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
 
     partial void OnUiLockingPasswordChanged(string value)
     {
+        OnPropertyChanged(nameof(HasPendingPasswordChange));
         PublishPendingState();
     }
 
@@ -432,7 +451,10 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     private void OnNotificationSettingPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(SettingsNotificationOptionVM.IsEnabled))
+        {
+            OnPropertyChanged(nameof(HasPendingNotificationChanges));
             PublishPendingState();
+        }
     }
 
     private void PublishPendingState()

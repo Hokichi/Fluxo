@@ -148,6 +148,7 @@
                                 <Grid>
                                     <PasswordBox
                                         x:Name="UiLockingPasswordBox"
+                                        LostFocus="OnUiLockingPasswordLostFocus"
                                         PasswordChanged="OnUiLockingPasswordBoxPasswordChanged"
                                         Style="{StaticResource RoundedPasswordInputStyle}"
                                         Visibility="{Binding IsUiLockingPasswordVisible, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
@@ -155,6 +156,7 @@
                                     <TextBox
                                         x:Name="UiLockingPasswordVisibleTextBox"
                                         Background="{StaticResource Brush.Background.Elevated}"
+                                        LostFocus="OnUiLockingPasswordLostFocus"
                                         Style="{StaticResource RoundedTextInputStyle}"
                                         Text="{Binding UiLockingPassword, UpdateSourceTrigger=PropertyChanged}"
                                         TextChanged="OnUiLockingPasswordVisibleTextBoxTextChanged"
