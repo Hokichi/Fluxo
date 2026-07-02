@@ -54,7 +54,7 @@ public partial class SettingsAboutTab : UserControl
                 MessageBoxImage.Information);
         else if (result.IsSuccess)
             FloatingNotificationPublisher.Success(WeakReferenceMessenger.Default,
-                "Settings reset", "Your settings were reset to defaults.");
+                "Settings", "Default values were restored.", headerAction: "Reset");
     }
 
     private async void OnDeleteAllDataClick(object sender, RoutedEventArgs e)

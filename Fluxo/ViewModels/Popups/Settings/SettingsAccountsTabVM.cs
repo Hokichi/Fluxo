@@ -228,7 +228,8 @@ public partial class SettingsAccountsTabVM : ObservableObject
             await RefreshAccountsAsync();
             _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.Accounts));
 
-            var verb = action.ToString().ToLowerInvariant() switch
+            var actionKey = action.ToString().ToLowerInvariant();
+            var verb = actionKey switch
             {
                 "delete" => "deleted",
                 "unpin" => "unpinned",
@@ -236,8 +237,8 @@ public partial class SettingsAccountsTabVM : ObservableObject
                 "disable" => "disabled",
                 _ => "enabled"
             };
-            var header = affectedNames.Length == 1 ? $"{affectedNames[0]} {verb}" : $"{affectedNames.Length} accounts {verb}";
-            var message = action.ToString().ToLowerInvariant() switch
+            var header = affectedNames.Length == 1 ? affectedNames[0] : $"{affectedNames.Length} accounts";
+            var message = actionKey switch
             {
                 "delete" => "Selected accounts were removed.",
                 "unpin" => "Selected accounts were removed from the dashboard.",
@@ -245,7 +246,9 @@ public partial class SettingsAccountsTabVM : ObservableObject
                 "disable" => "Selected accounts were disabled.",
                 _ => "Selected accounts were enabled."
             };
-            FloatingNotificationPublisher.Success(_messenger, header, message, true);
+            FloatingNotificationPublisher.Success(
+                _messenger, header, message, true,
+                char.ToUpperInvariant(verb[0]) + verb[1..]);
             return SettingsOperationResult.Success();
         }
         catch (Exception exception)

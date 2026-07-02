@@ -848,7 +848,12 @@ public partial class AddNewTransactionVM : ObservableValidator
                     ResetForm(true);
                 }
 
-                FloatingNotificationPublisher.Success("Recurring transaction saved", $"{input.Name} was saved.", true);
+                var isEdit = input.EditingRecurringTransactionId is > 0;
+                FloatingNotificationPublisher.Success(
+                    input.Name,
+                    isEdit ? "Recurring transaction was updated." : "Recurring transaction was added.",
+                    true,
+                    isEdit ? "Updated" : "Added");
                 return AddNewTransactionSubmissionResult.Success();
             }
 
@@ -1070,7 +1075,8 @@ public partial class AddNewTransactionVM : ObservableValidator
             }
 
             var savedType = input.IsGoal ? "Goal contribution" : input.IsExpense ? "Expense" : "Income";
-            FloatingNotificationPublisher.Success($"{savedType} added", $"{input.Name} was recorded.", true);
+            FloatingNotificationPublisher.Success(
+                input.Name, $"{savedType} was recorded.", true, "Added");
             return AddNewTransactionSubmissionResult.Success();
         }
         catch (Exception exception)

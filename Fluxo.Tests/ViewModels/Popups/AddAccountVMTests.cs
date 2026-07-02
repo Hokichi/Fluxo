@@ -35,6 +35,16 @@ public sealed class AddAccountVMTests
     }
 
     [Fact]
+    public void NotificationAction_ReflectsCreateOrEditMode()
+    {
+        var create = new AddAccountVM(mainViewModel: null!, appData: null!);
+        var edit = new AddAccountVM(mainViewModel: null!, appData: null!) { EditingId = 7 };
+
+        Assert.Equal("Added", create.NotificationAction);
+        Assert.Equal("Updated", edit.NotificationAction);
+    }
+
+    [Fact]
     public void InitializeFromAccount_LoadsEditableFields()
     {
         var sut = CreateSut();

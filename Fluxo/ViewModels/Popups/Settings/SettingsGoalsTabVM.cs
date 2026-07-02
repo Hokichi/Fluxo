@@ -191,22 +191,25 @@ public partial class SettingsGoalsTabVM : ObservableObject
             await _mainViewModel.ReloadCurrentDataAsync();
             await RefreshSavingGoalsAsync(resetPagination: false);
 
-            var verb = action.ToString().ToLowerInvariant() switch
+            var actionKey = action.ToString().ToLowerInvariant();
+            var verb = actionKey switch
             {
                 "delete" => "deleted",
                 "disable" => "disabled",
                 _ => "enabled"
             };
             var header = selectedItems.Length == 1
-                ? $"{selectedItems[0].Name} {verb}"
-                : $"{selectedItems.Length} goals {verb}";
-            var message = action.ToString().ToLowerInvariant() switch
+                ? selectedItems[0].Name
+                : $"{selectedItems.Length} goals";
+            var message = actionKey switch
             {
                 "delete" => "Selected goals were removed.",
                 "disable" => "Selected goals were disabled.",
                 _ => "Selected goals were enabled."
             };
-            FloatingNotificationPublisher.Success(_messenger, header, message, true);
+            FloatingNotificationPublisher.Success(
+                _messenger, header, message, true,
+                char.ToUpperInvariant(verb[0]) + verb[1..]);
             return SettingsOperationResult.Success();
         }
         catch (Exception exception)

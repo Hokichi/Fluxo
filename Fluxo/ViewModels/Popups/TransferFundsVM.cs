@@ -128,7 +128,8 @@ public partial class TransferFundsVM : ObservableObject
                 DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
 
             await _mainViewModel.ReloadCurrentDataAsync();
-            FloatingNotificationPublisher.Success("Transfer complete", $"{input.Amount:N2} was transferred to {target.Name}.", true);
+            FloatingNotificationPublisher.Success(
+                target.Name, $"{input.Amount:N2} was transferred successfully.", true, "Credited");
             return TransferFundsResult.Success();
         }
         catch (Exception exception)

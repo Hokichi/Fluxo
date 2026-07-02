@@ -41,6 +41,7 @@ public partial class AddSavingGoalVM : ObservableObject
     public bool CanSave => !IsBusy && AreRequiredFieldsFilled();
     public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
     public bool IsEditMode => EditingId.HasValue;
+    public string NotificationAction => IsEditMode ? "Updated" : "Added";
     public string PopupTitle => IsEditMode ? "Edit Goal" : "Add Goal";
     public string HeaderTitle => IsEditMode ? "Edit Goal" : "Add Goal";
     public string HeaderDescription => IsEditMode
@@ -106,13 +107,17 @@ public partial class AddSavingGoalVM : ObservableObject
             WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.SavingGoals));
 
-            FloatingNotificationPublisher.Success($"{input.Name} saved", "The saving goal was updated.", true);
+            FloatingNotificationPublisher.Success(
+                input.Name,
+                IsEditMode ? "Saving goal details were updated." : "Saving goal is ready to track.",
+                true,
+                NotificationAction);
             return AddSavingGoalResult.Success(true);
         }
         catch (Exception exception)
         {
             FloatingNotificationPublisher.LoggedFailure(WeakReferenceMessenger.Default, exception,
-                "create saving goal");
+                IsEditMode ? "update saving goal" : "create saving goal");
             return AddSavingGoalResult.Failure(string.Empty);
         }
         finally

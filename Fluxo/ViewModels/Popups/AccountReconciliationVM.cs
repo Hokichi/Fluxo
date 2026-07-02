@@ -115,7 +115,8 @@ public partial class AccountReconciliationVM : ObservableObject
                 DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
             await _reloadCurrentDataAsync();
 
-            FloatingNotificationPublisher.Success("Account reconciled", $"{input.Amount:N2} was reconciled against {account.Name}.", true);
+            FloatingNotificationPublisher.Success(
+                account.Name, $"{input.Amount:N2} was reconciled.", true, "Reconciled");
             return AccountReconciliationSaveResult.Success(createdTransaction);
         }
         catch (Exception exception)

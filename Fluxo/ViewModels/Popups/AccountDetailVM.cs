@@ -215,7 +215,8 @@ public partial class AccountDetailVM : ObservableObject
             await RefreshAsync(true);
             IsEditing = false;
 
-            FloatingNotificationPublisher.Success($"{input.Name} saved", "The account was updated.", true);
+            FloatingNotificationPublisher.Success(
+                input.Name, "Account details were saved.", true, "Updated");
             return AccountDetailResult.Success();
         }
         catch (Exception exception)
@@ -294,8 +295,10 @@ public partial class AccountDetailVM : ObservableObject
             await RefreshAsync(true);
 
             FloatingNotificationPublisher.Success(
-                $"{account.Name} {(account.PinnedOnUI ? "pinned" : "unpinned")}",
-                $"{account.Name} was {(account.PinnedOnUI ? "pinned" : "unpinned")}.", true);
+                account.Name,
+                account.PinnedOnUI ? "Account was added to the dashboard." : "Account was removed from the dashboard.",
+                true,
+                account.PinnedOnUI ? "Pinned" : "Unpinned");
             return AccountDetailResult.Success();
         }
         catch (Exception exception)
@@ -342,8 +345,10 @@ public partial class AccountDetailVM : ObservableObject
             await RefreshAsync(true);
 
             FloatingNotificationPublisher.Success(
-                $"{account.Name} {(account.IsEnabled ? "enabled" : "disabled")}",
-                $"{account.Name} was {(account.IsEnabled ? "enabled" : "disabled")}.", true);
+                account.Name,
+                account.IsEnabled ? "Account is available for transactions." : "Account is unavailable for transactions.",
+                true,
+                account.IsEnabled ? "Enabled" : "Disabled");
             return AccountDetailResult.Success();
         }
         catch (Exception exception)
@@ -387,7 +392,8 @@ public partial class AccountDetailVM : ObservableObject
 
             await MainViewModel.ReloadCurrentDataAsync();
 
-            FloatingNotificationPublisher.Success($"{account.Name} deleted", "The account was deleted.", true);
+            FloatingNotificationPublisher.Success(
+                account.Name, "Account was permanently removed.", true, "Deleted");
             return AccountDetailResult.Success(true);
         }
         catch (Exception exception)

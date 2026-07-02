@@ -116,6 +116,7 @@ public partial class AddAccountVM : ObservableValidator
     public bool CanSave => !IsBusy && !HasErrors && AreRequiredFieldsFilled();
     public bool HasChanges => _isChangeTrackingInitialized && !CaptureState().Equals(_initialState);
     public bool IsEditMode => EditingId.HasValue;
+    public string NotificationAction => IsEditMode ? "Updated" : "Added";
     public bool IsSourceTypeSelectionEnabled => !IsEditMode;
     public string PopupTitle => IsEditMode ? "Edit Account" : "Add New Account";
     public string HeaderTitle => PopupTitle;
@@ -507,12 +508,19 @@ public partial class AddAccountVM : ObservableValidator
                 DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
 
             await _mainViewModel.ReloadCurrentDataAsync();
-            FloatingNotificationPublisher.Success($"{input.Name} added", "The account is ready to use.", true);
+            FloatingNotificationPublisher.Success(
+                input.Name,
+                IsEditMode ? "Account details were updated." : "Account is ready to use.",
+                true,
+                NotificationAction);
             return AddAccountResult.Success(true);
         }
         catch (Exception exception)
         {
-            FloatingNotificationPublisher.LoggedFailure(WeakReferenceMessenger.Default, exception, "create account");
+            FloatingNotificationPublisher.LoggedFailure(
+                WeakReferenceMessenger.Default,
+                exception,
+                IsEditMode ? "update account" : "create account");
             return AddAccountResult.Failure(string.Empty);
         }
         finally
