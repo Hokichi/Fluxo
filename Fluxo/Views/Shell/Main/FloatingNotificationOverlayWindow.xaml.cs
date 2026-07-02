@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -12,6 +13,12 @@ public partial class FloatingNotificationOverlayWindow : Window
     private readonly FloatingNotificationListVM _viewModel;
     private readonly DispatcherTimer _activeTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };
     private MainWindow? _mainWindow;
+
+    [DllImport("user32.dll")]
+    private static extern nint GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(nint window, out uint processId);
 
     public FloatingNotificationOverlayWindow(FloatingNotificationListVM viewModel)
     {
@@ -49,9 +56,8 @@ public partial class FloatingNotificationOverlayWindow : Window
     {
         if (_mainWindow is null)
             return;
-        var appActive = Application.Current.Windows.Cast<Window>().Any(window => window != this && window.IsActive);
         var show = _viewModel.HasItems && _mainWindow.IsVisible &&
-                   _mainWindow.WindowState != WindowState.Minimized && appActive;
+                   _mainWindow.WindowState != WindowState.Minimized && IsApplicationForeground();
         if (show)
         {
             if (!IsVisible) Show();
@@ -61,6 +67,15 @@ public partial class FloatingNotificationOverlayWindow : Window
         {
             Hide();
         }
+    }
+
+    internal static bool IsForegroundProcess(uint foregroundProcessId, int currentProcessId) =>
+        foregroundProcessId != 0 && foregroundProcessId == (uint)currentProcessId;
+
+    private static bool IsApplicationForeground()
+    {
+        GetWindowThreadProcessId(GetForegroundWindow(), out var processId);
+        return IsForegroundProcess(processId, Environment.ProcessId);
     }
 
     private void UpdatePosition()
