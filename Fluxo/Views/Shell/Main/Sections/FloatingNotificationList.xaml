@@ -22,8 +22,10 @@
                     <Border
                         Height="72"
                         Margin="8,4"
-                        Padding="18,14"
-                        Background="{StaticResource Brush.Background.Surface}"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderBrush="{Binding Background, ElementName=AccentBackground}"
+                        BorderThickness="2"
                         CornerRadius="12"
                         Cursor="Hand"
                         MouseLeftButtonUp="OnCardClick">
@@ -37,12 +39,12 @@
                                 ShadowDepth="2" />
                         </Border.Effect>
                         <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="5" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Border CornerRadius="3" Style="{StaticResource NotificationAccentStyle}" />
-                            <StackPanel Grid.Column="1" Margin="14,0,0,0">
+                            <Border
+                                x:Name="AccentBackground"
+                                CornerRadius="10"
+                                Opacity="0.5"
+                                Style="{StaticResource NotificationAccentStyle}" />
+                            <StackPanel Margin="18,14">
                                 <TextBlock
                                     FontFamily="{StaticResource Bold}"
                                     FontSize="15"

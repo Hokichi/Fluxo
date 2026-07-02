@@ -18,11 +18,16 @@ public sealed class FloatingNotificationOverlayTests
     }
 
     [Fact]
-    public void List_UsesThreeCardViewportAndOneWayBindings()
+    public void List_UsesSeverityBorderAndBackgroundWithoutAccentBar()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Sections", "FloatingNotificationList.xaml"));
-        Assert.Contains("Width=\"400\"", xaml);
-        Assert.Contains("MaxHeight=\"540\"", xaml);
+        Assert.Contains("Width=\"360\"", xaml);
+        Assert.Contains("MaxHeight=\"243\"", xaml);
+        Assert.Contains("BorderThickness=\"2\"", xaml);
+        Assert.Contains("x:Name=\"AccentBackground\"", xaml);
+        Assert.Contains("Opacity=\"0.5\"", xaml);
+        Assert.Contains("ElementName=AccentBackground", xaml);
+        Assert.DoesNotContain("<ColumnDefinition Width=\"5\" />", xaml);
         Assert.Contains("Mode=OneWay", xaml);
         Assert.Contains("NotificationAccentStyle", xaml);
     }
