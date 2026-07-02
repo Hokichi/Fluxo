@@ -31,6 +31,8 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
     private bool _isSavingConfiguration;
     private bool _isSelectingTab;
 
+    internal IMessenger Messenger => _messenger;
+
     public SettingsPopup(SettingsVM viewModel, IDialogService dialogService, IMessenger messenger)
     {
         InitializeComponent();
