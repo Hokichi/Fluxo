@@ -597,6 +597,62 @@ public sealed class SettingsConfigTabVMTests
         Assert.False(vm.HasPendingPasswordChange);
     }
 
+    [Fact]
+    public async Task PersonalizationTab_ReportsPendingAutoLockToggleSeparately()
+    {
+        var vm = new SettingsPersonalizationTabVM(
+            new AppDataService(new TestSettingsUnitOfWork([])),
+            passwordProtector: new TestPasswordProtector());
+        await vm.LoadAsync();
+
+        vm.IsAppAutoLocked = !vm.IsAppAutoLocked;
+
+        Assert.True(vm.HasPendingAutoLockEnabledChange);
+        Assert.False(vm.HasPendingAutoLockIntervalChange);
+    }
+
+    [Fact]
+    public async Task PersonalizationTab_ReportsPendingAutoLockIntervalSeparately()
+    {
+        var vm = new SettingsPersonalizationTabVM(
+            new AppDataService(new TestSettingsUnitOfWork([])),
+            passwordProtector: new TestPasswordProtector());
+        await vm.LoadAsync();
+
+        vm.AppAutoLockedInterval += 30;
+
+        Assert.True(vm.HasPendingAutoLockIntervalChange);
+        Assert.False(vm.HasPendingAutoLockEnabledChange);
+    }
+
+    [Fact]
+    public async Task BudgetTab_ReportsConfigurationChangesSeparately()
+    {
+        var vm = new SettingsBudgetTabVM(
+            () => 1000m,
+            new AppDataService(new TestSettingsUnitOfWork([])));
+        await vm.LoadAsync();
+
+        vm.AllocationLimit += 100m;
+
+        Assert.True(vm.HasPendingConfigurationChanges);
+        Assert.False(vm.HasPendingAllocationChanges);
+    }
+
+    [Fact]
+    public async Task BudgetTab_ReportsAllocationChangesSeparately()
+    {
+        var vm = new SettingsBudgetTabVM(
+            () => 1000m,
+            new AppDataService(new TestSettingsUnitOfWork([])));
+        await vm.LoadAsync();
+
+        vm.NeedsAllocationPercentage += 1;
+
+        Assert.True(vm.HasPendingAllocationChanges);
+        Assert.False(vm.HasPendingConfigurationChanges);
+    }
+
     private sealed class PendingRecipient(List<SettingsPendingChangesChangedMessage> messages)
     {
         public List<SettingsPendingChangesChangedMessage> Messages { get; } = messages;

@@ -98,6 +98,10 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     public bool HasPendingPasswordChange =>
         !string.Equals(UiLockingPassword ?? string.Empty, _savedUiLockingPassword, StringComparison.Ordinal);
 
+    public bool HasPendingAutoLockEnabledChange => IsAppAutoLocked != _savedIsAppAutoLocked;
+
+    public bool HasPendingAutoLockIntervalChange => AppAutoLockedInterval != _savedAppAutoLockedInterval;
+
     public bool HasPendingNotificationChanges =>
         NotificationsSnoozePeriod != _savedNotificationsSnoozePeriod ||
         NotificationSettings.Any(setting =>
@@ -132,6 +136,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
         LoadNotificationSettings(settingsByName);
         OnPropertyChanged(nameof(HasPendingPasswordChange));
         OnPropertyChanged(nameof(HasPendingNotificationChanges));
+        RaiseAutoLockPendingProperties();
         PublishPendingState();
     }
 
@@ -245,6 +250,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
             _savedNotificationSettings[setting.SettingName] = setting.IsEnabled;
         OnPropertyChanged(nameof(HasPendingPasswordChange));
         OnPropertyChanged(nameof(HasPendingNotificationChanges));
+        RaiseAutoLockPendingProperties();
         PublishPendingState();
     }
 
@@ -264,6 +270,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
                 setting.IsEnabled = value;
         OnPropertyChanged(nameof(HasPendingPasswordChange));
         OnPropertyChanged(nameof(HasPendingNotificationChanges));
+        RaiseAutoLockPendingProperties();
         PublishPendingState();
     }
 
@@ -294,6 +301,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     partial void OnIsAppAutoLockedChanged(bool value)
     {
         OnPropertyChanged(nameof(HasAutoLockInterval));
+        OnPropertyChanged(nameof(HasPendingAutoLockEnabledChange));
         PublishPendingState();
     }
 
@@ -309,6 +317,7 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
         if (!string.Equals(SelectedAppAutoLockPreset, preset, StringComparison.Ordinal))
             SelectedAppAutoLockPreset = preset;
 
+        OnPropertyChanged(nameof(HasPendingAutoLockIntervalChange));
         PublishPendingState();
     }
 
@@ -461,6 +470,12 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
     {
         _messenger.Send(new SettingsPendingChangesChangedMessage(
             new SettingsPendingChangesChanged(SettingsTabKey.Personalization, HasPendingChanges)));
+    }
+
+    private void RaiseAutoLockPendingProperties()
+    {
+        OnPropertyChanged(nameof(HasPendingAutoLockEnabledChange));
+        OnPropertyChanged(nameof(HasPendingAutoLockIntervalChange));
     }
 
     private static string NotificationsSnoozePresetFromHours(int hours)

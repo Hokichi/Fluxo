@@ -124,6 +124,18 @@ public partial class SettingsBudgetTabVM : ObservableObject
         RolloverPolicy != _savedBudgetAllocation.RolloverPolicy ||
         OverspendPolicy != _savedBudgetAllocation.OverspendPolicy;
 
+    public bool HasPendingAllocationChanges =>
+        NeedsAllocationPercentage != _savedBudgetAllocation.Needs ||
+        WantsAllocationPercentage != _savedBudgetAllocation.Wants ||
+        InvestAllocationPercentage != _savedBudgetAllocation.Invest;
+
+    public bool HasPendingConfigurationChanges =>
+        AllocationLimit != _savedBudgetAllocation.AllocationLimit ||
+        AllocationPeriod != _savedBudgetAllocation.AllocationPeriod ||
+        PeriodStart != _savedBudgetAllocation.PeriodStart ||
+        RolloverPolicy != _savedBudgetAllocation.RolloverPolicy ||
+        OverspendPolicy != _savedBudgetAllocation.OverspendPolicy;
+
     public bool CanSaveConfiguration => !HasBudgetAllocationError;
 
     public string ConfigurationErrorMessage => BudgetAllocationErrorMessage;
@@ -172,6 +184,7 @@ public partial class SettingsBudgetTabVM : ObservableObject
         }
 
         PublishPendingState();
+        RaisePendingCategoryProperties();
     }
 
     public async Task<(SettingsOperationResult Result, List<ILogMemoryAction> Actions)> BuildApplyChangesAsync()
@@ -207,6 +220,7 @@ public partial class SettingsBudgetTabVM : ObservableObject
             RolloverPolicy,
             OverspendPolicy);
         PublishPendingState();
+        RaisePendingCategoryProperties();
     }
 
     public void OpenAddAccount()
@@ -227,6 +241,7 @@ public partial class SettingsBudgetTabVM : ObservableObject
         RolloverPolicy = _savedBudgetAllocation.RolloverPolicy;
         OverspendPolicy = _savedBudgetAllocation.OverspendPolicy;
         ValidateBudgetAllocation();
+        RaisePendingCategoryProperties();
         PublishPendingState();
     }
 
@@ -258,6 +273,7 @@ public partial class SettingsBudgetTabVM : ObservableObject
     partial void OnAllocationLimitChanged(decimal value)
     {
         RaiseAmountProperties();
+        OnPropertyChanged(nameof(HasPendingConfigurationChanges));
         PublishPendingState();
     }
 
@@ -268,6 +284,7 @@ public partial class SettingsBudgetTabVM : ObservableObject
         OnPropertyChanged(nameof(IsMonthlyPeriodStartVisible));
         OnPropertyChanged(nameof(IsQuarterlyPeriodStartVisible));
         OnPropertyChanged(nameof(IsYearlyPeriodStartVisible));
+        OnPropertyChanged(nameof(HasPendingConfigurationChanges));
         PublishPendingState();
     }
 
@@ -280,16 +297,19 @@ public partial class SettingsBudgetTabVM : ObservableObject
             return;
         }
 
+        OnPropertyChanged(nameof(HasPendingConfigurationChanges));
         PublishPendingState();
     }
 
     partial void OnRolloverPolicyChanged(RolloverPolicy value)
     {
+        OnPropertyChanged(nameof(HasPendingConfigurationChanges));
         PublishPendingState();
     }
 
     partial void OnOverspendPolicyChanged(OverspendPolicy value)
     {
+        OnPropertyChanged(nameof(HasPendingConfigurationChanges));
         PublishPendingState();
     }
 
@@ -297,6 +317,7 @@ public partial class SettingsBudgetTabVM : ObservableObject
     {
         OnPropertyChanged(nameof(IsAllocationPageSelected));
         OnPropertyChanged(nameof(IsConfigurationPageSelected));
+        PublishPendingState();
     }
 
     private string BuildAllocationAmountText(int percentage)
@@ -309,6 +330,7 @@ public partial class SettingsBudgetTabVM : ObservableObject
     {
         ValidateBudgetAllocation();
         RaiseAmountProperties();
+        OnPropertyChanged(nameof(HasPendingAllocationChanges));
         PublishPendingState();
     }
 
@@ -362,6 +384,12 @@ public partial class SettingsBudgetTabVM : ObservableObject
         OnPropertyChanged(nameof(NeedsAllocationAmountText));
         OnPropertyChanged(nameof(WantsAllocationAmountText));
         OnPropertyChanged(nameof(InvestAllocationAmountText));
+    }
+
+    private void RaisePendingCategoryProperties()
+    {
+        OnPropertyChanged(nameof(HasPendingAllocationChanges));
+        OnPropertyChanged(nameof(HasPendingConfigurationChanges));
     }
 
     private void ValidateBudgetAllocation()

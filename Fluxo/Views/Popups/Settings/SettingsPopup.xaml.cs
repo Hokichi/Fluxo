@@ -421,9 +421,21 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
 
     public void Receive(SettingsPendingChangesChangedMessage message)
     {
-        if (!_isLoaded ||
-            message.Value.TabKey != SettingsTabKey.Personalization ||
-            !message.Value.HasPendingChanges ||
+        if (!_isLoaded || !message.Value.HasPendingChanges)
+            return;
+
+        if (message.Value.TabKey == SettingsTabKey.Budget)
+        {
+            if (!_viewModel.BudgetTab.IsConfigurationPageSelected &&
+                _viewModel.BudgetTab.HasPendingConfigurationChanges)
+            {
+                _ = SaveConfigurationChangesAsync();
+            }
+
+            return;
+        }
+
+        if (message.Value.TabKey != SettingsTabKey.Personalization ||
             _viewModel.PersonalizationTab.IsNotificationPageSelected ||
             IsPersonalizationTextInputFocused())
         {
@@ -494,7 +506,11 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
             if (!result.IsSuccess)
                 ShowMessage(result.ErrorMessage, "Settings");
             else
-                FloatingNotificationPublisher.Success(_messenger, notification.Header, notification.Message);
+                FloatingNotificationPublisher.Success(
+                    _messenger,
+                    notification.Header,
+                    notification.Message,
+                    headerAction: notification.Action);
 
             return result;
         }
@@ -504,15 +520,24 @@ public partial class SettingsPopup : BasePopup, IRecipient<SettingsDialogRequest
         }
     }
 
-    private (string Header, string Message) ResolveSaveNotification()
+    private (string Header, string Action, string Message) ResolveSaveNotification()
     {
-        if (_viewModel.HasPendingBudgetConfigurationChanges)
-            return ("Budget updated", "Budget allocation settings were saved.");
+        if (_viewModel.BudgetTab.HasPendingConfigurationChanges)
+            return ("Budget configuration", "Updated", "Budget configuration was saved.");
+        if (_viewModel.BudgetTab.HasPendingAllocationChanges)
+            return ("Budget allocation", "Updated", "Budget allocation settings were saved.");
         if (_viewModel.PersonalizationTab.HasPendingPasswordChange)
-            return ("Password updated", "Unlock password was saved.");
+            return ("Password", "Updated", "Unlock password was saved.");
+        if (_viewModel.PersonalizationTab.HasPendingAutoLockEnabledChange)
+            return _viewModel.PersonalizationTab.IsAppAutoLocked
+                ? ("Auto-lock", "Enabled", "The UI will lock after inactivity.")
+                : ("Auto-lock", "Disabled", "The UI will no longer lock after inactivity.");
+        if (_viewModel.PersonalizationTab.HasPendingAutoLockIntervalChange)
+            return ("Auto-lock", "wait time changed",
+                $"The UI will lock after {_viewModel.PersonalizationTab.AppAutoLockedInterval} seconds of inactivity.");
         if (_viewModel.PersonalizationTab.HasPendingNotificationChanges)
-            return ("Notifications updated", "Notification preferences were saved.");
-        return ("Preferences updated", "Personalization preferences were saved.");
+            return ("Notifications", "Updated", "Notification preferences were saved.");
+        return ("Preferences", "Updated", "Personalization preferences were saved.");
     }
 
     private bool IsPersonalizationTextInputFocused()
