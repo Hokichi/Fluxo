@@ -190,7 +190,7 @@ public static class FluxoLogManager
     private static string WriteExceptionLogFile(Exception exception, string message)
     {
         var now = DateTime.Now;
-        var exceptionFileName = $"fluxo_exception_{now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture)}.log";
+        var exceptionFileName = $"fluxo_exception_{now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture)}_{Guid.NewGuid():N}.log";
         var exceptionDirectory = GetIssuesLogsDirectoryPath();
         Directory.CreateDirectory(exceptionDirectory);
         var exceptionPath = Path.Combine(exceptionDirectory, exceptionFileName);

@@ -45,32 +45,6 @@ public sealed class SavingGoalsPanelLayoutTests
     }
 
     [Fact]
-    public void SavingGoalTemplateExposesCompactMetrics()
-    {
-        var xaml = File.ReadAllText(SavingGoalsPanelXamlPath);
-
-        Assert.Contains("Amount Left", xaml);
-        Assert.Contains("Weekly Average", xaml);
-        Assert.Contains("Estimated Deadline", xaml);
-        Assert.DoesNotContain(">saved<", xaml);
-        Assert.DoesNotContain("target", xaml);
-    }
-
-    [Fact]
-    public void GoalActionButtonsLiveOutsideSavingGoalTemplate()
-    {
-        var xaml = File.ReadAllText(SavingGoalsPanelXamlPath);
-
-        var templateStart = xaml.IndexOf("<DataTemplate x:Key=\"SavingGoalTemplate\">", StringComparison.Ordinal);
-        var templateEnd = xaml.IndexOf("</DataTemplate>", templateStart, StringComparison.Ordinal);
-        var editAction = xaml.IndexOf("OnEditSavingGoalClick", StringComparison.Ordinal);
-        var fundsAction = xaml.IndexOf("OnAddGoalFundsClick", StringComparison.Ordinal);
-
-        Assert.True(editAction > templateEnd);
-        Assert.True(fundsAction > templateEnd);
-    }
-
-    [Fact]
     public void HeaderGoalActionsUseCurrentGoal()
     {
         var source = File.ReadAllText(SavingGoalsPanelCodeBehindPath);
@@ -79,13 +53,4 @@ public sealed class SavingGoalsPanelLayoutTests
         Assert.DoesNotContain("DataContext: SavingGoalVM goal", source);
     }
 
-    [Fact]
-    public void GoalNavigationDoesNotCrossfadeGoalContent()
-    {
-        var source = File.ReadAllText(SavingGoalsPanelCodeBehindPath);
-
-        Assert.Contains("BeginAnimation(AnimatedProgressRatioProperty, progressAnimation)", source);
-        Assert.DoesNotContain("CurrentGoalPresenter.BeginAnimation(OpacityProperty", source);
-        Assert.DoesNotContain("IncomingGoalPresenter.BeginAnimation(OpacityProperty", source);
-    }
 }

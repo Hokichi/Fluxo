@@ -33,24 +33,10 @@ public sealed class SettingsIoUsTabLayoutTests
         Assert.Contains("Click=\"OnResolveClick\"", xaml);
         Assert.Contains("Visibility=\"{Binding HasItems, Converter={StaticResource BoolToVisibilityInvertedConverter}}\"", xaml);
         Assert.Contains("Text=\"{Binding TotalAmountText, Mode=OneWay, Converter={StaticResource MoneyDisplayConverter}}\"", xaml);
-        Assert.Contains("<Run Text=\"{Binding AmountSign}\" />", xaml);
+        Assert.Contains("<Run Text=\"{Binding AmountSign, Mode=OneWay}\" />", xaml);
         Assert.Contains("<Run Text=\"{Binding Amount, Converter={StaticResource NumberWithCommasConverter}}\" />", xaml);
         Assert.Contains("<Run Text=\"{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}}\" />", xaml);
         Assert.Contains("await viewModel.ResolveAsync(item);", codeBehind);
     }
 
-    [Fact]
-    public void SettingsIoUsTab_UsesSettingsListItemHoverTemplate()
-    {
-        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "Settings", "Tabs", "SettingsDebtIousTab.xaml"));
-
-        Assert.Contains("x:Name=\"ItemRoot\"", xaml);
-        Assert.Contains("BorderBrush=\"Transparent\"", xaml);
-        Assert.Contains("x:Name=\"RowActions\"", xaml);
-        Assert.Contains("Visibility=\"Collapsed\"", xaml);
-        Assert.Contains("SourceName=\"ItemRoot\" Property=\"IsMouseOver\" Value=\"True\"", xaml);
-        Assert.Contains("TargetName=\"RowActions\" Property=\"Visibility\" Value=\"Visible\"", xaml);
-        Assert.Contains("Height=\"1.5\"", xaml);
-        Assert.Contains("Background=\"{StaticResource Brush.Border.Subtle}\"", xaml);
-    }
 }

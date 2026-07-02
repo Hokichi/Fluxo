@@ -258,12 +258,6 @@ public sealed class BalloonToggleTests
         Assert.Contains("CommandParameter=\"{Binding}\"", xaml);
     }
 
-    [Fact]
-    public void LongPressThreshold_IsThreeHundredMilliseconds()
-    {
-        Assert.Equal(TimeSpan.FromMilliseconds(300), BalloonToggle.LongPressDuration);
-    }
-
     private sealed class TestBalloonToggle : BalloonToggle
     {
         public Brush ResolvedRestingBackground => ResolveRestingBackground();

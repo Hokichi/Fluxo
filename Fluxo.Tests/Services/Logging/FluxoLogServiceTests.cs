@@ -4,6 +4,10 @@ using Xunit;
 
 namespace Fluxo.Tests.Services.Logging;
 
+[CollectionDefinition("Fluxo logging", DisableParallelization = true)]
+public sealed class FluxoLoggingCollection;
+
+[Collection("Fluxo logging")]
 public sealed class FluxoLogServiceTests : IDisposable
 {
     private readonly string _originalLocalAppData;
@@ -79,11 +83,27 @@ public sealed class FluxoLogServiceTests : IDisposable
         var exceptionLog = File.ReadAllText(exceptionFile);
 
         Assert.StartsWith("fluxo_exception_", exceptionFileName);
-        Assert.Matches(@"^fluxo_exception_\d{8}-\d{6}\.log$", exceptionFileName);
+        Assert.Matches(@"^fluxo_exception_\d{8}-\d{6}_[0-9a-f]{32}\.log$", exceptionFileName);
         Assert.Contains("Unable to start Fluxo.", issueLog);
         Assert.Contains("outer failure", exceptionLog);
         Assert.Contains("inner failure", exceptionLog);
         Assert.Contains(nameof(CreateNestedException), exceptionLog);
+    }
+
+    [Fact]
+    public void LogError_CreatesOneExceptionFilePerFailure()
+    {
+        FluxoLogManager.Initialize("User");
+
+        FluxoLogManager.LogError(new InvalidOperationException("first"), "First failure.");
+        FluxoLogManager.LogError(new InvalidOperationException("second"), "Second failure.");
+        FluxoLogManager.CloseAndFlush();
+
+        var files = Directory.EnumerateFiles(
+            Path.Combine(_tempLocalAppData, "fluxo", "logs", "issues"),
+            "fluxo_exception_*.log");
+
+        Assert.Equal(2, files.Count());
     }
 
     private static Exception CreateNestedException()

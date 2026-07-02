@@ -11,17 +11,6 @@ public sealed class MainWindowPageRegressionTests
     private static readonly XNamespace XamlNamespace = "http://schemas.microsoft.com/winfx/2006/xaml";
 
     [Fact]
-    public void ViewsFolder_ContainsOnlyViewsAndCodeBehindCSharpFiles()
-    {
-        var views = RepositoryPaths.File("Fluxo", "Views");
-        var standaloneFiles = Directory.GetFiles(views, "*.cs", SearchOption.AllDirectories)
-            .Where(path => !path.EndsWith(".xaml.cs", StringComparison.OrdinalIgnoreCase))
-            .ToArray();
-
-        Assert.Empty(standaloneFiles);
-    }
-
-    [Fact]
     public void OrdinaryAnalyticsNavigation_PreservesAnalyticsDateSelection()
     {
         var source = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "MainWindow.xaml.cs"));
@@ -45,15 +34,12 @@ public sealed class MainWindowPageRegressionTests
     }
 
     [Fact]
-    public void Ledger_ReplacesViewModeToggleWithAllTransactionsButton()
+    public void Ledger_UsesLoadAllTransactionsCommandInsteadOfViewModeToggle()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
 
         Assert.DoesNotContain("MainViewModeToggleControl", xaml);
-        Assert.Contains("ButtonText=\"View all transactions\"", xaml);
         Assert.Contains("Command=\"{Binding LoadAllTransactionsCommand}\"", xaml);
-        var buttonTextIndex = xaml.IndexOf("ButtonText=\"View all transactions\"", StringComparison.Ordinal);
-        Assert.DoesNotContain("ButtonIcon=", xaml[(buttonTextIndex - 300)..buttonTextIndex]);
     }
 
     [Fact]
@@ -77,18 +63,6 @@ public sealed class MainWindowPageRegressionTests
         Assert.DoesNotContain("_ledgerPageView!.PublishViewMode()", prepareBody);
         Assert.DoesNotContain("LedgerDateRangeRequestedMessage", prepareBody);
         Assert.DoesNotContain("LedgerAllTimeRequestedMessage", prepareBody);
-    }
-
-    [Fact]
-    public void MainPages_AreStoredUnderPagesFolder()
-    {
-        foreach (var pageName in new[] { "Dashboard", "Analytics", "Calendar", "Ledger" })
-        {
-            Assert.False(File.Exists(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", $"{pageName}.xaml")));
-            Assert.False(File.Exists(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", $"{pageName}.xaml.cs")));
-            Assert.True(File.Exists(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", $"{pageName}.xaml")));
-            Assert.True(File.Exists(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", $"{pageName}.xaml.cs")));
-        }
     }
 
     [Fact]

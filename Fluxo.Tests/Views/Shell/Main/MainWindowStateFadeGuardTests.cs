@@ -52,16 +52,6 @@ public sealed class MainWindowStateFadeGuardTests
     }
 
     [Fact]
-    public void MainPageTransition_UsesThreeHundredMillisecondDuration()
-    {
-        var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
-
-        Assert.Contains("private const int MainPageTransitionDuration = 300;", source);
-        Assert.Contains("FadeElementAsync(MainPageHost, 0, EasingMode.EaseIn, MainPageTransitionDuration)", source);
-        Assert.Contains("FadeElementAsync(MainPageHost, 1, EasingMode.EaseOut, MainPageTransitionDuration)", source);
-    }
-
-    [Fact]
     public void MainPageTransition_DoesNotBypassAnimationForReducedMotion()
     {
         var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());

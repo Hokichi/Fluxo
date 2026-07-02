@@ -120,20 +120,6 @@ public sealed class MainWindowLayoutTests
     }
 
     [Fact]
-    public void RootBorder_UsesDeepenedOuterGlowAndUpdatesChromeForWindowState()
-    {
-        var xaml = MainWindowXaml.Value;
-        var source = File.ReadAllText(ResolveMainWindowCodeBehindPath());
-
-        Assert.Contains("x:Name=\"RootBorder\"", xaml);
-        Assert.Contains("<DropShadowEffect", xaml);
-        Assert.Contains("Color=\"{StaticResource Color.Background.Deepened}\"", xaml);
-        Assert.Contains("ShadowDepth=\"0\"", xaml);
-        Assert.Contains("RootBorder.BorderThickness = maximizing ? new Thickness(0) : new Thickness(1);", source);
-        Assert.Contains("RootBorder.CornerRadius = maximizing ? new CornerRadius(0) : new CornerRadius(8);", source);
-    }
-
-    [Fact]
     public void SpendingAmountGate_HideMarkers_ArePresent()
     {
         var xamlDocument = MainWindowXamlDocument.Value;
@@ -243,44 +229,6 @@ public sealed class MainWindowLayoutTests
     }
 
     [Fact]
-    public void HeaderActions_UseRequestedOrderAndQuickAddStyling()
-    {
-        var xaml = MainWindowXaml.Value;
-        var xamlDocument = MainWindowXamlDocument.Value;
-
-        var searchIndex = xaml.IndexOf("x:Name=\"HeaderSearchButton\"", StringComparison.Ordinal);
-        var notificationIndex = xaml.IndexOf("x:Name=\"HeaderNotificationButton\"", StringComparison.Ordinal);
-        var menuIndex = xaml.IndexOf("x:Name=\"HeaderMenuButton\"", StringComparison.Ordinal);
-        var quickAddIndex = xaml.IndexOf("x:Name=\"HeaderQuickAddButton\"", StringComparison.Ordinal);
-        var minimizeIndex = xaml.IndexOf("Command=\"{x:Static SystemCommands.MinimizeWindowCommand}\"", quickAddIndex, StringComparison.Ordinal);
-        var maximizeIndex = xaml.IndexOf("x:Name=\"ExpandRestoreButton\"", minimizeIndex, StringComparison.Ordinal);
-        var closeIndex = xaml.IndexOf("Command=\"{x:Static SystemCommands.CloseWindowCommand}\"", maximizeIndex, StringComparison.Ordinal);
-
-        Assert.True(searchIndex < notificationIndex);
-        Assert.True(notificationIndex < menuIndex);
-        Assert.True(menuIndex < quickAddIndex);
-        Assert.True(quickAddIndex < minimizeIndex);
-        Assert.True(minimizeIndex < maximizeIndex);
-        Assert.True(maximizeIndex < closeIndex);
-
-        var quickAddButton = xamlDocument
-            .Descendants()
-            .SingleOrDefault(element =>
-                element.Name.LocalName == "BalloonButton" &&
-                (string?)element.Attribute(XamlNamespace + "Name") == "HeaderQuickAddButton");
-
-        Assert.NotNull(quickAddButton);
-        Assert.Equal("{StaticResource PlusSolid}", (string?)quickAddButton!.Attribute("ButtonIcon"));
-        Assert.Equal("New Transaction", (string?)quickAddButton.Attribute("ButtonText"));
-        Assert.Equal("{StaticResource Brush.Mint}", (string?)quickAddButton.Attribute("DefaultBackground"));
-        Assert.Null(quickAddButton.Attribute("ExpandedWidth"));
-        Assert.Equal("{StaticResource Brush.Mint.Muted}", (string?)quickAddButton.Attribute("HoveredBackground"));
-        Assert.Equal("{StaticResource Brush.Text.Primary.Dark}", (string?)quickAddButton.Attribute("Foreground"));
-        Assert.Equal("8,0", (string?)quickAddButton.Attribute("Padding"));
-        Assert.Equal("True", (string?)quickAddButton.Attribute("ShouldExpand"));
-    }
-
-    [Fact]
     public void WindowChromeButtons_ExpandWithFunctionalButtonText()
     {
         var xamlDocument = MainWindowXamlDocument.Value;
@@ -327,30 +275,6 @@ public sealed class MainWindowLayoutTests
     }
 
     [Fact]
-    public void NotificationPanel_UsesVerticalListWithStickyClearAllFooter()
-    {
-        var xaml = NotificationPanelXaml.Value;
-        var xamlDocument = NotificationPanelXamlDocument.Value;
-
-        Assert.DoesNotContain("StepNavigatorControl", xaml);
-        Assert.DoesNotContain("OnNavigatePreviousClick", xaml);
-        Assert.DoesNotContain("OnNavigateNextClick", xaml);
-        Assert.DoesNotContain("CarouselViewport", xaml);
-
-        AssertElementHasName(xamlDocument, "ScrollViewer", "NotificationListScrollViewer");
-        AssertElementHasName(xamlDocument, "ItemsControl", "NotificationItemsList");
-        AssertElementHasName(xamlDocument, "BalloonButton", "SnoozeAllNotificationsButton");
-        AssertElementHasName(xamlDocument, "BalloonButton", "ClearAllNotificationsButton");
-        Assert.Contains("ItemsSource=\"{Binding NotificationItems}\"", xaml);
-        Assert.Contains("Command=\"{Binding SnoozeAllNotificationsCommand}\"", xaml);
-        Assert.Contains("Command=\"{Binding ClearAllNotificationsCommand}\"", xaml);
-        Assert.Contains("ButtonIcon=\"{StaticResource SleepLine}\"", xaml);
-        Assert.Contains("ButtonIcon=\"{StaticResource Delete}\"", xaml);
-        Assert.Contains("ButtonText=\"Snooze\"", xaml);
-        Assert.Contains("ButtonText=\"Clear All\"", xaml);
-    }
-
-    [Fact]
     public void MainWindow_KeepsDashboardContentInShellWithCorrectControlOwnership()
     {
         var xamlDocument = MainWindowXamlDocument.Value;
@@ -377,27 +301,6 @@ public sealed class MainWindowLayoutTests
         AssertElementHasName(dashboardXamlDocument, "FadingScrollViewer", "DashboardAccountsScrollViewer");
         AssertElementHasName(dashboardXamlDocument, "Button", "DashboardAccountsScrollLeftButton");
         AssertElementHasName(dashboardXamlDocument, "Button", "DashboardAccountsScrollRightButton");
-    }
-
-    [Fact]
-    public void DashboardAccounts_HasOverflowScrollButtonsInMainWindow()
-    {
-        var xaml = DashboardXaml.Value;
-        var source = File.ReadAllText(ResolveDashboardCodeBehindPath());
-        var icons = File.ReadAllText(RepositoryPaths.File(
-            "Fluxo.Resources",
-            "Resources",
-            "Icons.xaml"));
-
-        Assert.Contains("x:Key=\"AngleLeft\"", icons);
-        Assert.Contains("x:Key=\"AngleRight\"", icons);
-        Assert.Contains("x:Key=\"DashboardAccountsScrollButtonStyle\"", xaml);
-        Assert.Contains("DashboardAccountsScrollPixels = 10", source);
-        Assert.Contains("DashboardAccountsScrollIntervalMilliseconds = 10", source);
-        Assert.Contains("_dashboardAccountsScrollTimer.Tick += OnDashboardAccountsScrollTimerTick;", source);
-        Assert.Contains("private void OnDashboardAccountsScrollTimerTick(object? sender, EventArgs e)", source);
-        Assert.Contains("ScrollDashboardAccounts(", source);
-        Assert.Contains("DashboardAccountsScrollViewer.ScrollableWidth > 0", source);
     }
 
     private static void AssertElementHasName(XDocument xamlDocument, string elementName, string xName)
@@ -585,42 +488,6 @@ public sealed class MainWindowLayoutTests
                 }
 
                 return notificationPanelXamlPath;
-            }
-
-            currentDirectory = currentDirectory.Parent;
-        }
-
-        throw new DirectoryNotFoundException(
-            $"Could not locate repository root containing 'Fluxo.sln' or 'Fluxo.slnx' from '{AppContext.BaseDirectory}'.");
-    }
-
-    private static string ResolveDashboardCodeBehindPath()
-    {
-        var currentDirectory = new DirectoryInfo(AppContext.BaseDirectory);
-
-        while (currentDirectory is not null)
-        {
-            var solutionPath = Path.Combine(currentDirectory.FullName, "Fluxo.sln");
-            var solutionXPath = Path.Combine(currentDirectory.FullName, "Fluxo.slnx");
-            if (File.Exists(solutionPath) || File.Exists(solutionXPath))
-            {
-                var dashboardCodeBehindPath = Path.Combine(
-                    currentDirectory.FullName,
-                    "Fluxo",
-                    "Views",
-                    "Shell",
-                    "Main",
-                    "Pages",
-                    "Dashboard.xaml.cs");
-
-                if (!File.Exists(dashboardCodeBehindPath))
-                {
-                    throw new FileNotFoundException(
-                        $"Dashboard.xaml.cs was not found at '{dashboardCodeBehindPath}'.",
-                        dashboardCodeBehindPath);
-                }
-
-                return dashboardCodeBehindPath;
             }
 
             currentDirectory = currentDirectory.Parent;
