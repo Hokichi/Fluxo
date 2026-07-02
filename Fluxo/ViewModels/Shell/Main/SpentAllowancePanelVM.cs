@@ -198,7 +198,7 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
 
     private void ApplyTransactionToTrackedSource(TransactionMemorySnapshot snapshot)
     {
-        var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.AccountId);
+        var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.SourceAccountId);
         if (source is null)
             return;
 
@@ -210,7 +210,7 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
 
     private void RestoreTransactionFromTrackedSource(TransactionMemorySnapshot snapshot)
     {
-        var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.AccountId);
+        var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.SourceAccountId);
         if (source is null)
             return;
 
@@ -222,7 +222,7 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
 
     private TransactionVM ToTransactionVm(TransactionMemorySnapshot snapshot)
     {
-        var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.AccountId);
+        var source = _accounts.FirstOrDefault(candidate => candidate.Id == snapshot.SourceAccountId);
 
         return new TransactionVM
         {
@@ -240,7 +240,7 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
             IsExcludedFromBudget = snapshot.IsExcludedFromBudget,
             Account = new AccountVM
             {
-                Id = snapshot.AccountId,
+                Id = snapshot.SourceAccountId,
                 Name = source?.Name ?? string.Empty,
                 AccountType = source?.AccountType ?? AccountType.Checking
             }

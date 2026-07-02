@@ -8,6 +8,29 @@ namespace Fluxo.Tests.Services.Transactions;
 public sealed class RepaymentTransactionSupportTests
 {
     [Fact]
+    public void FindNewestIncome_SelectsNewestMatchingCreditIncome()
+    {
+        var checking = new Account { Id = 1, Name = "Checking" };
+        var expense = new Transaction
+        {
+            Type = TransactionType.Expense,
+            Account = checking,
+            SourceAccountId = checking.Id,
+            RepaymentAccountId = 2,
+            Amount = 75m,
+            OccurredOn = new DateTime(2026, 7, 2)
+        };
+        var older = Income(10, 2, 75m, new DateTime(2026, 7, 2), new DateTime(2026, 7, 2, 9, 0, 0));
+        var newer = Income(11, 2, 75m, new DateTime(2026, 7, 2), new DateTime(2026, 7, 2, 10, 0, 0));
+        var wrongAmount = Income(12, 2, 50m, new DateTime(2026, 7, 2), new DateTime(2026, 7, 2, 11, 0, 0));
+
+        var match = RepaymentTransactionSupport.FindNewestIncome(
+            expense,
+            [older, wrongAmount, newer]);
+        Assert.Same(newer, match);
+    }
+
+    [Fact]
     public void Create_ProducesExcludedBalanceUpdatePair_AndMutatesAccounts()
     {
         var checking = new Account
@@ -39,10 +62,12 @@ public sealed class RepaymentTransactionSupportTests
         Assert.Equal("Repayment to Visa", pair.Expense.Name);
         Assert.Equal(ExpenseCategory.Savings, pair.Expense.ExpenseCategory);
         Assert.Equal(3, pair.Expense.TagId);
+        Assert.Equal(2, pair.Expense.RepaymentAccountId);
         Assert.True(pair.Expense.IsExcludedFromBudget);
         Assert.Equal(TransactionType.Income, pair.Income.Type);
         Assert.Equal("Repayment from Checking", pair.Income.Name);
-        Assert.Equal(2, pair.Income.AccountId);
+        Assert.Equal(2, pair.Income.SourceAccountId);
+        Assert.Equal(2, pair.Income.RepaymentAccountId);
         Assert.True(pair.Income.IsExcludedFromBudget);
     }
 
@@ -63,4 +88,16 @@ public sealed class RepaymentTransactionSupportTests
         Assert.Throws<ArgumentException>(() =>
             RepaymentTransactionSupport.Create(source, target, amount, DateTime.Today, tag));
     }
+
+    private static Transaction Income(int id, int accountId, decimal amount, DateTime date, DateTime loggedOn) => new()
+    {
+        Id = id,
+        Type = TransactionType.Income,
+        Name = "Repayment from Checking",
+        SourceAccountId = accountId,
+        RepaymentAccountId = accountId,
+        Amount = amount,
+        OccurredOn = date,
+        LoggedOn = loggedOn
+    };
 }

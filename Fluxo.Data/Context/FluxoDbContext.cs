@@ -157,7 +157,9 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(transaction => transaction.IsForDeletion).HasDefaultValue(false);
         entity.Property(transaction => transaction.IsIoU).HasDefaultValue(false);
         entity.Property(transaction => transaction.IsExcludedFromBudget).HasDefaultValue(false);
-        entity.HasOne(transaction => transaction.Account).WithMany().HasForeignKey(transaction => transaction.AccountId).OnDelete(DeleteBehavior.Restrict);
+        entity.HasOne(transaction => transaction.Account).WithMany().HasForeignKey(transaction => transaction.SourceAccountId).OnDelete(DeleteBehavior.Restrict);
+        entity.HasOne(transaction => transaction.Goal).WithMany().HasForeignKey(transaction => transaction.GoalId).OnDelete(DeleteBehavior.SetNull);
+        entity.HasOne(transaction => transaction.RepaymentAccount).WithMany().HasForeignKey(transaction => transaction.RepaymentAccountId).OnDelete(DeleteBehavior.SetNull);
         entity.HasOne(transaction => transaction.Tag).WithMany().HasForeignKey(transaction => transaction.TagId).OnDelete(DeleteBehavior.Restrict);
         entity.HasOne(transaction => transaction.ParentTransaction).WithMany().HasForeignKey(transaction => transaction.ParentTransactionId).OnDelete(DeleteBehavior.Restrict);
     }

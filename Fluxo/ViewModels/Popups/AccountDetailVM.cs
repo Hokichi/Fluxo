@@ -379,7 +379,7 @@ public partial class AccountDetailVM : ObservableObject
 
             var snapshot = AccountMemorySnapshot.Create(account);
 
-            foreach (var transaction in transactions.Where(item => item.AccountId == AccountId))
+            foreach (var transaction in transactions.Where(item => item.SourceAccountId == AccountId))
                 _appData.RemoveTransaction(transaction);
 
             _appData.RemoveAccount(account);
@@ -421,7 +421,7 @@ public partial class AccountDetailVM : ObservableObject
         await LoadDeductSourcesAsync();
 
         var transactions = (await _appData.GetTransactionsAsync())
-            .Where(transaction => transaction.AccountId == AccountId && !transaction.IsForDeletion)
+            .Where(transaction => transaction.SourceAccountId == AccountId && !transaction.IsForDeletion)
             .ToList();
         var expenseLogs = transactions.Where(transaction => transaction.Type == TransactionType.Expense).ToList();
         var incomeLogs = transactions.Where(transaction => transaction.Type == TransactionType.Income).ToList();

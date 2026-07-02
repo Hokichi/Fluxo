@@ -33,7 +33,7 @@ public sealed class SettingsIoUsTabVMTests
                     OccurredOn = new DateTime(2026, 6, 20),
                     IsIoU = true,
                     Account = account,
-                    AccountId = account.Id
+                    SourceAccountId = account.Id
                 },
                 new Transaction
                 {
@@ -44,7 +44,7 @@ public sealed class SettingsIoUsTabVMTests
                     OccurredOn = new DateTime(2026, 6, 20),
                     IsIoU = true,
                     Account = account,
-                    AccountId = account.Id
+                    SourceAccountId = account.Id
                 }
             ], [],
             [account]);
@@ -72,7 +72,7 @@ public sealed class SettingsIoUsTabVMTests
                     OccurredOn = new DateTime(2026, 6, 20),
                     IsIoU = true,
                     Account = account,
-                    AccountId = account.Id
+                    SourceAccountId = account.Id
                 },
                 new Transaction
                 {
@@ -83,7 +83,7 @@ public sealed class SettingsIoUsTabVMTests
                     OccurredOn = new DateTime(2026, 6, 20),
                     IsIoU = true,
                     Account = account,
-                    AccountId = account.Id
+                    SourceAccountId = account.Id
                 }
             ], [],
             [account]);
@@ -112,7 +112,7 @@ public sealed class SettingsIoUsTabVMTests
             Amount = 25m,
             IsIoU = true,
             Account = account,
-            AccountId = account.Id,
+            SourceAccountId = account.Id,
             ExpenseCategory = ExpenseCategory.Needs,
             Tag = new Tag { Id = 20, Name = "Food", HexCode = "#22C55E" },
             Notes = string.Empty
@@ -130,7 +130,7 @@ public sealed class SettingsIoUsTabVMTests
             Arg.Is<Transaction>(income =>
                 income.Type == TransactionType.Income &&
                 income.Amount == 25m &&
-                income.AccountId == 10 &&
+                income.SourceAccountId == 10 &&
                 !income.IsIoU &&
                 income.Name == "Lunch lend - IOU resolved"),
             Arg.Any<CancellationToken>());
@@ -156,7 +156,7 @@ public sealed class SettingsIoUsTabVMTests
             Amount = 40m,
             IsIoU = true,
             Account = account,
-            AccountId = account.Id,
+            SourceAccountId = account.Id,
             Notes = string.Empty
         };
         var tags = new List<Tag>();
@@ -181,7 +181,7 @@ public sealed class SettingsIoUsTabVMTests
                 expense.Amount == 40m &&
                 expense.ExpenseCategory == ExpenseCategory.Needs &&
                 expense.Tag!.Name == SystemTags.BudgetReconciliationName &&
-                expense.AccountId == 10),
+                expense.SourceAccountId == 10),
             Arg.Any<CancellationToken>());
         appData.Received(1).UpdateTransaction(income);
         appData.Received(1).UpdateAccount(account);

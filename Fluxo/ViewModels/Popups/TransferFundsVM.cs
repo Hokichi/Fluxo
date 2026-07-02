@@ -91,7 +91,7 @@ public partial class TransferFundsVM : ObservableObject
                 OccurredOn = input.Date,
                 Notes = BuildExpenseNote(target.Name, input.Note),
                 ExpenseCategory = ExpenseCategory.Savings,
-                AccountId = source.Id,
+                SourceAccountId = source.Id,
                 TagId = tag.Id
             };
 
@@ -102,7 +102,7 @@ public partial class TransferFundsVM : ObservableObject
                 Amount = input.Amount,
                 OccurredOn = input.Date,
                 Notes = input.Note,
-                AccountId = target.Id
+                SourceAccountId = target.Id
             };
 
             await _appData.AddTransactionAsync(expense);

@@ -977,7 +977,8 @@ public partial class AddNewTransactionVM : ObservableValidator
                     OccurredOn = input.Date,
                     Notes = $"Goal update for {goal.Name}",
                     ExpenseCategory = ExpenseCategory.Savings,
-                    AccountId = account.Id,
+                    SourceAccountId = account.Id,
+                    GoalId = goal.Id,
                     TagId = goalUpdateTag.Id,
                     IsPinned = false,
                     IsExcludedFromBudget = input.IsExcludedFromBudget
@@ -1019,7 +1020,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                     OccurredOn = input.Date,
                     Notes = input.Note,
                     ExpenseCategory = input.Category!.Value,
-                    AccountId = account.Id,
+                    SourceAccountId = account.Id,
                     TagId = tag.Id,
                     IsPinned = input.IsPinned,
                     IsIoU = input.IsIoU,
@@ -1045,7 +1046,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                     Amount = input.Amount,
                     OccurredOn = input.Date,
                     Notes = input.Note,
-                    AccountId = account.Id,
+                    SourceAccountId = account.Id,
                     TagId = input.TagId,
                     IsPinned = input.IsPinned,
                     IsIoU = input.IsIoU,
@@ -1547,7 +1548,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         IReadOnlySet<int> goalUpdateTagIds)
     {
         if (log.IsForDeletion ||
-            log.AccountId != input.AccountId ||
+            log.SourceAccountId != input.AccountId ||
             log.Type != TransactionType.Expense ||
             !IsSameTransactionName(log.Name, candidateName) ||
             !IsSimilarAmount(log.Amount, input.Amount))
@@ -1563,7 +1564,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         QuickTransactionInput input,
         string candidateName)
     {
-        return log.Type == TransactionType.Income && log.AccountId == input.AccountId &&
+        return log.Type == TransactionType.Income && log.SourceAccountId == input.AccountId &&
                IsSameTransactionName(log.Name, candidateName) &&
                IsSimilarAmount(log.Amount, input.Amount);
     }
@@ -1680,7 +1681,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             .Select(log => new AddNewTransactionSuggestion(
                 log.Name,
                 log.Amount,
-                log.AccountId,
+                log.SourceAccountId,
                 log.Account?.Name ?? string.Empty,
                 log.Notes,
                 log.ExpenseCategory,
@@ -1700,7 +1701,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             .Select(log => new AddNewTransactionSuggestion(
                 log.Name,
                 log.Amount,
-                log.AccountId,
+                log.SourceAccountId,
                 log.Account?.Name ?? string.Empty,
                 log.Notes,
                 null,

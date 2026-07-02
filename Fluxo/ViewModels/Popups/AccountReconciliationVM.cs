@@ -96,7 +96,7 @@ public partial class AccountReconciliationVM : ObservableObject
                 OccurredOn = DateTime.Today,
                 Notes = string.Empty,
                 ExpenseCategory = ExpenseCategory.Needs,
-                AccountId = account.Id,
+                SourceAccountId = account.Id,
                 TagId = reconciliationTag.Id
             };
             if (reconciliationTag.Id <= 0)

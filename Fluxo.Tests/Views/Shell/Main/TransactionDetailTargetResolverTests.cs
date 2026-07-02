@@ -32,7 +32,7 @@ public sealed class TransactionDetailTargetResolverTests
             Id = 3,
             Type = type,
             Name = "Parent",
-            AccountId = 1,
+            SourceAccountId = 1,
             Account = new Account { Id = 1, Name = "Checking" }
         });
 

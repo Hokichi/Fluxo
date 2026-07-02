@@ -5,6 +5,31 @@ namespace Fluxo.Services.Transactions;
 
 public static class RepaymentTransactionSupport
 {
+    public static Transaction? FindNewestIncome(
+        Transaction expense,
+        IEnumerable<Transaction> transactions)
+    {
+        ArgumentNullException.ThrowIfNull(expense);
+        ArgumentNullException.ThrowIfNull(transactions);
+
+        if (expense.RepaymentAccountId is not { } creditAccountId)
+            return null;
+
+        var expectedName = $"Repayment from {expense.Account.Name}";
+        return transactions
+            .Where(candidate =>
+                candidate.Type == TransactionType.Income &&
+                !candidate.IsForDeletion &&
+                candidate.SourceAccountId == creditAccountId &&
+                candidate.RepaymentAccountId == creditAccountId &&
+                candidate.Amount == expense.Amount &&
+                candidate.OccurredOn.Date == expense.OccurredOn.Date &&
+                string.Equals(candidate.Name, expectedName, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(candidate => candidate.LoggedOn)
+            .ThenByDescending(candidate => candidate.Id)
+            .FirstOrDefault();
+    }
+
     public static RepaymentTransactionPair Create(
         Account source,
         Account target,
@@ -36,7 +61,8 @@ public static class RepaymentTransactionSupport
             OccurredOn = occurredOn,
             Notes = string.Empty,
             ExpenseCategory = ExpenseCategory.Savings,
-            AccountId = source.Id,
+            SourceAccountId = source.Id,
+            RepaymentAccountId = target.Id,
             TagId = balanceUpdateTag.Id,
             IsExcludedFromBudget = true
         };
@@ -47,7 +73,8 @@ public static class RepaymentTransactionSupport
             Amount = amount,
             OccurredOn = occurredOn,
             Notes = string.Empty,
-            AccountId = target.Id,
+            SourceAccountId = target.Id,
+            RepaymentAccountId = target.Id,
             IsExcludedFromBudget = true
         };
 

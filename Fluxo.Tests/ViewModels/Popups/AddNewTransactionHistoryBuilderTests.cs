@@ -110,7 +110,7 @@ public sealed class AddNewTransactionHistoryBuilderTests
             OccurredOn = date,
             Notes = "note",
             IsPinned = isPinned,
-            AccountId = 10,
+            SourceAccountId = 10,
             Account = new Account { Id = 10, Name = "Checking" },
             ExpenseCategory = ExpenseCategory.Needs,
             TagId = 20,
@@ -140,7 +140,7 @@ public sealed class AddNewTransactionHistoryBuilderTests
             OccurredOn = date,
             Notes = "note",
             IsPinned = isPinned,
-            AccountId = 10,
+            SourceAccountId = 10,
             Account = new Account { Id = 10, Name = "Checking" }
         };
     }
@@ -160,7 +160,7 @@ public sealed class AddNewTransactionHistoryBuilderTests
             OccurredOn = date,
             Notes = $"Goal update for {goalName}",
             IsPinned = false,
-            AccountId = 10,
+            SourceAccountId = 10,
             Account = new Account { Id = 10, Name = "Checking" },
             ExpenseCategory = ExpenseCategory.Savings,
             TagId = 20,

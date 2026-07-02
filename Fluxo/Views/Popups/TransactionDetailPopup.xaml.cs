@@ -127,7 +127,7 @@ public partial class TransactionDetailPopup : BasePopup
 
         var confirmation = FluxoMessageBox.Show(
             this,
-            "Delete this transaction?",
+            _viewModel.DeleteConfirmationMessage,
             "Transaction Detail",
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning);

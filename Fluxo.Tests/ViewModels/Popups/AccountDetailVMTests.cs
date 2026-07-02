@@ -27,7 +27,7 @@ public sealed class AccountDetailVMTests
         var source = CreateSource(1, "Checking", AccountType.Checking);
         var appData = CreateAppData(
             [source],
-            [new Transaction { Id = 10, AccountId = source.Id, Amount = 20m, OccurredOn = DateTime.Today }],
+            [new Transaction { Id = 10, SourceAccountId = source.Id, Amount = 20m, OccurredOn = DateTime.Today }],
             []);
         var sut = new AccountDetailVM(null!, source.Id, appData);
 

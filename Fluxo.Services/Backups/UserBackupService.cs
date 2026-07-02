@@ -958,7 +958,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
 
         foreach (var transaction in transactions)
         {
-            if (!sourceBackupIds.TryGetValue(transaction.AccountId, out var accountBackupId))
+            if (!sourceBackupIds.TryGetValue(transaction.SourceAccountId, out var accountBackupId))
                 continue;
 
             int? tagBackupId = transaction.TagId is { } tagId && tagBackupIds.TryGetValue(tagId, out var mappedTagId)
@@ -1007,7 +1007,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
             var transaction = new Transaction
             {
                 Type = type,
-                AccountId = accountId,
+                SourceAccountId = accountId,
                 Name = backup.Name,
                 Amount = backup.Amount,
                 OccurredOn = backup.OccurredOn,

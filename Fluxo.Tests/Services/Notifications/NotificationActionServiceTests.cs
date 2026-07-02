@@ -100,9 +100,9 @@ public sealed class NotificationActionServiceTests
         var expense = Assert.Single(transactions, transaction => transaction.Type == TransactionType.Expense);
         var income = Assert.Single(transactions, transaction => transaction.Type == TransactionType.Income);
         Assert.Equal(60m, expense.Amount);
-        Assert.Equal(1, expense.AccountId);
+        Assert.Equal(1, expense.SourceAccountId);
         Assert.Equal(60m, income.Amount);
-        Assert.Equal(10, income.AccountId);
+        Assert.Equal(10, income.SourceAccountId);
         Assert.True(persistedNotifications.Single(notification => notification.Id == 1).IsCleared);
         Assert.False(persistedNotifications.Single(notification => notification.Id == 2).IsCleared);
     }
@@ -144,7 +144,7 @@ public sealed class NotificationActionServiceTests
         Assert.Equal(40m, accounts.Single(account => account.Id == 10).SpentAmount);
         var expense = Assert.Single(transactions, transaction => transaction.Type == TransactionType.Expense);
         Assert.Equal(60m, expense.Amount);
-        Assert.Equal(4, expense.AccountId);
+        Assert.Equal(4, expense.SourceAccountId);
         Assert.Equal(9, expense.TagId);
         Assert.True(expense.IsExcludedFromBudget);
     }
@@ -186,7 +186,7 @@ public sealed class NotificationActionServiceTests
         Assert.Equal(75m, accounts.Single(source => source.Id == 8).Balance);
         var expense = Assert.Single(transactions);
         Assert.Equal("Rent", expense.Name);
-        Assert.Equal(8, expense.AccountId);
+        Assert.Equal(8, expense.SourceAccountId);
         Assert.Equal(25m, expense.Amount);
         Assert.True(persistedNotifications[0].IsCleared);
     }

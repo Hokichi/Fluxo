@@ -6,8 +6,10 @@ public sealed class TransactionDto
 {
     public int Id { get; set; }
     public TransactionType Type { get; set; }
-    public int AccountId { get; set; }
+    public int SourceAccountId { get; set; }
     public AccountDto Account { get; set; } = new();
+    public int? GoalId { get; set; }
+    public int? RepaymentAccountId { get; set; }
     public string Name { get; set; } = string.Empty;
     public decimal Amount { get; set; }
     public DateTime OccurredOn { get; set; }

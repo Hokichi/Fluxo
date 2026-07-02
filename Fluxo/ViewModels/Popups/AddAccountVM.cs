@@ -596,7 +596,7 @@ public partial class AddAccountVM : ObservableValidator
             OccurredOn = DateTime.Now,
             Notes = string.Empty,
             ExpenseCategory = ExpenseCategory.Needs,
-            AccountId = account.Id,
+            SourceAccountId = account.Id,
             TagId = balanceUpdateTag.Id
         };
 

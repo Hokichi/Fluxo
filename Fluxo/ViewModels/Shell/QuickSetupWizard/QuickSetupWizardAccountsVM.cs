@@ -265,7 +265,7 @@ public partial class QuickSetupWizardAccountsVM : ObservableObject
         {
             if (existingSources.TryGetValue(removedId, out var existing))
             {
-                foreach (var transaction in allTransactions.Where(item => item.AccountId == removedId))
+                foreach (var transaction in allTransactions.Where(item => item.SourceAccountId == removedId))
                     appData.RemoveTransaction(transaction);
 
                 appData.RemoveAccount(existing);

@@ -110,13 +110,15 @@ public sealed record UserSettingMemorySnapshot(
 public sealed record TransactionMemorySnapshot(
     int TransactionId,
     TransactionType Type,
-    int AccountId,
+    int SourceAccountId,
     string Name,
     decimal Amount,
     DateTime OccurredOn,
     string Notes,
     ExpenseCategory? ExpenseCategory,
     int? TagId,
+    int? GoalId,
+    int? RepaymentAccountId,
     int? ParentTransactionId,
     bool IsPinned,
     bool IsForDeletion,
@@ -131,13 +133,15 @@ public sealed record TransactionMemorySnapshot(
         return new TransactionMemorySnapshot(
             transaction.Id,
             transaction.Type,
-            transaction.AccountId,
+            transaction.SourceAccountId,
             transaction.Name,
             transaction.Amount,
             transaction.OccurredOn,
             transaction.Notes,
             transaction.ExpenseCategory,
             transaction.TagId,
+            transaction.GoalId,
+            transaction.RepaymentAccountId,
             transaction.ParentTransactionId,
             transaction.IsPinned,
             transaction.IsForDeletion,
@@ -165,6 +169,8 @@ public sealed class AddTransactionMemoryAction(
             LogMemoryPersistence.RevertTransactionFromAccount(transaction.Account, transaction.Type, transaction.Amount);
             unitOfWork.Accounts.Update(transaction.Account);
         }
+        await LogMemoryPersistence.AdjustGoalAsync(
+            unitOfWork, snapshot.GoalId, -snapshot.Amount, cancellationToken);
         unitOfWork.Transactions.Remove(transaction);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
@@ -175,7 +181,7 @@ public sealed class AddTransactionMemoryAction(
             return;
 
         var account = await LogMemoryPersistence.GetRequiredAccountAsync(
-            unitOfWork, snapshot.AccountId, cancellationToken);
+            unitOfWork, snapshot.SourceAccountId, cancellationToken);
         var transaction = CreateTransaction(snapshot, account);
         await unitOfWork.Transactions.AddAsync(transaction, cancellationToken);
         if (shouldAdjustAccountTotals)
@@ -183,6 +189,8 @@ public sealed class AddTransactionMemoryAction(
             LogMemoryPersistence.ApplyTransactionToAccount(account, snapshot.Type, snapshot.Amount);
             unitOfWork.Accounts.Update(account);
         }
+        await LogMemoryPersistence.AdjustGoalAsync(
+            unitOfWork, snapshot.GoalId, snapshot.Amount, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
@@ -190,7 +198,7 @@ public sealed class AddTransactionMemoryAction(
     {
         Id = value.TransactionId,
         Type = value.Type,
-        AccountId = value.AccountId,
+        SourceAccountId = value.SourceAccountId,
         Account = account,
         Name = value.Name,
         Amount = value.Amount,
@@ -198,6 +206,8 @@ public sealed class AddTransactionMemoryAction(
         Notes = value.Notes,
         ExpenseCategory = value.ExpenseCategory,
         TagId = value.TagId,
+        GoalId = value.GoalId,
+        RepaymentAccountId = value.RepaymentAccountId,
         ParentTransactionId = value.ParentTransactionId,
         IsPinned = value.IsPinned,
         IsForDeletion = value.IsForDeletion,
@@ -227,12 +237,12 @@ public sealed class EditTransactionMemoryAction(
 
         var oldAccount = transaction.Account;
         var newAccount = await LogMemoryPersistence.GetRequiredAccountAsync(
-            unitOfWork, snapshot.AccountId, cancellationToken);
+            unitOfWork, snapshot.SourceAccountId, cancellationToken);
         LogMemoryPersistence.RevertTransactionFromAccount(oldAccount, transaction.Type, transaction.Amount);
         LogMemoryPersistence.ApplyTransactionToAccount(newAccount, snapshot.Type, snapshot.Amount);
 
         transaction.Type = snapshot.Type;
-        transaction.AccountId = snapshot.AccountId;
+        transaction.SourceAccountId = snapshot.SourceAccountId;
         transaction.Account = newAccount;
         transaction.Name = snapshot.Name;
         transaction.Amount = snapshot.Amount;
@@ -240,6 +250,8 @@ public sealed class EditTransactionMemoryAction(
         transaction.Notes = snapshot.Notes;
         transaction.ExpenseCategory = snapshot.ExpenseCategory;
         transaction.TagId = snapshot.TagId;
+        transaction.GoalId = snapshot.GoalId;
+        transaction.RepaymentAccountId = snapshot.RepaymentAccountId;
         transaction.ParentTransactionId = snapshot.ParentTransactionId;
         transaction.IsPinned = snapshot.IsPinned;
         transaction.IsForDeletion = snapshot.IsForDeletion;
@@ -265,10 +277,12 @@ public sealed class DeleteTransactionMemoryAction(TransactionMemorySnapshot snap
             return;
 
         var account = await LogMemoryPersistence.GetRequiredAccountAsync(
-            unitOfWork, snapshot.AccountId, cancellationToken);
+            unitOfWork, snapshot.SourceAccountId, cancellationToken);
         await unitOfWork.Transactions.AddAsync(AddTransactionMemoryAction.CreateTransaction(snapshot, account), cancellationToken);
         LogMemoryPersistence.ApplyTransactionToAccount(account, snapshot.Type, snapshot.Amount);
         unitOfWork.Accounts.Update(account);
+        await LogMemoryPersistence.AdjustGoalAsync(
+            unitOfWork, snapshot.GoalId, snapshot.Amount, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
@@ -280,6 +294,8 @@ public sealed class DeleteTransactionMemoryAction(TransactionMemorySnapshot snap
 
         LogMemoryPersistence.RevertTransactionFromAccount(transaction.Account, transaction.Type, transaction.Amount);
         unitOfWork.Accounts.Update(transaction.Account);
+        await LogMemoryPersistence.AdjustGoalAsync(
+            unitOfWork, snapshot.GoalId, -snapshot.Amount, cancellationToken);
         unitOfWork.Transactions.Remove(transaction);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
@@ -580,6 +596,21 @@ public sealed class SetUserSettingMemoryAction(
 
 internal static class LogMemoryPersistence
 {
+    internal static async Task AdjustGoalAsync(
+        IUnitOfWork unitOfWork,
+        int? goalId,
+        decimal amount,
+        CancellationToken cancellationToken)
+    {
+        if (goalId is not { } id)
+            return;
+
+        var goal = await unitOfWork.SavingGoals.GetByIdAsync(id, cancellationToken)
+            ?? throw new InvalidOperationException($"Saving goal {id} was not found.");
+        goal.CurrentAmount += amount;
+        unitOfWork.SavingGoals.Update(goal);
+    }
+
     internal static void ApplyTransactionToAccount(Account account, TransactionType type, decimal amount)
     {
         if (type == TransactionType.Expense)

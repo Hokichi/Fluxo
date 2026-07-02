@@ -6,8 +6,12 @@ public sealed class Transaction
 {
     public int Id { get; set; }
     public TransactionType Type { get; set; }
-    public int AccountId { get; set; }
+    public int SourceAccountId { get; set; }
     public Account Account { get; set; } = null!;
+    public int? GoalId { get; set; }
+    public SavingGoal? Goal { get; set; }
+    public int? RepaymentAccountId { get; set; }
+    public Account? RepaymentAccount { get; set; }
     public string Name { get; set; } = string.Empty;
     public decimal Amount { get; set; }
     public DateTime OccurredOn { get; set; }

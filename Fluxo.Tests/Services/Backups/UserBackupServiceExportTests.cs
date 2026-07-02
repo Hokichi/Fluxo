@@ -26,7 +26,7 @@ public sealed class UserBackupServiceExportTests
         appData.GetTagsAsync(Arg.Any<CancellationToken>())
             .Returns([new Tag { Id = 3, Name = "Food", HexCode = "#ffffff" }]);
         appData.GetTransactionsAsync(Arg.Any<CancellationToken>())
-            .Returns([new Transaction { Id = 9, Type = TransactionType.Expense, AccountId = 7, TagId = 3, Name = "Lunch" }]);
+            .Returns([new Transaction { Id = 9, Type = TransactionType.Expense, SourceAccountId = 7, TagId = 3, Name = "Lunch" }]);
 
         var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
         var service = new UserBackupService(appData);
@@ -99,7 +99,7 @@ public sealed class UserBackupServiceExportTests
         {
             Id = 20,
             Type = TransactionType.Expense,
-            AccountId = account.Id,
+            SourceAccountId = account.Id,
             TagId = tag.Id,
             Name = "Dinner",
             Amount = 100m,
@@ -110,7 +110,7 @@ public sealed class UserBackupServiceExportTests
         {
             Id = 21,
             Type = TransactionType.Expense,
-            AccountId = account.Id,
+            SourceAccountId = account.Id,
             TagId = tag.Id,
             Name = "Tip",
             Amount = 20m,
@@ -160,7 +160,7 @@ public sealed class UserBackupServiceExportTests
         {
             Id = 20,
             Type = TransactionType.Expense,
-            AccountId = account.Id,
+            SourceAccountId = account.Id,
             TagId = tag.Id,
             Name = "Loan",
             Amount = 100m,
@@ -172,7 +172,7 @@ public sealed class UserBackupServiceExportTests
         {
             Id = 11,
             Type = TransactionType.Income,
-            AccountId = account.Id,
+            SourceAccountId = account.Id,
             Account = account,
             Name = "Borrowed cash",
             Amount = 50m,

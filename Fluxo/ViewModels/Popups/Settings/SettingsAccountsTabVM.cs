@@ -150,7 +150,7 @@ public partial class SettingsAccountsTabVM : ObservableObject
                 case SettingsBatchAction.Delete:
                     var allTransactions = await _appData.GetTransactionsAsync();
                     var transactionsBySourceId = allTransactions
-                        .GroupBy(log => log.AccountId)
+                        .GroupBy(log => log.SourceAccountId)
                         .ToDictionary(group => group.Key, group => (IReadOnlyList<Transaction>)group.ToList());
 
                     foreach (var selectedId in selectedIds)

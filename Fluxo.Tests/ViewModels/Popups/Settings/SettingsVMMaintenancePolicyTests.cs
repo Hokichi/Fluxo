@@ -153,7 +153,7 @@ public sealed class SettingsVMMaintenancePolicyTests
             Id = 1,
             Type = TransactionType.Expense,
             Name = "Coffee",
-            AccountId = source.Id,
+            SourceAccountId = source.Id,
             Account = source,
             TagId = customTag.Id,
             Tag = customTag

@@ -23,7 +23,7 @@ public sealed class TransactionRepository(FluxoDbContext dbContext)
         var query = Query();
         if (!filter.IncludeDeleted) query = query.Where(transaction => !transaction.IsForDeletion);
         if (filter.Type.HasValue) query = query.Where(transaction => transaction.Type == filter.Type);
-        if (filter.AccountId.HasValue) query = query.Where(transaction => transaction.AccountId == filter.AccountId);
+        if (filter.AccountId.HasValue) query = query.Where(transaction => transaction.SourceAccountId == filter.AccountId);
         if (filter.StartDate.HasValue) query = query.Where(transaction => transaction.OccurredOn >= filter.StartDate);
         if (filter.EndDate.HasValue) query = query.Where(transaction => transaction.OccurredOn <= filter.EndDate);
         if (filter.ExpenseCategory.HasValue) query = query.Where(transaction => transaction.ExpenseCategory == filter.ExpenseCategory);

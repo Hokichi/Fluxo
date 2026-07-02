@@ -1143,7 +1143,7 @@ public sealed class AddNewTransactionVMValidationTests
                     Type = TransactionType.Income,
                     Name = "Valid name",
                     Amount = 10.25m,
-                    AccountId = 1,
+                    SourceAccountId = 1,
                     OccurredOn = DateTime.Today
                 }
             ]);
@@ -1526,6 +1526,9 @@ public sealed class AddNewTransactionVMValidationTests
 
             Assert.True(result.IsSuccess);
             Assert.Equal(125m, goal.CurrentAmount);
+            appData.Received(1).AddTransactionAsync(
+                Arg.Is<Transaction>(transaction => transaction.GoalId == goal.Id),
+                Arg.Any<CancellationToken>());
             appData.Received(1).UpdateSavingGoal(goal);
         });
     }
@@ -2401,7 +2404,7 @@ public sealed class AddNewTransactionVMValidationTests
         {
             Id = 10,
             Amount = amount,
-            AccountId = sourceId,
+            SourceAccountId = sourceId,
             OccurredOn = DateTime.Today,
             IsForDeletion = false,
             Type = TransactionType.Expense,

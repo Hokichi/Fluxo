@@ -24,6 +24,9 @@ internal static class TransactionDetailTargetResolver
         {
             Id = transaction.Id,
             Type = transaction.Type,
+            SourceAccountId = transaction.SourceAccountId,
+            GoalId = transaction.GoalId,
+            RepaymentAccountId = transaction.RepaymentAccountId,
             Name = transaction.Name,
             Amount = transaction.Amount,
             OccurredOn = transaction.OccurredOn,
@@ -36,7 +39,7 @@ internal static class TransactionDetailTargetResolver
             ParentTransactionId = transaction.ParentTransactionId,
             Account = new AccountVM
             {
-                Id = transaction.Account?.Id ?? transaction.AccountId,
+                Id = transaction.Account?.Id ?? transaction.SourceAccountId,
                 Name = transaction.Account?.Name ?? string.Empty,
                 AccountType = transaction.Account?.AccountType ?? default,
                 AccountLimit = transaction.Account?.AccountLimit ?? 0m,

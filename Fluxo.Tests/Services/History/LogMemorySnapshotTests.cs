@@ -12,14 +12,17 @@ public sealed class LogMemorySnapshotTests
     {
         var account = new Account { Id = 1, Name = "Checking" };
         var tag = new Tag { Id = 2, Name = "Budget Reconciliation", HexCode = "#9ca3af" };
+        var goal = new SavingGoal { Id = 4, Name = "Goal" };
         var transaction = new Transaction
         {
             Id = 3,
             Type = TransactionType.Expense,
-            AccountId = account.Id,
+            SourceAccountId = account.Id,
             Account = account,
             TagId = tag.Id,
             Tag = tag,
+            GoalId = goal.Id,
+            RepaymentAccountId = 5,
             Name = "Lend",
             Amount = 10m,
             LoggedOn = new DateTime(2026, 6, 28, 12, 30, 0),
@@ -34,5 +37,7 @@ public sealed class LogMemorySnapshotTests
         Assert.True(snapshot.IsIoU);
         Assert.True(snapshot.IsExcludedFromBudget);
         Assert.Equal(transaction.LoggedOn, snapshot.LoggedOn);
+        Assert.Equal(goal.Id, snapshot.GoalId);
+        Assert.Equal(5, snapshot.RepaymentAccountId);
     }
 }

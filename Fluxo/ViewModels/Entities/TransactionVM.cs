@@ -7,6 +7,9 @@ public partial class TransactionVM : ObservableObject
 {
     [ObservableProperty] private int _id;
     [ObservableProperty] private TransactionType _type;
+    [ObservableProperty] private int _sourceAccountId;
+    [ObservableProperty] private int? _goalId;
+    [ObservableProperty] private int? _repaymentAccountId;
     [ObservableProperty] private AccountVM _account = new();
     [ObservableProperty] private string _name = string.Empty;
     [ObservableProperty] private decimal _amount;

@@ -8,6 +8,8 @@ using Fluxo.Data.Operations;
 using Fluxo.Data.Repositories;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Xunit;
@@ -16,6 +18,57 @@ namespace Fluxo.Tests.Infrastructure;
 
 public sealed class AppDatabaseMigrationTests
 {
+    [Fact]
+    public async Task AddTransactionLinks_PreservesExistingSourceAccountId()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "fluxo-tests", Guid.NewGuid().ToString("N"));
+        var databasePath = Path.Combine(directory, "fluxo.db");
+        Directory.CreateDirectory(directory);
+
+        try
+        {
+            using var services = CreateServiceProvider(databasePath);
+            await App.MigrateDatabaseAsync(
+                services.GetRequiredService<IDataOperationRunner>(),
+                () => databasePath);
+
+            await using (var scope = services.CreateAsyncScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<FluxoDbContext>();
+                var migrator = context.GetService<IMigrator>();
+                await migrator.MigrateAsync("20260630032006_AddRecurringTransactionEndDate");
+                await context.Database.ExecuteSqlRawAsync("""
+                    INSERT INTO Accounts
+                        (Id, Name, AccountType, Balance, IsDefault, IsEnabled, IsForDeletion,
+                         MaximumSpending, PinnedOnUI, SpentAmount, AccountLimit)
+                    VALUES (7, 'Checking', 0, 100, 0, 1, 0, 0, 0, 0, 0);
+
+                    INSERT INTO Transactions
+                        (Id, Type, AccountId, Name, Amount, OccurredOn, LoggedOn, Notes,
+                         IsPinned, IsForDeletion, IsIoU, IsExcludedFromBudget)
+                    VALUES (42, 0, 7, 'Existing', 10, '2026-07-01', '2026-07-01 12:00:00', '', 0, 0, 0, 0);
+                    """);
+                await migrator.MigrateAsync();
+            }
+
+            await using var connection = new SqliteConnection($"Data Source={databasePath}");
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText =
+                "SELECT SourceAccountId, GoalId, RepaymentAccountId FROM Transactions WHERE Id = 42";
+            await using var reader = await command.ExecuteReaderAsync();
+            Assert.True(await reader.ReadAsync());
+            Assert.Equal(7, reader.GetInt32(0));
+            Assert.True(reader.IsDBNull(1));
+            Assert.True(reader.IsDBNull(2));
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            Directory.Delete(directory, true);
+        }
+    }
+
     [Fact]
     public async Task MigrateDatabaseAsync_CreatesCurrentTransactionSchema()
     {
@@ -31,6 +84,10 @@ public sealed class AppDatabaseMigrationTests
             await using var connection = new SqliteConnection($"Data Source={databasePath}");
             await connection.OpenAsync();
             Assert.True(await ColumnExistsAsync(connection, "Transactions", "LoggedOn"));
+            Assert.True(await ColumnExistsAsync(connection, "Transactions", "SourceAccountId"));
+            Assert.True(await ColumnExistsAsync(connection, "Transactions", "GoalId"));
+            Assert.True(await ColumnExistsAsync(connection, "Transactions", "RepaymentAccountId"));
+            Assert.False(await ColumnExistsAsync(connection, "Transactions", "AccountId"));
             Assert.True(await ColumnExistsAsync(connection, "RecurringTransactions", "EndDate"));
             Assert.False(await TableExistsAsync(connection, "Expenses"));
             Assert.False(await TableExistsAsync(connection, "ExpenseLogs"));

@@ -131,7 +131,7 @@ public partial class SettingsIoUsTabVM : ObservableObject
             return SettingsOperationResult.Success();
         }
 
-        var account = source.Account ?? await _appData.GetAccountByIdAsync(source.AccountId, cancellationToken);
+        var account = source.Account ?? await _appData.GetAccountByIdAsync(source.SourceAccountId, cancellationToken);
         if (account is null)
             return SettingsOperationResult.Failure("Unable to load the IOU account.");
 
@@ -143,7 +143,7 @@ public partial class SettingsIoUsTabVM : ObservableObject
             Amount = source.Amount,
             OccurredOn = _todayProvider().Date,
             Notes = $"Resolved lend from expense #{source.Id}",
-            AccountId = account.Id,
+            SourceAccountId = account.Id,
             Account = account,
             IsIoU = false
         };
@@ -176,7 +176,7 @@ public partial class SettingsIoUsTabVM : ObservableObject
             return SettingsOperationResult.Success();
         }
 
-        var account = source.Account ?? await _appData.GetAccountByIdAsync(source.AccountId, cancellationToken);
+        var account = source.Account ?? await _appData.GetAccountByIdAsync(source.SourceAccountId, cancellationToken);
         if (account is null)
             return SettingsOperationResult.Failure("Unable to load the debt account.");
 
@@ -190,7 +190,7 @@ public partial class SettingsIoUsTabVM : ObservableObject
             OccurredOn = _todayProvider().Date,
             Notes = $"Resolved debt from income #{source.Id}",
             ExpenseCategory = ExpenseCategory.Needs,
-            AccountId = account.Id,
+            SourceAccountId = account.Id,
             Account = account,
             TagId = reconciliationTag.Id,
             Tag = reconciliationTag

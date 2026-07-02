@@ -646,7 +646,7 @@ public partial class LedgerVM : ObservableRecipient,
                 if (targetSource is not null)
                 {
                     persisted.Account = targetSource;
-                    persisted.AccountId = targetSource.Id;
+                    persisted.SourceAccountId = targetSource.Id;
                 }
 
                 if (persisted.Type == TransactionType.Expense && targetTag is not null && !transaction.IsGoal)
@@ -1173,7 +1173,7 @@ public partial class LedgerVM : ObservableRecipient,
             expenseLog.Name = transaction.Name.Trim();
             expenseLog.Amount = transaction.Amount;
             expenseLog.Account = targetAccount;
-            expenseLog.AccountId = targetAccount.Id;
+            expenseLog.SourceAccountId = targetAccount.Id;
 
             expenseLog.Tag = targetTag;
             expenseLog.TagId = targetTag.Id;
@@ -1210,7 +1210,7 @@ public partial class LedgerVM : ObservableRecipient,
             incomeLog.Name = transaction.Name.Trim();
             incomeLog.Amount = transaction.Amount;
             incomeLog.Account = targetAccount;
-            incomeLog.AccountId = targetAccount.Id;
+            incomeLog.SourceAccountId = targetAccount.Id;
 
             scope.UnitOfWork.Transactions.Update(incomeLog);
             await scope.UnitOfWork.SaveChangesAsync(ct);
@@ -1287,7 +1287,7 @@ public partial class LedgerVM : ObservableRecipient,
     {
         transaction.Name = snapshot.Name;
         transaction.Amount = snapshot.Amount;
-        transaction.AccountId = snapshot.AccountId;
+        transaction.AccountId = snapshot.SourceAccountId;
         transaction.TagId = snapshot.TagId ?? 0;
     }
 
@@ -1295,7 +1295,7 @@ public partial class LedgerVM : ObservableRecipient,
     {
         transaction.Name = log.Name;
         transaction.Amount = log.Amount;
-        transaction.AccountId = log.AccountId;
+        transaction.AccountId = log.SourceAccountId;
         transaction.AccountName = log.Account?.Name ?? transaction.AccountName;
         transaction.TagId = log.TagId ?? 0;
         transaction.TagName = log.Tag?.Name ?? transaction.TagName;
@@ -1306,7 +1306,7 @@ public partial class LedgerVM : ObservableRecipient,
     {
         transaction.Name = log.Name;
         transaction.Amount = log.Amount;
-        transaction.AccountId = log.AccountId;
+        transaction.AccountId = log.SourceAccountId;
         transaction.AccountName = log.Account?.Name ?? transaction.AccountName;
     }
 

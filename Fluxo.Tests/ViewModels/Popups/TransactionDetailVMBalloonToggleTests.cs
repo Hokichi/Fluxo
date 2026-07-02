@@ -91,11 +91,11 @@ public sealed class TransactionDetailVMBalloonToggleTests
     {
         var transactions = new[]
         {
-            new Transaction { Id = 1, AccountId = 2, Type = TransactionType.Expense, Amount = 30m },
-            new Transaction { Id = 2, AccountId = 2, Type = TransactionType.Expense, Amount = 20m, IsExcludedFromBudget = true },
-            new Transaction { Id = 3, AccountId = 2, Type = TransactionType.Expense, Amount = 50m, IsForDeletion = true },
-            new Transaction { Id = 4, AccountId = 3, Type = TransactionType.Expense, Amount = 100m },
-            new Transaction { Id = 5, AccountId = 2, Type = TransactionType.Expense, Amount = 10m, ParentTransactionId = 1 }
+            new Transaction { Id = 1, SourceAccountId = 2, Type = TransactionType.Expense, Amount = 30m },
+            new Transaction { Id = 2, SourceAccountId = 2, Type = TransactionType.Expense, Amount = 20m, IsExcludedFromBudget = true },
+            new Transaction { Id = 3, SourceAccountId = 2, Type = TransactionType.Expense, Amount = 50m, IsForDeletion = true },
+            new Transaction { Id = 4, SourceAccountId = 3, Type = TransactionType.Expense, Amount = 100m },
+            new Transaction { Id = 5, SourceAccountId = 2, Type = TransactionType.Expense, Amount = 10m, ParentTransactionId = 1 }
         };
 
         Assert.Equal(30m, TransactionDetailVM.CalculateAccountSpending(transactions, accountId: 2));

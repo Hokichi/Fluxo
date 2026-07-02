@@ -10,6 +10,8 @@ using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.Services.Logging;
+using Fluxo.Services.Notifications;
+using Fluxo.Services.Transactions;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups.Helpers;
 using Fluxo.ViewModels.Shell;
@@ -75,6 +77,18 @@ public partial class TransactionDetailVM : ObservableObject
         new("Wants", ExpenseCategory.Wants),
         new("Invest", ExpenseCategory.Savings)
     ];
+
+    public string DeleteConfirmationMessage => GetDeleteConfirmationMessage(_transaction);
+
+    internal static string GetDeleteConfirmationMessage(TransactionVM transaction)
+    {
+        ArgumentNullException.ThrowIfNull(transaction);
+        return transaction.Type == TransactionType.Expense &&
+               transaction.RepaymentAccountId is not null &&
+               string.Equals(transaction.Tag?.Name, "Balance Update", StringComparison.OrdinalIgnoreCase)
+            ? "Reverse this repayment? Both repayment transactions will be deleted."
+            : "Delete this transaction?";
+    }
 
     public ObservableCollection<AccountVM> Accounts { get; } = [];
     public ICollectionView AccountsView { get; }
@@ -505,18 +519,40 @@ public partial class TransactionDetailVM : ObservableObject
             if (transaction is null)
                 return TransactionDetailSaveResult.Failure("Unable to load this expense.");
 
-            var snapshot = TransactionMemorySnapshot.Create(transaction);
-            if (transaction.Account is { } account)
+            var plan = await BuildDeletionPlanAsync(_appData, transaction, CancellationToken.None);
+            if (!plan.IsSuccess)
+                return TransactionDetailSaveResult.Failure(plan.ErrorMessage);
+
+            var snapshots = plan.Transactions.Select(TransactionMemorySnapshot.Create).ToList();
+            foreach (var item in plan.Transactions)
             {
-                LogMemoryPersistence.RevertTransactionFromAccount(account, transaction.Type, transaction.Amount);
-                _appData.UpdateAccount(account);
+                LogMemoryPersistence.RevertTransactionFromAccount(item.Account, item.Type, item.Amount);
+                _appData.UpdateAccount(item.Account);
+                _appData.RemoveTransaction(item);
             }
 
-            _appData.RemoveTransaction(transaction);
+            if (plan.Goal is { } goal)
+            {
+                goal.CurrentAmount -= transaction.Amount;
+                _appData.UpdateSavingGoal(goal);
+            }
+
             await _appData.SaveChangesAsync();
 
-            WeakReferenceMessenger.Default.Send(new RecordLogMemoryMessage(new DeleteTransactionMemoryAction(snapshot)));
-            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(DashboardDataInvalidationScope.Budget));
+            ILogMemoryAction historyAction = snapshots.Count == 1
+                ? new DeleteTransactionMemoryAction(snapshots[0])
+                : new CompositeLogMemoryAction(
+                    "Reverse repayment",
+                    snapshots.Select(snapshot => (ILogMemoryAction)new DeleteTransactionMemoryAction(snapshot)).ToList());
+            WeakReferenceMessenger.Default.Send(new RecordLogMemoryMessage(historyAction));
+
+            var scope = DashboardDataInvalidationScope.Budget;
+            if (plan.Goal is not null)
+                scope |= DashboardDataInvalidationScope.SavingGoals;
+            WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(scope));
+
+            if (plan.RepaymentAccountName is { } accountName)
+                PublishRepaymentReversalNotification(WeakReferenceMessenger.Default, accountName);
             return TransactionDetailSaveResult.Success();
         }
         catch (Exception exception)
@@ -912,6 +948,66 @@ public partial class TransactionDetailVM : ObservableObject
         };
     }
 
+    internal static void PublishRepaymentReversalNotification(IMessenger messenger, string accountName)
+    {
+        FloatingNotificationPublisher.Success(
+            messenger,
+            $"Repayment for {accountName} reversed.",
+            string.Empty);
+    }
+
+    internal static async Task<TransactionDeletionPlan> BuildDeletionPlanAsync(
+        IAppDataService appData,
+        Transaction transaction,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(appData);
+        ArgumentNullException.ThrowIfNull(transaction);
+
+        if (string.Equals(transaction.Tag?.Name, GoalUpdateTransactionSupport.GoalUpdateTagName,
+                StringComparison.OrdinalIgnoreCase) &&
+            transaction.GoalId is { } goalId)
+        {
+            var goal = await appData.GetSavingGoalByIdAsync(goalId, cancellationToken);
+            return goal is null
+                ? TransactionDeletionPlan.Failure("Unable to load the linked saving goal.")
+                : TransactionDeletionPlan.Success([transaction], goal);
+        }
+
+        if (transaction.Type == TransactionType.Expense &&
+            transaction.RepaymentAccountId is not null &&
+            string.Equals(transaction.Tag?.Name, "Balance Update", StringComparison.OrdinalIgnoreCase))
+        {
+            var income = RepaymentTransactionSupport.FindNewestIncome(
+                transaction,
+                await appData.GetTransactionsAsync(cancellationToken));
+            if (income is null)
+                return TransactionDeletionPlan.Failure("Unable to find the matching repayment income.");
+
+            var accountName = transaction.RepaymentAccount?.Name ?? income.Account.Name;
+            return TransactionDeletionPlan.Success([transaction, income], repaymentAccountName: accountName);
+        }
+
+        return TransactionDeletionPlan.Success([transaction]);
+    }
+
+    internal readonly record struct TransactionDeletionPlan(
+        bool IsSuccess,
+        string? ErrorMessage,
+        IReadOnlyList<Transaction> Transactions,
+        SavingGoal? Goal,
+        string? RepaymentAccountName)
+    {
+        public static TransactionDeletionPlan Success(
+            IReadOnlyList<Transaction> transactions,
+            SavingGoal? goal = null,
+            string? repaymentAccountName = null) =>
+            new(true, null, transactions, goal, repaymentAccountName);
+
+        public static TransactionDeletionPlan Failure(string errorMessage) =>
+            new(false, errorMessage, [], null, null);
+    }
+
     private TransactionSplitRowVM ProjectSplitRow(Transaction log)
     {
         return new TransactionSplitRowVM
@@ -949,7 +1045,7 @@ public partial class TransactionDetailVM : ObservableObject
         foreach (var childLog in childLogs)
         {
             childLog.Account = account;
-            childLog.AccountId = account.Id;
+            childLog.SourceAccountId = account.Id;
             _appData.UpdateTransaction(childLog);
         }
     }
@@ -969,7 +1065,7 @@ public partial class TransactionDetailVM : ObservableObject
             OccurredOn = input.Date,
             Notes = input.Note,
             ExpenseCategory = type == TransactionType.Expense ? input.Category : null,
-            AccountId = account.Id,
+            SourceAccountId = account.Id,
             Account = account,
             TagId = tag.Id,
             Tag = tag,
@@ -992,7 +1088,7 @@ public partial class TransactionDetailVM : ObservableObject
         transaction.Tag = tag;
         transaction.TagId = tag.Id;
         transaction.Account = account;
-        transaction.AccountId = account.Id;
+        transaction.SourceAccountId = account.Id;
         transaction.IsIoU = input.IsIoU;
         transaction.IsForDeletion = false;
         transaction.ParentTransactionId = input.ParentTransactionId;
@@ -1129,7 +1225,7 @@ public partial class TransactionDetailVM : ObservableObject
     internal static decimal CalculateAccountSpending(IEnumerable<Transaction> transactions, int accountId)
     {
         var expenses = transactions
-            .Where(transaction => transaction.AccountId == accountId &&
+            .Where(transaction => transaction.SourceAccountId == accountId &&
                                   transaction.Type == TransactionType.Expense &&
                                   !transaction.IsForDeletion)
             .ToList();

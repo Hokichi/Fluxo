@@ -336,7 +336,7 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
             ExpenseCategory = transactionType == TransactionType.Expense
                 ? recurring.Category ?? ExpenseCategory.Needs
                 : null,
-            AccountId = source.Id,
+            SourceAccountId = source.Id,
             TagId = tag.Id
         };
         await unitOfWork.Transactions.AddAsync(transaction, cancellationToken);
@@ -375,7 +375,7 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
             OccurredOn = DateTime.Now,
             Notes = recurring.Name,
             ExpenseCategory = ExpenseCategory.Savings,
-            AccountId = source.Id,
+            SourceAccountId = source.Id,
             TagId = goalUpdateTag.Id
         };
         await unitOfWork.Transactions.AddAsync(expense, cancellationToken);

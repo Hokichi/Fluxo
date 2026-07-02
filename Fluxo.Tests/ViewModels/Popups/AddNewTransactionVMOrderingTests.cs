@@ -73,7 +73,7 @@ public class AddNewTransactionVMOrderingTests
                 Amount = 42.50m,
                 OccurredOn = new DateTime(2026, 5, 1),
                 Notes = "weekly",
-                AccountId = checking.Id,
+                SourceAccountId = checking.Id,
                 Account = checking,
                 Type = TransactionType.Expense,
                 Name = "Market Groceries",
@@ -87,7 +87,7 @@ public class AddNewTransactionVMOrderingTests
                 Amount = 12m,
                 OccurredOn = new DateTime(2026, 5, 2),
                 Notes = "coffee",
-                AccountId = checking.Id,
+                SourceAccountId = checking.Id,
                 Account = checking,
                 Type = TransactionType.Expense,
                 Name = "Coffee",
@@ -123,7 +123,7 @@ public class AddNewTransactionVMOrderingTests
                 Amount = 3000m,
                 OccurredOn = new DateTime(2026, 5, 3),
                 Notes = "May payroll",
-                AccountId = checking.Id,
+                SourceAccountId = checking.Id,
                 Account = checking
             },
             new Transaction
@@ -134,7 +134,7 @@ public class AddNewTransactionVMOrderingTests
                 Amount = 14m,
                 OccurredOn = new DateTime(2026, 5, 4),
                 Notes = "store",
-                AccountId = checking.Id,
+                SourceAccountId = checking.Id,
                 Account = checking
             }
         };
@@ -163,7 +163,7 @@ public class AddNewTransactionVMOrderingTests
                 Amount = 3000m,
                 OccurredOn = new DateTime(2026, 5, 3),
                 Notes = "May payroll",
-                AccountId = 5,
+                SourceAccountId = 5,
                 Account = new Account { Id = 5, Name = "Checking" }
             }
         };

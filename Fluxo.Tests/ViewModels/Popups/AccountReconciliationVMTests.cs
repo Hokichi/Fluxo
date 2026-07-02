@@ -75,7 +75,7 @@ public sealed class AccountReconciliationVMTests
         Assert.Equal("Checking - Budget Reconciliation", savedTransaction.Name);
         Assert.Equal(42.50m, savedTransaction.Amount);
         Assert.Equal(ExpenseCategory.Needs, savedTransaction.ExpenseCategory);
-        Assert.Equal(3, savedTransaction.AccountId);
+        Assert.Equal(3, savedTransaction.SourceAccountId);
         Assert.Equal(9, savedTransaction.TagId);
         Assert.Equal(DateTime.Today, savedTransaction.OccurredOn);
         Assert.False(savedTransaction.IsForDeletion);
