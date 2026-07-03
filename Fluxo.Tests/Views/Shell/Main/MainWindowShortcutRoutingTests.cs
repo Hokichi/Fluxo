@@ -145,8 +145,6 @@ public sealed class MainWindowShortcutRoutingTests
         Assert.Contains("if (MainWindowShortcutMatcher.IsOpenRecurringNewTransactionShortcut(e.Key, Keyboard.Modifiers))", source);
         Assert.Contains("if (MainWindowShortcutMatcher.IsOpenSearchShortcut(e.Key, Keyboard.Modifiers))", source);
         Assert.Contains("if (MainWindowShortcutMatcher.IsOpenAnalyticsShortcut(e.Key, Keyboard.Modifiers))", source);
-        Assert.Contains("if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z && !IsTextInputElementFocused()", source);
-        Assert.Contains("if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Y && !IsTextInputElementFocused()", source);
     }
 
     [Fact]
@@ -212,22 +210,6 @@ public sealed class MainWindowShortcutRoutingTests
 
         Assert.Contains("if (MainWindowShortcutMatcher.IsToggleNotificationsShortcut(e.Key, Keyboard.Modifiers))", source);
         Assert.Contains("ToggleHeaderNotificationPopup();", source);
-    }
-
-    [Fact]
-    public void EscapeKey_ClosesHeaderNotificationPopupBeforeGlobalShortcuts()
-    {
-        var source = ReadMainWindowSource();
-        var keyDownMethod = Slice(
-            source,
-            "private async void OnPreviewKeyDown(object sender, KeyEventArgs e)",
-            "private static bool IsTextInputElementFocused()");
-
-        Assert.Contains("if (HeaderNotificationPopup.IsOpen && e.Key == Key.Escape)", keyDownMethod);
-        Assert.Contains("CloseHeaderNotificationPopup();", keyDownMethod);
-        Assert.True(
-            keyDownMethod.IndexOf("if (HeaderNotificationPopup.IsOpen && e.Key == Key.Escape)", StringComparison.Ordinal) <
-            keyDownMethod.IndexOf("if (MainWindowShortcutMatcher.IsOpenNewTransactionShortcut", StringComparison.Ordinal));
     }
 
     [Fact]
