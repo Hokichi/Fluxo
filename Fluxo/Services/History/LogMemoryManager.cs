@@ -53,9 +53,9 @@ public sealed class LogMemoryManager : IDisposable
 
             await _dataOperationRunner.RunAsync("undo log memory action", async (scope, ct) =>
             {
-                await action.UndoAsync(scope.UnitOfWork, ct);
+                await action.RevertAsync(scope.UnitOfWork, ct);
             }, cancellationToken);
-            _messenger.Send(new LogMemoryActionAppliedMessage(action, LogMemoryApplyDirection.Undo));
+            _messenger.Send(new LogMemoryActionAppliedMessage(action, LogMemoryApplyDirection.Revert));
             await _mainViewModel.ReloadCurrentDataAsync();
 
             _redoStack.Push(action);
@@ -85,9 +85,9 @@ public sealed class LogMemoryManager : IDisposable
 
             await _dataOperationRunner.RunAsync("redo log memory action", async (scope, ct) =>
             {
-                await action.RedoAsync(scope.UnitOfWork, ct);
+                await action.ReapplyAsync(scope.UnitOfWork, ct);
             }, cancellationToken);
-            _messenger.Send(new LogMemoryActionAppliedMessage(action, LogMemoryApplyDirection.Redo));
+            _messenger.Send(new LogMemoryActionAppliedMessage(action, LogMemoryApplyDirection.Reapply));
             await _mainViewModel.ReloadCurrentDataAsync();
 
             _undoStack.Push(action);

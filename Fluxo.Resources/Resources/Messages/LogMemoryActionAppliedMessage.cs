@@ -2,8 +2,8 @@ namespace Fluxo.Resources.Resources.Messages;
 
 public enum LogMemoryApplyDirection
 {
-    Redo,
-    Undo
+    Reapply,
+    Revert
 }
 
 public sealed class LogMemoryActionAppliedMessage(ILogMemoryAction action, LogMemoryApplyDirection direction)

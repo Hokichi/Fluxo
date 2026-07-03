@@ -11,7 +11,7 @@ namespace Fluxo.Tests.Services.History;
 public sealed class TransactionHistoryActionTests
 {
     [Fact]
-    public async Task DeleteGoalUpdate_UndoRestoresGoalAndSourceTotals()
+    public async Task DeleteGoalUpdate_RevertRestoresGoalAndSourceTotals()
     {
         var source = new Account { Id = 1, Name = "Checking", AccountType = AccountType.Checking, Balance = 150m };
         var goal = new SavingGoal { Id = 2, Name = "Emergency", CurrentAmount = 25m };
@@ -20,7 +20,7 @@ public sealed class TransactionHistoryActionTests
         transactions.GetByIdAsync(snapshot.TransactionId, Arg.Any<CancellationToken>())
             .Returns((Transaction?)null);
 
-        await new DeleteTransactionMemoryAction(snapshot).UndoAsync(unitOfWork);
+        await new DeleteTransactionMemoryAction(snapshot).RevertAsync(unitOfWork);
 
         Assert.Equal(125m, source.Balance);
         Assert.Equal(50m, goal.CurrentAmount);
@@ -30,7 +30,7 @@ public sealed class TransactionHistoryActionTests
     }
 
     [Fact]
-    public async Task DeleteGoalUpdate_RedoReversesGoalAndSourceTotals()
+    public async Task DeleteGoalUpdate_ReapplyReversesGoalAndSourceTotals()
     {
         var source = new Account { Id = 1, Name = "Checking", AccountType = AccountType.Checking, Balance = 125m };
         var goal = new SavingGoal { Id = 2, Name = "Emergency", CurrentAmount = 50m };
@@ -40,7 +40,7 @@ public sealed class TransactionHistoryActionTests
         transactions.GetByIdAsync(snapshot.TransactionId, Arg.Any<CancellationToken>())
             .Returns(transaction);
 
-        await new DeleteTransactionMemoryAction(snapshot).RedoAsync(unitOfWork);
+        await new DeleteTransactionMemoryAction(snapshot).ReapplyAsync(unitOfWork);
 
         Assert.Equal(150m, source.Balance);
         Assert.Equal(25m, goal.CurrentAmount);

@@ -153,7 +153,7 @@ public partial class AllocationDataVM : ObservableRecipient,
 
     public void Receive(RecordLogMemoryMessage message)
     {
-        ApplyLogMemoryAction(message.Value, LogMemoryApplyDirection.Redo);
+        ApplyLogMemoryAction(message.Value, LogMemoryApplyDirection.Reapply);
     }
 
     public void Receive(LogMemoryActionAppliedMessage message)

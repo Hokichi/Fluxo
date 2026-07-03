@@ -6,7 +6,7 @@ public interface ILogMemoryAction
 {
     string Description { get; }
 
-    Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default);
+    Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default);
 
-    Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default);
+    Task ReapplyAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default);
 }

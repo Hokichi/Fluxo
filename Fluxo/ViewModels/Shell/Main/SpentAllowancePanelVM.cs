@@ -85,7 +85,7 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
 
     public void Receive(RecordLogMemoryMessage message)
     {
-        ApplyLogMemoryAction(message.Value, LogMemoryApplyDirection.Redo);
+        ApplyLogMemoryAction(message.Value, LogMemoryApplyDirection.Reapply);
     }
 
     public void Receive(LogMemoryActionAppliedMessage message)
@@ -165,7 +165,7 @@ public partial class SpentAllowancePanelVM : ObservableRecipient,
         if (action.Snapshot is not { } snapshot)
             return;
 
-        if (direction == LogMemoryApplyDirection.Redo)
+        if (direction == LogMemoryApplyDirection.Reapply)
         {
             RemoveTransaction(snapshot.TransactionId);
             RestoreTransactionFromTrackedSource(snapshot);

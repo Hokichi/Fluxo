@@ -248,7 +248,7 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
 
     public void Receive(RecordLogMemoryMessage message)
     {
-        ApplyBalanceImpactsFromAction(message.Value, LogMemoryApplyDirection.Redo);
+        ApplyBalanceImpactsFromAction(message.Value, LogMemoryApplyDirection.Reapply);
     }
 
     public void Receive(LogMemoryActionAppliedMessage message)

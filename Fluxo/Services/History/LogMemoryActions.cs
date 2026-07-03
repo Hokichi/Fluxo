@@ -158,7 +158,7 @@ public sealed class AddTransactionMemoryAction(
     public TransactionMemorySnapshot Snapshot => snapshot;
     public string Description => snapshot.Type == TransactionType.Expense ? "Add expense" : "Add income";
 
-    public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    public async Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
         var transaction = await unitOfWork.Transactions.GetByIdAsync(snapshot.TransactionId, cancellationToken);
         if (transaction is null)
@@ -175,7 +175,7 @@ public sealed class AddTransactionMemoryAction(
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    public async Task ReapplyAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
         if (await unitOfWork.Transactions.GetByIdAsync(snapshot.TransactionId, cancellationToken) is not null)
             return;
@@ -223,9 +223,9 @@ public sealed class EditTransactionMemoryAction(
     public TransactionMemorySnapshot Before => before;
     public TransactionMemorySnapshot After => after;
     public string Description => "Edit transaction";
-    public Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default) =>
+    public Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default) =>
         ApplyAsync(unitOfWork, before, cancellationToken);
-    public Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default) =>
+    public Task ReapplyAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default) =>
         ApplyAsync(unitOfWork, after, cancellationToken);
 
     private static async Task ApplyAsync(IUnitOfWork unitOfWork, TransactionMemorySnapshot snapshot,
@@ -271,7 +271,7 @@ public sealed class DeleteTransactionMemoryAction(TransactionMemorySnapshot snap
     public TransactionMemorySnapshot Snapshot => snapshot;
     public string Description => "Delete transaction";
 
-    public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    public async Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
         if (await unitOfWork.Transactions.GetByIdAsync(snapshot.TransactionId, cancellationToken) is not null)
             return;
@@ -286,7 +286,7 @@ public sealed class DeleteTransactionMemoryAction(TransactionMemorySnapshot snap
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    public async Task ReapplyAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
         var transaction = await unitOfWork.Transactions.GetByIdAsync(snapshot.TransactionId, cancellationToken);
         if (transaction is null)
@@ -307,16 +307,16 @@ public sealed class CompositeLogMemoryAction(string description, IReadOnlyList<I
     public string Description { get; } = description;
     public IReadOnlyList<ILogMemoryAction> Actions { get; } = actions;
 
-    public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    public async Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
         foreach (var action in actions.Reverse())
-            await action.UndoAsync(unitOfWork, cancellationToken);
+            await action.RevertAsync(unitOfWork, cancellationToken);
     }
 
-    public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    public async Task ReapplyAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
         foreach (var action in actions)
-            await action.RedoAsync(unitOfWork, cancellationToken);
+            await action.ReapplyAsync(unitOfWork, cancellationToken);
     }
 }
 
@@ -324,7 +324,7 @@ public sealed class AddAccountMemoryAction(AccountMemorySnapshot snapshot) : ILo
 {
     public string Description => "Add account";
 
-    public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    public async Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
         var account =
             await unitOfWork.Accounts.GetByIdAsync(snapshot.AccountId, cancellationToken);
@@ -335,7 +335,7 @@ public sealed class AddAccountMemoryAction(AccountMemorySnapshot snapshot) : ILo
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    public async Task ReapplyAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
         if (await unitOfWork.Accounts.GetByIdAsync(snapshot.AccountId, cancellationToken) is not null)
             return;
@@ -369,12 +369,12 @@ public sealed class EditAccountMemoryAction(
 {
     public string Description => "Edit account";
 
-    public Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    public Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
         return ApplySnapshotAsync(unitOfWork, before, cancellationToken);
     }
 
-    public Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    public Task ReapplyAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
         return ApplySnapshotAsync(unitOfWork, after, cancellationToken);
     }
@@ -409,7 +409,7 @@ public sealed class DeleteAccountMemoryAction(AccountMemorySnapshot snapshot) : 
 {
     public string Description => "Delete account";
 
-    public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    public async Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
         if (await unitOfWork.Accounts.GetByIdAsync(snapshot.AccountId, cancellationToken) is not null)
             return;
@@ -436,7 +436,7 @@ public sealed class DeleteAccountMemoryAction(AccountMemorySnapshot snapshot) : 
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    public async Task ReapplyAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
         var account =
             await unitOfWork.Accounts.GetByIdAsync(snapshot.AccountId, cancellationToken);
@@ -452,7 +452,7 @@ public sealed class DeleteTagMemoryAction(TagMemorySnapshot snapshot) : ILogMemo
 {
     public string Description => "Delete tag";
 
-    public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    public async Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
         if (await unitOfWork.Tags.GetByIdAsync(snapshot.TagId, cancellationToken) is not null)
             return;
@@ -469,7 +469,7 @@ public sealed class DeleteTagMemoryAction(TagMemorySnapshot snapshot) : ILogMemo
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    public async Task ReapplyAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
         var tag = await unitOfWork.Tags.GetByIdAsync(snapshot.TagId, cancellationToken);
         if (tag is null)
@@ -486,12 +486,12 @@ public sealed class EditTagMemoryAction(
 {
     public string Description => "Edit tag";
 
-    public Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    public Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
         return ApplySnapshotAsync(unitOfWork, before, cancellationToken);
     }
 
-    public Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    public Task ReapplyAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
         return ApplySnapshotAsync(unitOfWork, after, cancellationToken);
     }
@@ -515,7 +515,7 @@ public sealed class DeleteSavingGoalMemoryAction(SavingGoalMemorySnapshot snapsh
 {
     public string Description => "Delete saving goal";
 
-    public async Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    public async Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
         if (await unitOfWork.SavingGoals.GetByIdAsync(snapshot.SavingGoalId, cancellationToken) is not null)
             return;
@@ -534,7 +534,7 @@ public sealed class DeleteSavingGoalMemoryAction(SavingGoalMemorySnapshot snapsh
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    public async Task ReapplyAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
         var savingGoal = await unitOfWork.SavingGoals.GetByIdAsync(snapshot.SavingGoalId, cancellationToken);
         if (savingGoal is null)
@@ -551,12 +551,12 @@ public sealed class SetUserSettingMemoryAction(
 {
     public string Description => "Update setting";
 
-    public Task UndoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    public Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
         return ApplySnapshotAsync(unitOfWork, before, cancellationToken);
     }
 
-    public Task RedoAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
+    public Task ReapplyAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
         return ApplySnapshotAsync(unitOfWork, after, cancellationToken);
     }
