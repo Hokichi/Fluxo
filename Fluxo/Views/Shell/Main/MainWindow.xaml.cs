@@ -148,16 +148,14 @@ public partial class MainWindow : Window, IPopupHost
         _messenger = messenger;
         _appUpdateService = appUpdateService;
         _appUpdateInteractionService = appUpdateInteractionService;
-        _logMemoryManager = new LogMemoryManager(_mainVM, _dataOperationRunner);
+        _logMemoryManager = new LogMemoryManager(_dataOperationRunner, _mainVM.ReloadCurrentDataAsync);
         WeakReferenceMessenger.Default.Register<MainWindow, NavigateToLedgerRequestedMessage>(
             this,
             static (recipient, message) => _ = recipient.NavigateToLedgerFromDashboardAsync());
 
         HeaderSearchResultsList.ItemsSource = _headerSearchResults;
         DataContext = _mainVM;
-        _logMemoryManager.StateChanged += OnHistoryManagerStateChanged;
         _mainVM.PropertyChanged += OnMainViewModelPropertyChanged;
-        UpdateHistoryAvailability();
 
         Loaded += async (_, _) =>
         {
@@ -333,7 +331,6 @@ public partial class MainWindow : Window, IPopupHost
         try
         {
             _hasCompletedPendingDeletionCleanup = true;
-            _logMemoryManager.StateChanged -= OnHistoryManagerStateChanged;
             _mainVM.PropertyChanged -= OnMainViewModelPropertyChanged;
             WeakReferenceMessenger.Default.Unregister<NavigateToLedgerRequestedMessage>(this);
             Activated -= OnWindowActivated;
@@ -935,32 +932,6 @@ public partial class MainWindow : Window, IPopupHost
             return;
         }
 
-        if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z && !IsTextInputElementFocused() &&
-            _logMemoryManager.CanUndo)
-        {
-            if (IsSufficientFundsActionGateLocked())
-            {
-                e.Handled = true;
-                return;
-            }
-
-            _ = UndoLogMemoryAsync();
-            e.Handled = true;
-            return;
-        }
-
-        if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Y && !IsTextInputElementFocused() &&
-            _logMemoryManager.CanRedo)
-        {
-            if (IsSufficientFundsActionGateLocked())
-            {
-                e.Handled = true;
-                return;
-            }
-
-            _ = RedoLogMemoryAsync();
-            e.Handled = true;
-        }
     }
 
     private async Task<bool> TryHandleDashboardPeriodShortcut(Key key, ModifierKeys modifiers)
@@ -1332,24 +1303,6 @@ public partial class MainWindow : Window, IPopupHost
     {
         CloseHeaderMenu();
         OpenAccountsListPopup();
-    }
-
-    private async void OnUndoButtonClick(object sender, RoutedEventArgs e)
-    {
-        CloseHeaderMenu();
-        if (IsSufficientFundsActionGateLocked())
-            return;
-
-        await UndoLogMemoryAsync();
-    }
-
-    private async void OnRedoButtonClick(object sender, RoutedEventArgs e)
-    {
-        CloseHeaderMenu();
-        if (IsSufficientFundsActionGateLocked())
-            return;
-
-        await RedoLogMemoryAsync();
     }
 
     private void OnSettingsButtonClick(object sender, RoutedEventArgs e)
@@ -2372,41 +2325,6 @@ public partial class MainWindow : Window, IPopupHost
         return _activeMainPage != MainPage.Ledger || string.IsNullOrWhiteSpace(HeaderSearchBox.Text);
     }
 
-    private async Task UndoLogMemoryAsync()
-    {
-        if (!_logMemoryManager.CanUndo)
-            return;
-
-        try
-        {
-            await _logMemoryManager.UndoAsync();
-        }
-        catch (Exception exception)
-        {
-            FloatingNotificationPublisher.LoggedFailure(_messenger, exception, "undo last action");
-        }
-    }
-
-    private async Task RedoLogMemoryAsync()
-    {
-        if (!_logMemoryManager.CanRedo)
-            return;
-
-        try
-        {
-            await _logMemoryManager.RedoAsync();
-        }
-        catch (Exception exception)
-        {
-            FloatingNotificationPublisher.LoggedFailure(_messenger, exception, "redo last action");
-        }
-    }
-
-    private static bool IsTextInputElementFocused()
-    {
-        return Keyboard.FocusedElement is TextBoxBase or PasswordBox or ComboBox;
-    }
-
     private bool IsDashboardSpendingAmountGateLocked()
     {
         return _mainVM.IsDashboardSpendingAmountGateLocked;
@@ -2420,20 +2338,6 @@ public partial class MainWindow : Window, IPopupHost
     private bool IsAppLocked()
     {
         return _mainVM.IsAppLocked;
-    }
-
-    private void OnHistoryManagerStateChanged(object? sender, EventArgs e)
-    {
-        UpdateHistoryAvailability();
-    }
-
-    private void UpdateHistoryAvailability()
-    {
-        if (UndoMenuButton is not null)
-            UndoMenuButton.IsEnabled = _logMemoryManager.CanUndo;
-
-        if (RedoMenuButton is not null)
-            RedoMenuButton.IsEnabled = _logMemoryManager.CanRedo;
     }
 
     [StructLayout(LayoutKind.Sequential)]
