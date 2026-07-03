@@ -503,6 +503,16 @@
                                     </Border>
                                 </Popup>
                             </Grid>
+                            <customControls:BalloonButton
+                                x:Name="HeaderHistoryButton"
+                                AutomationProperties.Name="Toggle history"
+                                ButtonIcon="{StaticResource History}"
+                                Click="OnHeaderHistoryButtonClick"
+                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
+                                IconSize="11"
+                                Style="{StaticResource HeaderButtonDisableWhenAppLockedStyle}" />
+
                             <Grid>
                                 <customControls:BalloonButton
                                     x:Name="HeaderNotificationButton"
@@ -954,11 +964,141 @@
                     </Grid>
                 </Border>
                 <Border
+                    x:Name="HistoryDrawer"
+                    Width="360"
+                    Margin="0,76,24,28"
+                    Padding="20"
+                    HorizontalAlignment="Right"
+                    Panel.ZIndex="31"
+                    Background="{StaticResource Brush.Background.Elevated}"
+                    BorderBrush="{StaticResource Brush.Border.Subtle}"
+                    BorderThickness="1"
+                    CornerRadius="18"
+                    Visibility="Collapsed">
+                    <Border.RenderTransform>
+                        <TranslateTransform x:Name="HistoryDrawerTransform" X="380" />
+                    </Border.RenderTransform>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel>
+                            <TextBlock
+                                FontFamily="{StaticResource Bold}"
+                                FontSize="20"
+                                Foreground="{StaticResource Brush.Text.Primary}"
+                                Text="History" />
+                            <TextBlock
+                                Margin="0,4,0,0"
+                                FontFamily="{StaticResource Regular}"
+                                FontSize="12"
+                                Foreground="{StaticResource Brush.Text.Muted}"
+                                Text="Actions from this session, oldest first" />
+                        </StackPanel>
+
+                        <Grid Grid.Row="1" Margin="0,18,0,0">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <ItemsControl x:Name="HistoryItemsControl">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border
+                                                Margin="0,0,0,8"
+                                                Padding="12"
+                                                Background="{StaticResource Brush.Background.Surface}"
+                                                CornerRadius="12">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Opacity" Value="1" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsReverted}" Value="True">
+                                                                <Setter Property="Opacity" Value="0.55" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock
+                                                            FontFamily="{StaticResource Medium}"
+                                                            FontSize="13"
+                                                            Foreground="{StaticResource Brush.Text.Primary}"
+                                                            Text="{Binding Description, Mode=OneWay}"
+                                                            TextWrapping="Wrap" />
+                                                        <TextBlock
+                                                            Margin="0,3,0,0"
+                                                            FontFamily="{StaticResource Medium}"
+                                                            FontSize="11"
+                                                            Foreground="{StaticResource Brush.Text.Muted}"
+                                                            Text="Reverted">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsReverted}" Value="True">
+                                                                            <Setter Property="Visibility" Value="Visible" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                    <customControls:BalloonCheckBox
+                                                        Grid.Column="1"
+                                                        Margin="12,0,0,0"
+                                                        AutomationProperties.Name="Toggle history action"
+                                                        ButtonSize="30"
+                                                        CheckedBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                                                        CheckedIcon="{StaticResource RegularRedo}"
+                                                        CheckedText="Reapply"
+                                                        Click="OnHistoryActionClick"
+                                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
+                                                        IconSize="11"
+                                                        IsChecked="{Binding IsReverted, Mode=OneWay}"
+                                                        ShouldExpand="True"
+                                                        UncheckedIcon="{StaticResource RegularUndo}"
+                                                        UncheckedText="Revert" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                FontFamily="{StaticResource Medium}"
+                                FontSize="13"
+                                Foreground="{StaticResource Brush.Text.Muted}"
+                                Text="No actions logged this session">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasItems, ElementName=HistoryItemsControl}" Value="False">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+                    </Grid>
+                </Border>
+                <Border
                     x:Name="PopupOverlay"
                     Panel.ZIndex="30"
                     Background="Black"
                     CornerRadius="16"
                     IsHitTestVisible="False"
+                    MouseLeftButtonDown="OnPopupOverlayMouseLeftButtonDown"
                     Opacity="0"
                     Visibility="Collapsed" />
             </Grid>

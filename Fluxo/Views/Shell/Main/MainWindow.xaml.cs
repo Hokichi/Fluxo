@@ -72,6 +72,7 @@ public partial class MainWindow : Window, IPopupHost
     private const double HeaderSearchCollapsedWidth = 36;
     private const double HeaderSearchExpandedWidth = 160;
     private const int HeaderSearchAnimationDuration = 160; // ms
+    private const int HistoryDrawerAnimationDuration = 180; // ms
     private static readonly TimeSpan AppAutoLockActiveDelay = TimeSpan.FromSeconds(10);
 
     private readonly DispatcherTimer _headerMenuCloseTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
@@ -102,6 +103,8 @@ public partial class MainWindow : Window, IPopupHost
     private bool _isMainPageTransitionActive;
     private bool _isPreparingMainPage;
     private bool _isHeaderSearchExpanded;
+    private bool _isHistoryDrawerOpen;
+    private bool _isHistoryDrawerAnimating;
     private int _headerSearchAnimationGeneration;
     private EventHandler? _popupOverlayDeferredHideTickHandler;
     private MainPage _activeMainPage = MainPage.Dashboard;
@@ -152,8 +155,11 @@ public partial class MainWindow : Window, IPopupHost
         WeakReferenceMessenger.Default.Register<MainWindow, NavigateToLedgerRequestedMessage>(
             this,
             static (recipient, message) => _ = recipient.NavigateToLedgerFromDashboardAsync());
+        _messenger.Register<MainWindow, OpenHistoryDrawerMessage>(this,
+            static (recipient, _) => recipient.OpenHistoryDrawer());
 
         HeaderSearchResultsList.ItemsSource = _headerSearchResults;
+        HistoryItemsControl.ItemsSource = _logMemoryManager.HistoryEntries;
         DataContext = _mainVM;
         _mainVM.PropertyChanged += OnMainViewModelPropertyChanged;
 
@@ -333,6 +339,7 @@ public partial class MainWindow : Window, IPopupHost
             _hasCompletedPendingDeletionCleanup = true;
             _mainVM.PropertyChanged -= OnMainViewModelPropertyChanged;
             WeakReferenceMessenger.Default.Unregister<NavigateToLedgerRequestedMessage>(this);
+            _messenger.Unregister<OpenHistoryDrawerMessage>(this);
             Activated -= OnWindowActivated;
             Deactivated -= OnWindowDeactivated;
             StateChanged -= OnWindowStateChanged;
@@ -714,6 +721,20 @@ public partial class MainWindow : Window, IPopupHost
 
         RecordAppAutoLockInputActivity();
 
+        if (_isHistoryDrawerOpen && e.Key == Key.Escape)
+        {
+            CloseHistoryDrawer();
+            e.Handled = true;
+            return;
+        }
+
+        if (MainWindowShortcutMatcher.IsToggleHistoryShortcut(e.Key, Keyboard.Modifiers))
+        {
+            ToggleHistoryDrawer();
+            e.Handled = true;
+            return;
+        }
+
         if (MainWindowShortcutMatcher.IsToggleAppLockShortcut(e.Key, Keyboard.Modifiers))
         {
             LockAppUiFromUser();
@@ -1087,6 +1108,12 @@ public partial class MainWindow : Window, IPopupHost
             return;
 
         ToggleHeaderNotificationPopup();
+    }
+
+    private void OnHeaderHistoryButtonClick(object sender, RoutedEventArgs e)
+    {
+        if (!IsAppLocked())
+            ToggleHistoryDrawer();
     }
 
     private void ToggleHeaderNotificationPopup()
@@ -1911,6 +1938,124 @@ public partial class MainWindow : Window, IPopupHost
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
         };
         PopupOverlay.BeginAnimation(OpacityProperty, fadeIn);
+    }
+
+    private void ToggleHistoryDrawer()
+    {
+        if (_isHistoryDrawerAnimating)
+            return;
+
+        if (_isHistoryDrawerOpen)
+            CloseHistoryDrawer();
+        else
+            OpenHistoryDrawer();
+    }
+
+    private void OpenHistoryDrawer()
+    {
+        if (_isHistoryDrawerOpen || _isHistoryDrawerAnimating || IsAppLocked())
+            return;
+
+        CollapseHeaderSearch();
+        CloseHeaderNotificationPopup();
+        CloseHeaderMenu();
+
+        _isHistoryDrawerOpen = true;
+        _isHistoryDrawerAnimating = true;
+        HistoryDrawerTransform.BeginAnimation(TranslateTransform.XProperty, null);
+        HistoryDrawerTransform.X = HistoryDrawer.Width + HistoryDrawer.Margin.Right;
+        HistoryDrawer.Visibility = Visibility.Visible;
+        PopupOverlay.IsHitTestVisible = true;
+        ShowPopupOverlay();
+
+        var animation = new DoubleAnimation(
+            HistoryDrawerTransform.X,
+            0,
+            TimeSpan.FromMilliseconds(HistoryDrawerAnimationDuration))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+        animation.Completed += (_, _) =>
+        {
+            HistoryDrawerTransform.BeginAnimation(TranslateTransform.XProperty, null);
+            HistoryDrawerTransform.X = 0;
+            _isHistoryDrawerAnimating = false;
+        };
+        HistoryDrawerTransform.BeginAnimation(TranslateTransform.XProperty, animation);
+    }
+
+    private void CloseHistoryDrawer()
+    {
+        if (!_isHistoryDrawerOpen || _isHistoryDrawerAnimating)
+            return;
+
+        _isHistoryDrawerOpen = false;
+        _isHistoryDrawerAnimating = true;
+        var animation = new DoubleAnimation(
+            0,
+            HistoryDrawer.Width + HistoryDrawer.Margin.Right,
+            TimeSpan.FromMilliseconds(HistoryDrawerAnimationDuration))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
+        };
+        animation.Completed += (_, _) =>
+        {
+            HistoryDrawerTransform.BeginAnimation(TranslateTransform.XProperty, null);
+            HistoryDrawerTransform.X = HistoryDrawer.Width + HistoryDrawer.Margin.Right;
+            HistoryDrawer.Visibility = Visibility.Collapsed;
+            PopupOverlay.IsHitTestVisible = false;
+            _isHistoryDrawerAnimating = false;
+            HidePopupOverlay();
+        };
+        HistoryDrawerTransform.BeginAnimation(TranslateTransform.XProperty, animation);
+    }
+
+    private void OnPopupOverlayMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (!_isHistoryDrawerOpen)
+            return;
+
+        CloseHistoryDrawer();
+        e.Handled = true;
+    }
+
+    private async void OnHistoryActionClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not BalloonCheckBox { DataContext: LogMemoryEntry entry } checkBox)
+            return;
+
+        var operation = entry.IsReverted ? "Reapply" : "Revert";
+        var confirmed = FluxoMessageBox.Show(
+            this,
+            $"{operation} \"{entry.Description}\"?",
+            "History",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (confirmed != MessageBoxResult.Yes)
+        {
+            checkBox.GetBindingExpression(BalloonCheckBox.IsCheckedProperty)?.UpdateTarget();
+            return;
+        }
+
+        HistoryItemsControl.IsEnabled = false;
+        try
+        {
+            if (!await _logMemoryManager.ToggleAsync(entry))
+                checkBox.GetBindingExpression(BalloonCheckBox.IsCheckedProperty)?.UpdateTarget();
+        }
+        catch (Exception exception)
+        {
+            checkBox.GetBindingExpression(BalloonCheckBox.IsCheckedProperty)?.UpdateTarget();
+            FloatingNotificationPublisher.LoggedFailure(
+                _messenger,
+                exception,
+                $"{operation.ToLowerInvariant()} history action");
+        }
+        finally
+        {
+            HistoryItemsControl.IsEnabled = true;
+        }
     }
 
     public void HidePopupOverlay()
