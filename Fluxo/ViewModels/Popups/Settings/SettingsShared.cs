@@ -140,12 +140,4 @@ internal static class SettingsShared
         return settings.ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.Ordinal);
     }
 
-    public static void RecordActions(IReadOnlyList<ILogMemoryAction> actions, IMessenger messenger)
-    {
-        if (actions.Count == 0)
-            return;
-
-        messenger.Send(new RecordLogMemoryMessage(
-            actions.Count == 1 ? actions[0] : new CompositeLogMemoryAction("Settings update", actions)));
-    }
 }

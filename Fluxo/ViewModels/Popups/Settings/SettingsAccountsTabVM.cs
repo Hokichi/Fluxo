@@ -220,7 +220,6 @@ public partial class SettingsAccountsTabVM : ObservableObject
                 return SettingsOperationResult.Failure("Nothing changed for the selected accounts.");
 
             await _appData.SaveChangesAsync();
-            SettingsShared.RecordActions(actions, _messenger);
             _messenger.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
             var affectedNames = Accounts.Where(item => selectedIds.Contains(item.Id)).Select(item => item.Name).ToArray();
@@ -247,7 +246,8 @@ public partial class SettingsAccountsTabVM : ObservableObject
                 _ => "Selected accounts were enabled."
             };
             FloatingNotificationPublisher.Success(
-                _messenger, header, message, true,
+                _messenger, header, message,
+                headerAction:
                 char.ToUpperInvariant(verb[0]) + verb[1..]);
             return SettingsOperationResult.Success();
         }

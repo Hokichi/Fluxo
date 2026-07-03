@@ -7,7 +7,6 @@ using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
-using Fluxo.Services.History;
 using Fluxo.Services.Logging;
 using MainVM = Fluxo.ViewModels.Shell.Main.MainVM;
 
@@ -135,7 +134,6 @@ public partial class SettingsIoUsTabVM : ObservableObject
         if (account is null)
             return SettingsOperationResult.Failure("Unable to load the IOU account.");
 
-        var beforeSnapshot = TransactionMemorySnapshot.Create(source);
         var income = new Transaction
         {
             Type = TransactionType.Income,
@@ -157,10 +155,6 @@ public partial class SettingsIoUsTabVM : ObservableObject
 
         await _appData.SaveChangesAsync(cancellationToken);
 
-        RecordResolutionActions(
-            new AddTransactionMemoryAction(TransactionMemorySnapshot.Create(income)),
-            new EditTransactionMemoryAction(beforeSnapshot, TransactionMemorySnapshot.Create(source)));
-
         await ReloadAfterResolveAsync(cancellationToken);
         return SettingsOperationResult.Success();
     }
@@ -180,7 +174,6 @@ public partial class SettingsIoUsTabVM : ObservableObject
         if (account is null)
             return SettingsOperationResult.Failure("Unable to load the debt account.");
 
-        var beforeSnapshot = TransactionMemorySnapshot.Create(source);
         var reconciliationTag = await EnsureBudgetReconciliationTagAsync(cancellationToken);
         var expense = new Transaction
         {
@@ -203,10 +196,6 @@ public partial class SettingsIoUsTabVM : ObservableObject
         _appData.UpdateAccount(account);
 
         await _appData.SaveChangesAsync(cancellationToken);
-
-        RecordResolutionActions(
-            new AddTransactionMemoryAction(TransactionMemorySnapshot.Create(expense)),
-            new EditTransactionMemoryAction(beforeSnapshot, TransactionMemorySnapshot.Create(source)));
 
         await ReloadAfterResolveAsync(cancellationToken);
         return SettingsOperationResult.Success();
@@ -248,12 +237,6 @@ public partial class SettingsIoUsTabVM : ObservableObject
         _messenger.Send(new DashboardDataInvalidatedMessage(
             DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
         await _reloadCurrentDataAsync();
-    }
-
-    private void RecordResolutionActions(params ILogMemoryAction[] actions)
-    {
-        _messenger.Send(new RecordLogMemoryMessage(
-            new CompositeLogMemoryAction("Resolve debt or IOU", actions)));
     }
 
     private static void ApplyExpenseToAccount(Account account, decimal amount)

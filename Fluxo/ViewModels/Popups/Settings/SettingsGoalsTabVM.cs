@@ -184,7 +184,6 @@ public partial class SettingsGoalsTabVM : ObservableObject
                 return SettingsOperationResult.Failure("Nothing changed for the selected goals.");
 
             await _appData.SaveChangesAsync();
-            SettingsShared.RecordActions(actions, _messenger);
             _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.SavingGoals));
             _messenger.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.SavingGoals));
@@ -208,7 +207,8 @@ public partial class SettingsGoalsTabVM : ObservableObject
                 _ => "Selected goals were enabled."
             };
             FloatingNotificationPublisher.Success(
-                _messenger, header, message, true,
+                _messenger, header, message,
+                headerAction:
                 char.ToUpperInvariant(verb[0]) + verb[1..]);
             return SettingsOperationResult.Success();
         }

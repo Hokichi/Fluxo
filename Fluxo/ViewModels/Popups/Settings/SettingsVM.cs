@@ -223,7 +223,6 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
             }
 
             await _mainViewModel.ReloadUserSettingsAsync();
-            SettingsShared.RecordActions(actions, Messenger);
             Messenger.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.All));
             await _mainViewModel.ReloadCurrentDataAsync();
@@ -371,9 +370,6 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
             _startupRegistrationService.SetRunAtStartup(false);
 
             await _appData.SaveChangesAsync();
-            if (actions.Count > 0)
-                SettingsShared.RecordActions(actions, Messenger);
-
             await _mainViewModel.ReloadUserSettingsAsync();
             Messenger.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.All));

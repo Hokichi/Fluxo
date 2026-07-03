@@ -55,15 +55,18 @@ public sealed class FloatingNotificationPublisherTests
     }
 
     [Fact]
-    public void Success_WithHistoryAction_PublishesClickableRequest()
+    public async Task Success_WithHistoryAction_ClickRequestsHistoryDrawer()
     {
         var messenger = new StrongReferenceMessenger();
         ShowFloatingNotificationMessage? received = null;
+        var openRequests = 0;
         messenger.Register<ShowFloatingNotificationMessage>(this, (_, message) => received = message);
+        messenger.Register<OpenHistoryDrawerMessage>(this, (_, _) => openRequests++);
 
         FloatingNotificationPublisher.Success(messenger, "Expense added", "Lunch was recorded.", true);
+        await received!.Value.ClickAsync!();
 
-        Assert.NotNull(received!.Value.ClickAsync);
         Assert.Contains("Click to view in History", received.Value.Message);
+        Assert.Equal(1, openRequests);
     }
 }

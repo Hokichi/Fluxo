@@ -6,7 +6,6 @@ using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
-using Fluxo.Services.History;
 using Fluxo.Services.Logging;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
@@ -193,11 +192,9 @@ public partial class SettingsTagsTabVM : ObservableObject
                 return SettingsOperationResult.Failure(
                     $"{persistedTag.Name} is still assigned to one or more expenses, so it can't be deleted yet.");
 
-            var snapshot = TagMemorySnapshot.Create(persistedTag);
             _appData.RemoveTag(persistedTag);
             await _appData.SaveChangesAsync();
 
-            SettingsShared.RecordActions([new DeleteTagMemoryAction(snapshot)], _messenger);
             _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.Tags));
             _messenger.Send(new DashboardDataInvalidatedMessage(DashboardDataInvalidationScope.All));
             await _mainViewModel.ReloadCurrentDataAsync();
@@ -242,7 +239,6 @@ public partial class SettingsTagsTabVM : ObservableObject
                     string.Equals(tag.Name, trimmedName, StringComparison.OrdinalIgnoreCase)))
                 return SettingsOperationResult.Failure($"A tag named \"{trimmedName}\" already exists.");
 
-            var beforeSnapshot = TagMemorySnapshot.Create(tag);
             var hasNameChanged = !string.Equals(tag.Name, trimmedName, StringComparison.Ordinal);
             var hasHexChanged = !string.Equals(tag.HexCode, normalizedHexCode, StringComparison.OrdinalIgnoreCase);
             var hasSpendingLimitChanged = tag.SpendingLimit != spendingLimit;
@@ -255,8 +251,6 @@ public partial class SettingsTagsTabVM : ObservableObject
             _appData.UpdateTag(tag);
             await _appData.SaveChangesAsync();
 
-            var afterSnapshot = TagMemorySnapshot.Create(tag);
-            SettingsShared.RecordActions([new EditTagMemoryAction(beforeSnapshot, afterSnapshot)], _messenger);
             _messenger.Send(new SettingsDataChangedMessage(SettingsDataChangedScope.Tags));
             _messenger.Send(new DashboardDataInvalidatedMessage(DashboardDataInvalidationScope.All));
             await _mainViewModel.ReloadCurrentDataAsync();

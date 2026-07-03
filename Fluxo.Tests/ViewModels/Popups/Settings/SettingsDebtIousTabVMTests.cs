@@ -6,6 +6,7 @@ using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Core.Interfaces.Services;
+using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.Persistence;
 using Fluxo.Tests.TestDoubles;
 using Fluxo.ViewModels.Popups.Settings;
@@ -118,7 +119,10 @@ public sealed class SettingsIoUsTabVMTests
             Notes = string.Empty
         };
         var appData = CreateAppData([transaction], [], [account]);
-        var vm = CreateVm(appData);
+        var messenger = new StrongReferenceMessenger();
+        var historyMessages = 0;
+        messenger.Register<RecordLogMemoryMessage>(this, (_, _) => historyMessages++);
+        var vm = CreateVm(appData, messenger);
         await vm.LoadAsync();
 
         var result = await vm.ResolveAsync(vm.Items.Single());
@@ -136,6 +140,7 @@ public sealed class SettingsIoUsTabVMTests
             Arg.Any<CancellationToken>());
         appData.Received(1).UpdateTransaction(transaction);
         appData.Received(1).UpdateAccount(account);
+        Assert.Equal(0, historyMessages);
     }
 
     [Fact]
@@ -187,9 +192,9 @@ public sealed class SettingsIoUsTabVMTests
         appData.Received(1).UpdateAccount(account);
     }
 
-    private static SettingsIoUsTabVM CreateVm(IAppDataService appData)
+    private static SettingsIoUsTabVM CreateVm(IAppDataService appData, IMessenger? messenger = null)
     {
-        var messenger = new WeakReferenceMessenger();
+        messenger ??= new WeakReferenceMessenger();
         return new SettingsIoUsTabVM(
             CreateMainViewModel(messenger),
             appData,

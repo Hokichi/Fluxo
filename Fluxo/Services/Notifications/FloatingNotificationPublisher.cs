@@ -33,7 +33,7 @@ public static class FloatingNotificationPublisher
             ? $"{message.TrimEnd()} Click to view in History"
             : message;
         Publish(messenger, header, body, [], NotificationSeverity.Success,
-            includeHistoryAction ? OpenHistoryAsync : null, headerAction);
+            includeHistoryAction ? () => OpenHistoryAsync(messenger) : null, headerAction);
     }
 
     public static void Warning(IMessenger messenger, string header, string message) =>
@@ -84,10 +84,9 @@ public static class FloatingNotificationPublisher
             messenger.Send(new DismissFloatingNotificationMessage(id));
     }
 
-    private static Task OpenHistoryAsync()
+    private static Task OpenHistoryAsync(IMessenger messenger)
     {
-        // TODO: Implement History panel hook here.
-        // TODO: Exclude actions related to Settings from Undo/Redo.
+        messenger.Send(new OpenHistoryDrawerMessage());
         return Task.CompletedTask;
     }
 
