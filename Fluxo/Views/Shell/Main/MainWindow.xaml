@@ -652,68 +652,6 @@
                                             </Grid>
                                         </Button>
 
-                                        <Button
-                                            x:Name="UndoMenuButton"
-                                            Click="OnUndoButtonClick"
-                                            IsEnabled="False"
-                                            Style="{StaticResource HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle}">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="16" />
-                                                    <ColumnDefinition Width="12" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="8" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
-                                                <components:Icon
-                                                    Width="14"
-                                                    Height="14"
-                                                    Path="{StaticResource RegularUndo}"
-                                                    Color="{StaticResource Brush.Warning}" />
-                                                <TextBlock
-                                                    Grid.Column="2"
-                                                    VerticalAlignment="Center"
-                                                    FontFamily="{StaticResource Bold}"
-                                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                                    Text="Undo" />
-                                                <TextBlock
-                                                    Grid.Column="4"
-                                                    Style="{StaticResource HeaderMenuShortcutTextStyle}"
-                                                    Text="Ctrl+Z" />
-                                            </Grid>
-                                        </Button>
-
-                                        <Button
-                                            x:Name="RedoMenuButton"
-                                            Click="OnRedoButtonClick"
-                                            IsEnabled="False"
-                                            Style="{StaticResource HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle}">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="16" />
-                                                    <ColumnDefinition Width="12" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="8" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
-                                                <components:Icon
-                                                    Width="14"
-                                                    Height="14"
-                                                    Path="{StaticResource RegularRedo}"
-                                                    Color="{StaticResource Brush.Info}" />
-                                                <TextBlock
-                                                    Grid.Column="2"
-                                                    VerticalAlignment="Center"
-                                                    FontFamily="{StaticResource Bold}"
-                                                    Foreground="{StaticResource Brush.Text.Primary}"
-                                                    Text="Redo" />
-                                                <TextBlock
-                                                    Grid.Column="4"
-                                                    Style="{StaticResource HeaderMenuShortcutTextStyle}"
-                                                    Text="Ctrl+Y" />
-                                            </Grid>
-                                        </Button>
-
                                         <Button Click="OnHotkeysButtonClick" Style="{StaticResource HeaderMenuActionButtonStyle}">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>

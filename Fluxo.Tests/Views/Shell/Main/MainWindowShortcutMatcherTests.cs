@@ -8,6 +8,15 @@ namespace Fluxo.Tests.Views.Shell.Main;
 public class MainWindowShortcutMatcherTests
 {
     [Fact]
+    public void IsToggleHistoryShortcut_ReturnsTrueOnlyForCtrlH()
+    {
+        Assert.True(MainWindowShortcutMatcher.IsToggleHistoryShortcut(Key.H, ModifierKeys.Control));
+        Assert.False(MainWindowShortcutMatcher.IsToggleHistoryShortcut(Key.H, ModifierKeys.None));
+        Assert.False(MainWindowShortcutMatcher.IsToggleHistoryShortcut(
+            Key.H, ModifierKeys.Control | ModifierKeys.Shift));
+    }
+
+    [Fact]
     public void IsOpenNewTransactionShortcut_ReturnsTrue_ForCtrlN()
     {
         var isShortcut = MainWindowShortcutMatcher.IsOpenNewTransactionShortcut(Key.N, ModifierKeys.Control);

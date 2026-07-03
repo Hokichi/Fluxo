@@ -25,6 +25,11 @@ public static class MainWindowShortcutMatcher
         return key == Key.F && modifiers == ModifierKeys.Control;
     }
 
+    public static bool IsToggleHistoryShortcut(Key key, ModifierKeys modifiers)
+    {
+        return key == Key.H && modifiers == ModifierKeys.Control;
+    }
+
     public static bool IsOpenNewTransactionShortcut(Key key, ModifierKeys modifiers)
     {
         return key == Key.N && modifiers == ModifierKeys.Control;

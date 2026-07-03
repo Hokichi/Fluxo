@@ -127,8 +127,6 @@ public sealed class MainWindowLayoutTests
         AssertElementHasNameAndStyle(xamlDocument, "Grid", "HeaderSearchRegion", "HeaderSearchRegionLockAndGateStyle");
         AssertElementHasNameAndStyle(xamlDocument, "customControls:BalloonButton", "HeaderQuickAddButton", "HeaderButtonDisableWhenAppLockedAndSufficientFundsActionGateLockedStyle");
         AssertElementHasNameAndStyle(xamlDocument, "Button", "QuickAddMenuButton", "HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle");
-        AssertElementHasNameAndStyle(xamlDocument, "Button", "UndoMenuButton", "HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle");
-        AssertElementHasNameAndStyle(xamlDocument, "Button", "RedoMenuButton", "HeaderMenuActionHideWhenSufficientFundsActionGateLockedStyle");
     }
 
     [Fact]
