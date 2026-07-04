@@ -1,12 +1,29 @@
 using Fluxo.Core.Exceptions;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Services;
+using Fluxo.Data.Context;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Fluxo.Data.Operations;
 
 public sealed class DataOperationRunner(IDataOperationScopeFactory scopeFactory, ILogService logService)
     : IDataOperationRunner
 {
+    public Task RunInTransactionAsync(string performedProcess,
+        Func<IDataOperationScope, CancellationToken, Task> operation,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        return RunAsync(performedProcess, async (scope, ct) =>
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<FluxoDbContext>();
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(ct);
+            await operation(scope, ct);
+            await transaction.CommitAsync(ct);
+        }, cancellationToken);
+    }
+
     public async Task RunAsync(Func<IDataOperationScope, CancellationToken, Task> operation,
         CancellationToken cancellationToken = default)
     {

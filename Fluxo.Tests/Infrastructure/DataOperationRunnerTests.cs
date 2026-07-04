@@ -2,7 +2,12 @@ using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Repositories;
 using Fluxo.Core.Interfaces.Services;
+using Fluxo.Core.Entities;
+using Fluxo.Core.Exceptions;
+using Fluxo.Data.Context;
 using Fluxo.Data.Extensions;
+using Fluxo.Data.Operations;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Xunit;
@@ -11,6 +16,38 @@ namespace Fluxo.Tests.Infrastructure;
 
 public sealed class DataOperationRunnerTests
 {
+    [Fact]
+    public async Task RunInTransactionAsync_WhenLaterSaveFails_RollsBackEarlierSave()
+    {
+        var options = new DbContextOptionsBuilder<FluxoDbContext>()
+            .UseSqlite("Data Source=:memory:")
+            .Options;
+        await using var dbContext = new FluxoDbContext(options);
+        await dbContext.Database.OpenConnectionAsync();
+        await dbContext.Database.EnsureCreatedAsync();
+        using var services = new ServiceCollection().AddSingleton(dbContext).BuildServiceProvider();
+        var scope = Substitute.For<IDataOperationScope>();
+        scope.ServiceProvider.Returns(services);
+        var factory = Substitute.For<IDataOperationScopeFactory>();
+        factory.CreateAsync(Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult(scope));
+        var log = Substitute.For<ILogService>();
+        log.CreateFailureMessage(Arg.Any<string>()).Returns("failed");
+        var runner = new DataOperationRunner(factory, log);
+
+        await Assert.ThrowsAsync<DataOperationException>(() =>
+            runner.RunInTransactionAsync("revert history range", async (_, ct) =>
+            {
+                dbContext.UserSettings.Add(new UserSettings { Name = "first", Value = "1" });
+                await dbContext.SaveChangesAsync(ct);
+                dbContext.UserSettings.Add(new UserSettings { Name = "second", Value = "2" });
+                await dbContext.SaveChangesAsync(ct);
+                throw new InvalidOperationException("stop batch");
+            }));
+
+        dbContext.ChangeTracker.Clear();
+        Assert.Empty(await dbContext.UserSettings.ToListAsync());
+    }
+
     [Fact]
     public async Task RunAsync_UsesSharedScopedInstancesWithinSingleOperation()
     {

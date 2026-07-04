@@ -6,6 +6,13 @@ namespace Fluxo.Tests.TestDoubles;
 
 public sealed class InlineDataOperationRunner(IUnitOfWork unitOfWork) : IDataOperationRunner
 {
+    public Task RunInTransactionAsync(string performedProcess,
+        Func<IDataOperationScope, CancellationToken, Task> operation,
+        CancellationToken cancellationToken = default)
+    {
+        return RunAsync(performedProcess, operation, cancellationToken);
+    }
+
     public Task RunAsync(Func<IDataOperationScope, CancellationToken, Task> operation,
         CancellationToken cancellationToken = default)
     {
