@@ -146,8 +146,15 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
 
     private static void ConfigureTransaction(EntityTypeBuilder<Transaction> entity)
     {
-        entity.ToTable("Transactions", table => table.HasCheckConstraint("CK_Transactions_Amount", "Amount >= 0"));
+        entity.ToTable("Transactions", table =>
+        {
+            table.HasCheckConstraint("CK_Transactions_Amount", "Amount >= 0");
+            table.HasCheckConstraint(
+                "CK_Transactions_ShouldAffectBalance_RequiresIoU",
+                "ShouldAffectBalance = 0 OR IsIoU = 1");
+        });
         entity.HasKey(transaction => transaction.Id);
+        entity.Ignore(transaction => transaction.AffectsAccountBalance);
         entity.Property(transaction => transaction.Id).ValueGeneratedOnAdd();
         entity.Property(transaction => transaction.Name).IsRequired();
         entity.Property(transaction => transaction.Amount).HasColumnType("NUMERIC");
@@ -156,6 +163,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(transaction => transaction.IsPinned).HasDefaultValue(false);
         entity.Property(transaction => transaction.IsForDeletion).HasDefaultValue(false);
         entity.Property(transaction => transaction.IsIoU).HasDefaultValue(false);
+        entity.Property(transaction => transaction.ShouldAffectBalance).HasDefaultValue(false);
         entity.Property(transaction => transaction.IsExcludedFromBudget).HasDefaultValue(false);
         entity.HasOne(transaction => transaction.Account).WithMany().HasForeignKey(transaction => transaction.SourceAccountId).OnDelete(DeleteBehavior.Restrict);
         entity.HasOne(transaction => transaction.Goal).WithMany().HasForeignKey(transaction => transaction.GoalId).OnDelete(DeleteBehavior.SetNull);
@@ -169,6 +177,9 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         foreach (var entry in ChangeTracker.Entries<Transaction>()
                      .Where(entry => entry.State is EntityState.Added or EntityState.Modified))
         {
+            if (!entry.Entity.IsIoU)
+                entry.Entity.ShouldAffectBalance = false;
+
             entry.Entity.OccurredOn = entry.Entity.OccurredOn.Date;
             if (entry.State == EntityState.Added)
                 entry.Entity.LoggedOn = DateTime.Now;

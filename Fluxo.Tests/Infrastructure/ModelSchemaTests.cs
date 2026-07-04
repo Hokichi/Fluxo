@@ -37,6 +37,7 @@ public sealed class ModelSchemaTests
         var transaction = model.FindEntityType(typeof(Transaction))!;
         Assert.Equal("Transactions", transaction.GetTableName());
         Assert.Equal(false, transaction.FindProperty(nameof(Transaction.IsIoU))!.GetDefaultValue());
+        Assert.Equal(false, transaction.FindProperty(nameof(Transaction.ShouldAffectBalance))!.GetDefaultValue());
         Assert.Equal(false, transaction.FindProperty(nameof(Transaction.IsExcludedFromBudget))!.GetDefaultValue());
         Assert.True(transaction.FindProperty(nameof(Transaction.ParentTransactionId))!.IsNullable);
         Assert.NotNull(transaction.FindProperty(nameof(Transaction.LoggedOn)));
@@ -78,6 +79,52 @@ public sealed class ModelSchemaTests
             index.IsUnique &&
             index.Properties.Count == 1 &&
             string.Equals(index.Properties[0].Name, "SingletonKey", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task SaveChanges_ClearsShouldAffectBalanceWhenTransactionIsNotIoU()
+    {
+        await using var dbContext = CreateDbContext();
+        await dbContext.Database.OpenConnectionAsync();
+        await dbContext.Database.EnsureCreatedAsync();
+        var account = new Account { Name = "Checking" };
+        var transaction = new Transaction
+        {
+            Type = TransactionType.Expense,
+            Account = account,
+            Name = "Regular",
+            Amount = 10m,
+            OccurredOn = DateTime.Today,
+            IsIoU = false,
+            ShouldAffectBalance = true
+        };
+        dbContext.Add(transaction);
+
+        await dbContext.SaveChangesAsync();
+
+        Assert.False(transaction.ShouldAffectBalance);
+    }
+
+    [Fact]
+    public async Task DatabaseRejectsBalanceAffectingTransactionThatIsNotIoU()
+    {
+        await using var dbContext = CreateDbContext();
+        await dbContext.Database.OpenConnectionAsync();
+        await dbContext.Database.EnsureCreatedAsync();
+        await dbContext.Database.ExecuteSqlRawAsync("""
+            INSERT INTO Accounts
+                (Id, Name, AccountType, Balance, IsDefault, IsEnabled, IsForDeletion,
+                 MaximumSpending, PinnedOnUI, SpentAmount, AccountLimit)
+            VALUES (7, 'Checking', 0, 100, 0, 1, 0, 0, 0, 0, 0);
+            """);
+
+        await Assert.ThrowsAsync<Microsoft.Data.Sqlite.SqliteException>(() =>
+            dbContext.Database.ExecuteSqlRawAsync("""
+                INSERT INTO Transactions
+                    (Type, SourceAccountId, Name, Amount, OccurredOn, LoggedOn, Notes,
+                     IsPinned, IsForDeletion, IsIoU, ShouldAffectBalance, IsExcludedFromBudget)
+                VALUES (0, 7, 'Invalid', 10, '2026-07-01', '2026-07-01 12:00:00', '', 0, 0, 0, 1, 0);
+                """));
     }
 
     [Theory]

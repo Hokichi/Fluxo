@@ -25,5 +25,10 @@ public sealed class Transaction
     public bool IsPinned { get; set; }
     public bool IsForDeletion { get; set; }
     public bool IsIoU { get; set; }
+    public bool ShouldAffectBalance { get; set; }
+    public bool AffectsAccountBalance => ShouldAffectAccountBalance(IsIoU, ShouldAffectBalance);
     public bool IsExcludedFromBudget { get; set; }
+
+    public static bool ShouldAffectAccountBalance(bool isIoU, bool shouldAffectBalance) =>
+        !isIoU || shouldAffectBalance;
 }
