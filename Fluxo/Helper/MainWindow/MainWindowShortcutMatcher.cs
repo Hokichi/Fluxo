@@ -30,6 +30,16 @@ public static class MainWindowShortcutMatcher
         return key == Key.H && modifiers == ModifierKeys.Control;
     }
 
+    public static bool IsUndoShortcut(Key key, ModifierKeys modifiers)
+    {
+        return key == Key.Z && modifiers == ModifierKeys.Control;
+    }
+
+    public static bool IsRedoShortcut(Key key, ModifierKeys modifiers)
+    {
+        return key == Key.Y && modifiers == ModifierKeys.Control;
+    }
+
     public static bool IsOpenNewTransactionShortcut(Key key, ModifierKeys modifiers)
     {
         return key == Key.N && modifiers == ModifierKeys.Control;

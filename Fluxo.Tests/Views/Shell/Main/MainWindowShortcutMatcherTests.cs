@@ -7,6 +7,26 @@ namespace Fluxo.Tests.Views.Shell.Main;
 
 public class MainWindowShortcutMatcherTests
 {
+    [Theory]
+    [InlineData(Key.Z, ModifierKeys.Control, true)]
+    [InlineData(Key.Z, ModifierKeys.None, false)]
+    [InlineData(Key.Z, ModifierKeys.Control | ModifierKeys.Shift, false)]
+    [InlineData(Key.Y, ModifierKeys.Control, false)]
+    public void IsUndoShortcut_MatchesOnlyCtrlZ(Key key, ModifierKeys modifiers, bool expected)
+    {
+        Assert.Equal(expected, MainWindowShortcutMatcher.IsUndoShortcut(key, modifiers));
+    }
+
+    [Theory]
+    [InlineData(Key.Y, ModifierKeys.Control, true)]
+    [InlineData(Key.Y, ModifierKeys.None, false)]
+    [InlineData(Key.Y, ModifierKeys.Control | ModifierKeys.Shift, false)]
+    [InlineData(Key.Z, ModifierKeys.Control, false)]
+    public void IsRedoShortcut_MatchesOnlyCtrlY(Key key, ModifierKeys modifiers, bool expected)
+    {
+        Assert.Equal(expected, MainWindowShortcutMatcher.IsRedoShortcut(key, modifiers));
+    }
+
     [Fact]
     public void IsToggleHistoryShortcut_ReturnsTrueOnlyForCtrlH()
     {
