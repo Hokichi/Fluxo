@@ -8,15 +8,34 @@ using Fluxo.Data.Context;
 using Fluxo.Data.Extensions;
 using Fluxo.Data.Repositories;
 using Fluxo.Services.Persistence;
+using Fluxo.Tests.TestDoubles;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
 using Xunit;
 
 namespace Fluxo.Tests.Infrastructure;
 
 public sealed class DataServiceRegistrationTests
 {
+#if DEBUG
+    [Fact]
+    public void AddFluxoData_EnablesSensitiveDataLoggingInDebug()
+    {
+        using var provider = new ServiceCollection()
+            .AddSingleton(Substitute.For<ILogService>())
+            .AddFluxoData()
+            .BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<FluxoDbContext>();
+
+        Assert.True(context.GetService<IDbContextOptions>()
+            .Extensions.OfType<CoreOptionsExtension>().Single().IsSensitiveDataLoggingEnabled);
+    }
+#endif
+
     [Fact]
     public void AddFluxoData_RegistersExpectedLifetimes()
     {
@@ -43,7 +62,9 @@ public sealed class DataServiceRegistrationTests
         AssertLifetime<IDataOperationScopeFactory>(services, ServiceLifetime.Singleton);
         AssertLifetime<IDataOperationRunner>(services, ServiceLifetime.Singleton);
 
-        services.AddScoped<IAppDataService, AppDataService>();
+        services.AddScoped<IAppDataService>(provider =>
+            new AppDataService(provider.GetRequiredService<IDataOperationRunner>()));
+        services.AddSingleton(Substitute.For<ILogService>());
         using var provider = services.BuildServiceProvider();
 
         var recurringRepository = provider.GetService<IRecurringTransactionRepository>();
@@ -71,17 +92,36 @@ public sealed class DataServiceRegistrationTests
         await dbContext.Database.EnsureCreatedAsync();
 
         using var unitOfWork = CreateUnitOfWork(dbContext);
-        var appData = new AppDataService(unitOfWork);
+        var appData = new AppDataService(new InlineDataOperationRunner(unitOfWork));
 
         var first = await appData.EnsureBudgetAllocationAsync();
         var second = await appData.EnsureBudgetAllocationAsync();
 
         Assert.Same(first, second);
-        Assert.Single(dbContext.BudgetAllocation.Local);
+        Assert.Empty(dbContext.BudgetAllocation.Local);
 
         await appData.SaveChangesAsync();
 
         Assert.Single(await dbContext.BudgetAllocation.AsNoTracking().ToListAsync());
+    }
+
+    [Fact]
+    public async Task SaveChangesAsync_AppliesQueuedRootsInsideOperation()
+    {
+        var accounts = Substitute.For<IAccountRepository>();
+        var unitOfWork = Substitute.For<IUnitOfWork>();
+        unitOfWork.Accounts.Returns(accounts);
+        var appData = new AppDataService(new InlineDataOperationRunner(unitOfWork));
+        var account = new Account { Id = 4, Name = "Updated" };
+
+        appData.UpdateAccount(account);
+
+        accounts.DidNotReceive().Update(Arg.Any<Account>());
+
+        await appData.SaveChangesAsync();
+
+        accounts.Received(1).Update(account);
+        await unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     private static void AssertLifetime<TService>(

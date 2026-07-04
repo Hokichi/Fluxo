@@ -500,6 +500,7 @@ public partial class TransactionDetailVM : ObservableObject
             transaction.OccurredOn = input.Date;
             transaction.Notes = input.Note;
             transaction.Account = newAccount;
+            transaction.SourceAccountId = newAccount.Id;
             transaction.IsIoU = input.IsIoU;
             transaction.ShouldAffectBalance = input.ShouldAffectBalance;
             transaction.IsExcludedFromBudget = input.IsExcludedFromBudget;

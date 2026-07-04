@@ -13,6 +13,13 @@ public sealed class InlineDataOperationRunner(IUnitOfWork unitOfWork) : IDataOpe
         return RunAsync(performedProcess, operation, cancellationToken);
     }
 
+    public Task<TResult> RunInTransactionAsync<TResult>(string performedProcess,
+        Func<IDataOperationScope, CancellationToken, Task<TResult>> operation,
+        CancellationToken cancellationToken = default)
+    {
+        return RunAsync(performedProcess, operation, cancellationToken);
+    }
+
     public Task RunAsync(Func<IDataOperationScope, CancellationToken, Task> operation,
         CancellationToken cancellationToken = default)
     {

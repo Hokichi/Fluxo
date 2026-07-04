@@ -33,9 +33,11 @@ public class Repository<T>(FluxoDbContext dbContext) : IRepository<T> where T : 
             .FirstOrDefaultAsync(entity => EF.Property<int>(entity, "Id") == id, cancellationToken);
     }
 
-    public async Task AddAsync(T entity, CancellationToken cancellationToken = default)
+    public Task AddAsync(T entity, CancellationToken cancellationToken = default)
     {
-        await DbSet.AddAsync(entity, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        DbContext.Entry(entity).State = EntityState.Added;
+        return Task.CompletedTask;
     }
 
     public void Update(T entity)

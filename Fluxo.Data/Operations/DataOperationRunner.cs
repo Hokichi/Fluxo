@@ -24,6 +24,21 @@ public sealed class DataOperationRunner(IDataOperationScopeFactory scopeFactory,
         }, cancellationToken);
     }
 
+    public Task<TResult> RunInTransactionAsync<TResult>(string performedProcess,
+        Func<IDataOperationScope, CancellationToken, Task<TResult>> operation,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        return RunAsync(performedProcess, async (scope, ct) =>
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<FluxoDbContext>();
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(ct);
+            var result = await operation(scope, ct);
+            await transaction.CommitAsync(ct);
+            return result;
+        }, cancellationToken);
+    }
+
     public async Task RunAsync(Func<IDataOperationScope, CancellationToken, Task> operation,
         CancellationToken cancellationToken = default)
     {

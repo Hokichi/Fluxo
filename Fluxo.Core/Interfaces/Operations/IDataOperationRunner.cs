@@ -19,4 +19,8 @@ public interface IDataOperationRunner
     Task RunInTransactionAsync(string performedProcess,
         Func<IDataOperationScope, CancellationToken, Task> operation,
         CancellationToken cancellationToken = default);
+
+    Task<TResult> RunInTransactionAsync<TResult>(string performedProcess,
+        Func<IDataOperationScope, CancellationToken, Task<TResult>> operation,
+        CancellationToken cancellationToken = default);
 }

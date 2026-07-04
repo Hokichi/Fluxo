@@ -60,7 +60,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ITagService, TagService>();
         services.AddTransient<IAnalyticsService, AnalyticsService>();
         services.AddTransient<ICalendarService, CalendarService>();
-        services.AddScoped<IAppDataService, AppDataService>();
+        services.AddTransient<IAppDataService>(provider =>
+            new AppDataService(provider.GetRequiredService<Fluxo.Core.Interfaces.Operations.IDataOperationRunner>()));
         services.AddTransient<IBudgetAllocationPeriodSyncService, BudgetAllocationPeriodSyncService>();
         services.AddTransient<IUserBackupService, UserBackupService>();
 

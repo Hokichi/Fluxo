@@ -17,6 +17,17 @@ namespace Fluxo.Tests.Infrastructure;
 public sealed class DataOperationRunnerTests
 {
     [Fact]
+    public async Task RunInTransactionAsync_ReturnsOperationResult()
+    {
+        using var serviceProvider = CreateServiceProvider();
+        var runner = serviceProvider.GetRequiredService<IDataOperationRunner>();
+
+        var result = await runner.RunInTransactionAsync("return result", (_, _) => Task.FromResult("done"));
+
+        Assert.Equal("done", result);
+    }
+
+    [Fact]
     public async Task RunInTransactionAsync_WhenLaterSaveFails_RollsBackEarlierSave()
     {
         var options = new DbContextOptionsBuilder<FluxoDbContext>()

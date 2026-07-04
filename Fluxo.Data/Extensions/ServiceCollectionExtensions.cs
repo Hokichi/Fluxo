@@ -24,6 +24,10 @@ public static class ServiceCollectionExtensions
                 FluxoDbContextFactory.BuildConnectionString(),
                 sqliteOptions => sqliteOptions.MigrationsAssembly("fluxo"));
 
+#if DEBUG
+            optionsBuilder.EnableSensitiveDataLogging();
+#endif
+
             if (logService is not null)
             {
                 optionsBuilder.LogTo(
