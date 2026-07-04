@@ -345,6 +345,7 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <customControls:BalloonRadioButton
                         CheckedBackground="{StaticResource Brush.Mint}"
@@ -367,12 +368,33 @@
                         GroupName="TransactionDetailMode"
                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
                         IconSize="14"
-                        IsChecked="{Binding IsIoU, Mode=TwoWay}"
+                        IsChecked="{Binding IsUnpostedIoUMode, Mode=TwoWay}"
                         IsEnabled="{Binding CanEditFields}"
                         ShouldShowText="True"
                         UncheckedIcon="{StaticResource CreditCardMinusSolid}"
-                        UncheckedText="Debt/IoU" />
+                        UncheckedText="Unposted Debt/IoU" />
+                    <customControls:BalloonRadioButton
+                        Grid.Column="2"
+                        Margin="8,0,0,0"
+                        CheckedBackground="{StaticResource Brush.Mint}"
+                        CornerRadius="8"
+                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                        GroupName="TransactionDetailMode"
+                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
+                        IconSize="14"
+                        IsChecked="{Binding IsPostedIoUMode, Mode=TwoWay}"
+                        IsEnabled="{Binding CanEditFields}"
+                        ShouldShowText="True"
+                        UncheckedIcon="{StaticResource CreditCardMinusSolid}"
+                        UncheckedText="Posted Debt/IoU" />
                 </Grid>
+                <TextBlock
+                    Margin="0,8,0,0"
+                    FontFamily="{StaticResource Medium}"
+                    FontSize="11"
+                    Foreground="{StaticResource Brush.Text.Secondary}"
+                    Text="{Binding TransactionModeDescription, Mode=OneWay}"
+                    TextWrapping="Wrap" />
             </StackPanel>
 
             <StackPanel

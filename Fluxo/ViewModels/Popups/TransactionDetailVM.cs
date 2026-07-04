@@ -32,6 +32,7 @@ public partial class TransactionDetailVM : ObservableObject
     [ObservableProperty] private decimal _amountText;
     [ObservableProperty] private bool _isPinned;
     [ObservableProperty] private bool _isIoU;
+    [ObservableProperty] private bool _shouldAffectBalance;
     [ObservableProperty] private bool _isExcludedFromBudget;
     [ObservableProperty] private bool _isEditing;
     [ObservableProperty] private bool _isSplitMode;
@@ -48,7 +49,7 @@ public partial class TransactionDetailVM : ObservableObject
     [ObservableProperty] private string _popupTitle = "Transaction Detail";
 
     private TransactionDetailSavedState _savedState = new(string.Empty, 0m, false, string.Empty, DateTime.Today,
-        ExpenseCategory.Needs, 0, 0, false, false);
+        ExpenseCategory.Needs, 0, 0, false, false, false);
 
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
     [ObservableProperty] private ExpenseCategory _selectedExpenseCategory = ExpenseCategory.Needs;
@@ -104,6 +105,28 @@ public partial class TransactionDetailVM : ObservableObject
         get => !IsIoU;
         set { if (value) IsIoU = false; }
     }
+    public bool IsUnpostedIoUMode
+    {
+        get => IsIoU && !ShouldAffectBalance;
+        set
+        {
+            if (!value) return;
+            IsIoU = false;
+            IsIoU = true;
+        }
+    }
+    public bool IsPostedIoUMode
+    {
+        get => IsIoU && ShouldAffectBalance;
+        set
+        {
+            if (!value) return;
+            IsIoU = true;
+            ShouldAffectBalance = true;
+        }
+    }
+    public string TransactionModeDescription =>
+        GetTransactionModeDescription(IsIoU, ShouldAffectBalance);
     public bool IsExpense => _transaction.Type == TransactionType.Expense;
     public string IoUTooltip => IsExpense ? "Set as lend" : "Set as debt";
     public bool IsCategoryEnabled => IsEditing && IsExpense;
@@ -180,7 +203,36 @@ public partial class TransactionDetailVM : ObservableObject
         IsMoreTagsOpen = false;
     }
 
-    partial void OnIsIoUChanged(bool value) => OnPropertyChanged(nameof(IsRegularMode));
+    partial void OnIsIoUChanged(bool value)
+    {
+        if (!value)
+            ShouldAffectBalance = false;
+
+        OnPropertyChanged(nameof(IsRegularMode));
+        OnPropertyChanged(nameof(IsUnpostedIoUMode));
+        OnPropertyChanged(nameof(IsPostedIoUMode));
+        OnPropertyChanged(nameof(TransactionModeDescription));
+    }
+
+    partial void OnShouldAffectBalanceChanged(bool value)
+    {
+        if (value && !IsIoU)
+        {
+            ShouldAffectBalance = false;
+            return;
+        }
+
+        OnPropertyChanged(nameof(IsUnpostedIoUMode));
+        OnPropertyChanged(nameof(IsPostedIoUMode));
+        OnPropertyChanged(nameof(TransactionModeDescription));
+    }
+
+    internal static string GetTransactionModeDescription(bool isIoU, bool shouldAffectBalance) =>
+        isIoU
+            ? shouldAffectBalance
+                ? "A transaction marked as debt/IoU and affects the accounts"
+                : "A transaction marked as debt/IoU but doesn't affect the accounts"
+            : "A one-time transaction";
 
     public async Task BeginEditingAsync()
     {
@@ -357,7 +409,8 @@ public partial class TransactionDetailVM : ObservableObject
             SelectedDate.Date,
             NoteText,
             SelectedExpenseCategory,
-            SelectedTag?.Id);
+            SelectedTag?.Id,
+            ShouldAffectBalance: ShouldAffectBalance);
     }
 
     public async Task<TransactionDetailSaveResult> SaveAsync(
@@ -407,6 +460,11 @@ public partial class TransactionDetailVM : ObservableObject
             var resolvedName = BuildTransactionName(input.Name, input.Note, tag.Name);
 
             var sourceChanged = currentAccount.Id != newAccount.Id;
+            if (!sourceChanged)
+                newAccount = currentAccount;
+            var oldAffectsBalance = transaction.AffectsAccountBalance;
+            var newAffectsBalance = Transaction.ShouldAffectAccountBalance(
+                input.IsIoU, input.ShouldAffectBalance);
             var destinationSpending = 0m;
             if (sourceChanged && newAccount.MaximumSpending > 0m)
             {
@@ -414,7 +472,7 @@ public partial class TransactionDetailVM : ObservableObject
                     ? newAccount.SpentAmount
                     : CalculateAccountSpending(await _appData.GetTransactionsAsync(), newAccount.Id);
             }
-            if (transaction.Type == TransactionType.Expense &&
+            if (newAffectsBalance && transaction.Type == TransactionType.Expense &&
                 RequiresMaximumSpendingConfirmation(
                     currentAccount.Id,
                     newAccount.Id,
@@ -427,17 +485,11 @@ public partial class TransactionDetailVM : ObservableObject
                     $"This expense exceeds {newAccount.Name}'s maximum spending limit. Save anyway?");
             }
 
-            if (!sourceChanged)
-            {
+            if (oldAffectsBalance)
                 LogMemoryPersistence.RevertTransactionFromAccount(currentAccount, transaction.Type, transaction.Amount);
-                LogMemoryPersistence.ApplyTransactionToAccount(currentAccount, transaction.Type, input.Amount);
-                newAccount = currentAccount;
-            }
-            else
-            {
-                LogMemoryPersistence.RevertTransactionFromAccount(currentAccount, transaction.Type, transaction.Amount);
+
+            if (newAffectsBalance)
                 LogMemoryPersistence.ApplyTransactionToAccount(newAccount, transaction.Type, input.Amount);
-            }
 
             transaction.Name = resolvedName;
             transaction.Amount = input.Amount;
@@ -449,15 +501,17 @@ public partial class TransactionDetailVM : ObservableObject
             transaction.Notes = input.Note;
             transaction.Account = newAccount;
             transaction.IsIoU = input.IsIoU;
+            transaction.ShouldAffectBalance = input.ShouldAffectBalance;
             transaction.IsExcludedFromBudget = input.IsExcludedFromBudget;
 
             if (sourceChanged)
                 await CascadeAccountToChildTransactionsAsync(newAccount);
 
             _appData.UpdateTransaction(transaction);
-            _appData.UpdateAccount(currentAccount);
+            if (oldAffectsBalance || newAffectsBalance && !sourceChanged)
+                _appData.UpdateAccount(currentAccount);
 
-            if (sourceChanged)
+            if (sourceChanged && newAffectsBalance)
                 _appData.UpdateAccount(newAccount);
 
             await _appData.SaveChangesAsync();
@@ -471,6 +525,7 @@ public partial class TransactionDetailVM : ObservableObject
                 input.AccountId,
                 input.TagId,
                 input.IsIoU,
+                input.ShouldAffectBalance,
                 input.IsExcludedFromBudget);
 
             IsEditing = false;
@@ -526,8 +581,11 @@ public partial class TransactionDetailVM : ObservableObject
             var snapshots = plan.Transactions.Select(TransactionMemorySnapshot.Create).ToList();
             foreach (var item in plan.Transactions)
             {
-                LogMemoryPersistence.RevertTransactionFromAccount(item.Account, item.Type, item.Amount);
-                _appData.UpdateAccount(item.Account);
+                if (item.AffectsAccountBalance)
+                {
+                    LogMemoryPersistence.RevertTransactionFromAccount(item.Account, item.Type, item.Amount);
+                    _appData.UpdateAccount(item.Account);
+                }
                 _appData.RemoveTransaction(item);
             }
 
@@ -582,6 +640,7 @@ public partial class TransactionDetailVM : ObservableObject
         NameText = _savedState.Name;
         IsPinned = _savedState.IsPinned;
         IsIoU = _savedState.IsIoU;
+        ShouldAffectBalance = _savedState.ShouldAffectBalance;
         IsExcludedFromBudget = _savedState.IsExcludedFromBudget;
         NoteText = _savedState.Note;
         SelectedDate = _savedState.Date == default ? DateTime.Today : _savedState.Date.Date;
@@ -627,6 +686,7 @@ public partial class TransactionDetailVM : ObservableObject
             SelectedExpenseCategory,
             SelectedTag.Id,
             IsIoU,
+            ShouldAffectBalance,
             IsExcludedFromBudget);
 
         return true;
@@ -1070,7 +1130,8 @@ public partial class TransactionDetailVM : ObservableObject
             TagId = tag.Id,
             Tag = tag,
             ParentTransactionId = parentTransactionId,
-            IsIoU = input.IsIoU
+            IsIoU = input.IsIoU,
+            ShouldAffectBalance = input.IsIoU
         };
     }
 
@@ -1090,6 +1151,7 @@ public partial class TransactionDetailVM : ObservableObject
         transaction.Account = account;
         transaction.SourceAccountId = account.Id;
         transaction.IsIoU = input.IsIoU;
+        transaction.ShouldAffectBalance = input.IsIoU;
         transaction.IsForDeletion = false;
         transaction.ParentTransactionId = input.ParentTransactionId;
     }
@@ -1121,6 +1183,7 @@ public partial class TransactionDetailVM : ObservableObject
             transaction.Account?.Id ?? 0,
             transaction.Tag?.Id ?? 0,
             transaction.IsIoU,
+            transaction.ShouldAffectBalance,
             transaction.IsExcludedFromBudget);
     }
 
@@ -1164,6 +1227,9 @@ public partial class TransactionDetailVM : ObservableObject
             changedFields |= TransactionDetailChangedFields.Note;
 
         if (input.IsIoU != savedState.IsIoU)
+            changedFields |= TransactionDetailChangedFields.IoU;
+
+        if (input.ShouldAffectBalance != savedState.ShouldAffectBalance)
             changedFields |= TransactionDetailChangedFields.IoU;
 
         if (input.IsExcludedFromBudget != savedState.IsExcludedFromBudget)
@@ -1268,6 +1334,7 @@ public partial class TransactionDetailVM : ObservableObject
         ExpenseCategory Category,
         int TagId,
         bool IsIoU,
+        bool ShouldAffectBalance,
         bool IsExcludedFromBudget);
 
     private readonly record struct TransactionSplitInput(
@@ -1291,5 +1358,6 @@ public partial class TransactionDetailVM : ObservableObject
         int AccountId,
         int TagId,
         bool IsIoU,
+        bool ShouldAffectBalance,
         bool IsExcludedFromBudget);
 }

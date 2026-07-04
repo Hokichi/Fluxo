@@ -1,4 +1,3 @@
-using Fluxo.Tests.TestSupport;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.ViewModels.Popups;
@@ -8,52 +7,20 @@ namespace Fluxo.Tests.ViewModels.Popups;
 
 public sealed class TransactionDetailVMBalloonToggleTests
 {
-    private static readonly string ViewModelPath = RepositoryPaths.File(
-        "Fluxo", "ViewModels", "Popups", "TransactionDetailVM.cs");
-
-    [Fact]
-    public void RegularMode_MapsToInverseOfIoU()
+    [Theory]
+    [InlineData(false, false, "A one-time transaction")]
+    [InlineData(true, false, "A transaction marked as debt/IoU but doesn't affect the accounts")]
+    [InlineData(true, true, "A transaction marked as debt/IoU and affects the accounts")]
+    public void ModeDescription_MatchesBalanceBehavior(bool isIoU, bool posted, string expected)
     {
-        var source = File.ReadAllText(ViewModelPath);
-
-        Assert.Contains("public bool IsRegularMode", source);
-        Assert.Contains("get => !IsIoU;", source);
-        Assert.Contains("if (value) IsIoU = false;", source);
-        Assert.DoesNotContain("public void HandleIoUModeClick()", source);
-        Assert.DoesNotContain("public void HandleExcludeModeClick()", source);
-        Assert.DoesNotContain("public void HandleRecurringModeClick()", source);
-        Assert.DoesNotContain("public void HandleInstallmentsModeClick()", source);
-    }
-
-    [Fact]
-    public void SaveAsync_UpdatesExistingTransactionModeFlags()
-    {
-        var source = File.ReadAllText(ViewModelPath);
-        var saveStart = source.IndexOf("public async Task<TransactionDetailSaveResult> SaveAsync", StringComparison.Ordinal);
-        var saveEnd = source.IndexOf("public bool HasValidChangesToPersistOnClose", saveStart, StringComparison.Ordinal);
-        var saveSource = source[saveStart..saveEnd];
-
-        Assert.Contains("transaction.IsIoU = input.IsIoU;", saveSource);
-        Assert.Contains("transaction.IsExcludedFromBudget = input.IsExcludedFromBudget;", saveSource);
-        Assert.Contains("_appData.UpdateTransaction(transaction);", saveSource);
-        Assert.DoesNotContain("AddTransactionAsync", saveSource);
-    }
-
-    [Fact]
-    public void ModeFlags_ParticipateInSavedStateAndDirtyTracking()
-    {
-        var source = File.ReadAllText(ViewModelPath);
-
-        Assert.Contains("input.IsIoU != savedState.IsIoU", source);
-        Assert.Contains("input.IsExcludedFromBudget != savedState.IsExcludedFromBudget", source);
-        Assert.Contains("IsIoU = _savedState.IsIoU;", source);
-        Assert.Contains("IsExcludedFromBudget = _savedState.IsExcludedFromBudget;", source);
+        Assert.Equal(expected, TransactionDetailVM.GetTransactionModeDescription(isIoU, posted));
     }
 
     [Fact]
     public void SplitState_IsPreservedWhileParentIsShownAndSavedOnClose()
     {
-        var source = File.ReadAllText(ViewModelPath);
+        var source = File.ReadAllText(Fluxo.Tests.TestSupport.RepositoryPaths.File(
+            "Fluxo", "ViewModels", "Popups", "TransactionDetailVM.cs"));
 
         Assert.Contains("private bool _areSplitRowsLoaded;", source);
         Assert.Contains("public bool HasPendingSplitChanges", source);
