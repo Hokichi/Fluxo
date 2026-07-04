@@ -11,6 +11,67 @@ namespace Fluxo.Tests.Services.History;
 public sealed class LogMemoryManagerTests
 {
     [Fact]
+    public async Task RevertTo_RevertsOnlyNewerActiveEntriesNewestFirst()
+    {
+        var calls = new List<string>();
+        var (manager, messenger, reloads) = CreateManager();
+        foreach (var name in new[] { "first", "second", "third", "fourth" })
+            messenger.Send(new RecordLogMemoryMessage(new RecordingAction(name, calls)));
+        await manager.ToggleAsync(manager.HistoryEntries[2]);
+        calls.Clear();
+        reloads.Clear();
+
+        Assert.True(await manager.RevertToAsync(manager.HistoryEntries[0]));
+
+        Assert.Equal(["revert:fourth", "revert:second"], calls);
+        Assert.False(manager.HistoryEntries[0].IsReverted);
+        Assert.All(manager.HistoryEntries.Skip(1), entry => Assert.True(entry.IsReverted));
+        Assert.Single(reloads);
+    }
+
+    [Fact]
+    public async Task RevertTo_BuildsOldestFirstRedoOrder()
+    {
+        var calls = new List<string>();
+        var (manager, messenger, _) = CreateManager();
+        foreach (var name in new[] { "first", "second", "third" })
+            messenger.Send(new RecordLogMemoryMessage(new RecordingAction(name, calls)));
+        await manager.RevertToAsync(manager.HistoryEntries[0]);
+        calls.Clear();
+
+        await manager.RedoAsync();
+        await manager.RedoAsync();
+
+        Assert.Equal(["reapply:second", "reapply:third"], calls);
+    }
+
+    [Fact]
+    public async Task RevertTo_WhenBatchFails_PreservesHistoryAndStacks()
+    {
+        var (manager, messenger, _) = CreateManager();
+        messenger.Send(new RecordLogMemoryMessage(new RecordingAction("first", [])));
+        messenger.Send(new RecordLogMemoryMessage(new RecordingAction("broken", [], true)));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            manager.RevertToAsync(manager.HistoryEntries[0]));
+
+        Assert.All(manager.HistoryEntries, entry => Assert.False(entry.IsReverted));
+        Assert.True(manager.CanUndo);
+        Assert.False(manager.CanRedo);
+    }
+
+    [Fact]
+    public void CanRevertToHere_IsTrueOnlyWithNewerActiveEntry()
+    {
+        var (manager, messenger, _) = CreateManager();
+        messenger.Send(new RecordLogMemoryMessage(new RecordingAction("first", [])));
+        messenger.Send(new RecordLogMemoryMessage(new RecordingAction("second", [])));
+
+        Assert.True(manager.HistoryEntries[0].CanRevertToHere);
+        Assert.False(manager.HistoryEntries[1].CanRevertToHere);
+    }
+
+    [Fact]
     public async Task UndoAndRedo_UseLifoOrderAndUpdateHistoryState()
     {
         var calls = new List<string>();

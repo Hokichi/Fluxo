@@ -47,6 +47,53 @@ public sealed class LogMemoryManager : IDisposable
         return ApplyStackAsync(_redoStack, _undoStack, LogMemoryApplyDirection.Reapply, cancellationToken);
     }
 
+    public async Task<bool> RevertToAsync(
+        LogMemoryEntry entry,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(entry);
+        if (_isExecuting || !HistoryEntries.Contains(entry) || entry.IsReverted)
+            return false;
+
+        var entries = HistoryEntries
+            .Skip(HistoryEntries.IndexOf(entry) + 1)
+            .Where(candidate => !candidate.IsReverted)
+            .Reverse()
+            .ToArray();
+        if (entries.Length == 0)
+            return false;
+
+        _isExecuting = true;
+        try
+        {
+            await _dataOperationRunner.RunInTransactionAsync(
+                "revert history range",
+                async (scope, ct) =>
+                {
+                    foreach (var candidate in entries)
+                        await candidate.Action.RevertAsync(scope.UnitOfWork, ct);
+                },
+                cancellationToken);
+
+            foreach (var candidate in entries)
+            {
+                candidate.IsReverted = true;
+                _redoStack.Push(candidate);
+                _messenger.Send(new LogMemoryActionAppliedMessage(
+                    candidate.Action,
+                    LogMemoryApplyDirection.Revert));
+            }
+
+            RefreshState();
+            await _reloadCurrentDataAsync();
+            return true;
+        }
+        finally
+        {
+            _isExecuting = false;
+        }
+    }
+
     public async Task<bool> ToggleAsync(LogMemoryEntry entry, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(entry);
