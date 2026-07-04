@@ -5,6 +5,8 @@ namespace Fluxo.Services.History;
 
 public sealed partial class LogMemoryEntry(CoreILogMemoryAction action) : ObservableObject
 {
+    private bool _canRevertToHere;
+
     internal CoreILogMemoryAction Action { get; } = action ?? throw new ArgumentNullException(nameof(action));
 
     public string Description => Action.Description;
@@ -14,6 +16,12 @@ public sealed partial class LogMemoryEntry(CoreILogMemoryAction action) : Observ
     public string Summary => Action.Summary;
 
     public string Details => Action.Details;
+
+    public bool CanRevertToHere
+    {
+        get => _canRevertToHere;
+        internal set => SetProperty(ref _canRevertToHere, value);
+    }
 
     [ObservableProperty]
     private bool _isReverted;

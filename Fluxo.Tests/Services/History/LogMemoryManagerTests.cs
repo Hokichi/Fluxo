@@ -11,6 +11,64 @@ namespace Fluxo.Tests.Services.History;
 public sealed class LogMemoryManagerTests
 {
     [Fact]
+    public async Task UndoAndRedo_UseLifoOrderAndUpdateHistoryState()
+    {
+        var calls = new List<string>();
+        var (manager, messenger, reloads) = CreateManager();
+        messenger.Send(new RecordLogMemoryMessage(new RecordingAction("first", calls)));
+        messenger.Send(new RecordLogMemoryMessage(new RecordingAction("second", calls)));
+
+        Assert.True(await manager.UndoAsync());
+        Assert.True(manager.HistoryEntries[1].IsReverted);
+        Assert.True(manager.CanRedo);
+        Assert.True(await manager.RedoAsync());
+
+        Assert.Equal(["revert:second", "reapply:second"], calls);
+        Assert.False(manager.HistoryEntries[1].IsReverted);
+        Assert.Equal(2, reloads.Count);
+    }
+
+    [Fact]
+    public async Task Undo_SkipsEntryAlreadyRevertedThroughHistory()
+    {
+        var calls = new List<string>();
+        var (manager, messenger, _) = CreateManager();
+        messenger.Send(new RecordLogMemoryMessage(new RecordingAction("first", calls)));
+        messenger.Send(new RecordLogMemoryMessage(new RecordingAction("second", calls)));
+        await manager.ToggleAsync(manager.HistoryEntries[1]);
+
+        Assert.True(await manager.UndoAsync());
+
+        Assert.Equal(["revert:second", "revert:first"], calls);
+    }
+
+    [Fact]
+    public async Task Toggle_CurrentRedoEntry_MakesItUndoEligibleAgain()
+    {
+        var (manager, messenger, _) = CreateManager();
+        messenger.Send(new RecordLogMemoryMessage(new RecordingAction("only", [])));
+        await manager.UndoAsync();
+
+        await manager.ToggleAsync(manager.HistoryEntries[0]);
+
+        Assert.True(manager.CanUndo);
+        Assert.False(manager.CanRedo);
+    }
+
+    [Fact]
+    public async Task FailedUndo_PreservesHistoryAndAvailability()
+    {
+        var (manager, messenger, _) = CreateManager();
+        messenger.Send(new RecordLogMemoryMessage(new RecordingAction("broken", [], true)));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => manager.UndoAsync());
+
+        Assert.False(manager.HistoryEntries[0].IsReverted);
+        Assert.True(manager.CanUndo);
+        Assert.False(manager.CanRedo);
+    }
+
+    [Fact]
     public void Record_AppendsEntriesOldestFirst()
     {
         var (manager, messenger, _) = CreateManager();
