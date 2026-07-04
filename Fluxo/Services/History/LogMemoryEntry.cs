@@ -9,6 +9,12 @@ public sealed partial class LogMemoryEntry(CoreILogMemoryAction action) : Observ
 
     public string Description => Action.Description;
 
+    public string Title => Action.Title;
+
+    public string Summary => Action.Summary;
+
+    public string Details => Action.Details;
+
     [ObservableProperty]
     private bool _isReverted;
 }

@@ -2,6 +2,7 @@ using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.History;
 using Fluxo.Core.Interfaces;
+using System.Globalization;
 
 namespace Fluxo.Services.History;
 
@@ -157,6 +158,9 @@ public sealed class AddTransactionMemoryAction(
 {
     public TransactionMemorySnapshot Snapshot => snapshot;
     public string Description => snapshot.Type == TransactionType.Expense ? "Add expense" : "Add income";
+    public string Title => $"{snapshot.Name} Added";
+    public string Summary => $"{LogMemoryDisplay.TransactionNoun(snapshot.Type)} added";
+    public string Details => $"{LogMemoryDisplay.Amount(snapshot.Amount)} · {LogMemoryDisplay.Date(snapshot.OccurredOn)}";
 
     public async Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
@@ -223,6 +227,17 @@ public sealed class EditTransactionMemoryAction(
     public TransactionMemorySnapshot Before => before;
     public TransactionMemorySnapshot After => after;
     public string Description => "Edit transaction";
+    public string Title => $"{after.Name} Updated";
+    public string Summary => $"{LogMemoryDisplay.TransactionNoun(after.Type)} information updated";
+    public string Details => LogMemoryDisplay.Changes(
+        ("Name", before.Name, after.Name),
+        ("Type", before.Type.ToString(), after.Type.ToString()),
+        ("Amount", LogMemoryDisplay.Amount(before.Amount), LogMemoryDisplay.Amount(after.Amount)),
+        ("Date", LogMemoryDisplay.Date(before.OccurredOn), LogMemoryDisplay.Date(after.OccurredOn)),
+        ("Category", before.ExpenseCategory?.ToString() ?? "None", after.ExpenseCategory?.ToString() ?? "None"),
+        ("Notes", LogMemoryDisplay.Text(before.Notes), LogMemoryDisplay.Text(after.Notes)),
+        ("Pinned", LogMemoryDisplay.YesNo(before.IsPinned), LogMemoryDisplay.YesNo(after.IsPinned)),
+        ("Excluded from budget", LogMemoryDisplay.YesNo(before.IsExcludedFromBudget), LogMemoryDisplay.YesNo(after.IsExcludedFromBudget)));
     public Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default) =>
         ApplyAsync(unitOfWork, before, cancellationToken);
     public Task ReapplyAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default) =>
@@ -270,6 +285,9 @@ public sealed class DeleteTransactionMemoryAction(TransactionMemorySnapshot snap
 {
     public TransactionMemorySnapshot Snapshot => snapshot;
     public string Description => "Delete transaction";
+    public string Title => $"{snapshot.Name} Deleted";
+    public string Summary => $"{LogMemoryDisplay.TransactionNoun(snapshot.Type)} deleted";
+    public string Details => $"{LogMemoryDisplay.Amount(snapshot.Amount)} · {LogMemoryDisplay.Date(snapshot.OccurredOn)}";
 
     public async Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
@@ -306,6 +324,9 @@ public sealed class CompositeLogMemoryAction(string description, IReadOnlyList<I
 {
     public string Description { get; } = description;
     public IReadOnlyList<ILogMemoryAction> Actions { get; } = actions;
+    public string Title => $"{Description} Completed";
+    public string Summary => $"{Description} completed";
+    public string Details => string.Join(" · ", Actions.Select(action => action.Title));
 
     public async Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
@@ -323,6 +344,9 @@ public sealed class CompositeLogMemoryAction(string description, IReadOnlyList<I
 public sealed class AddAccountMemoryAction(AccountMemorySnapshot snapshot) : ILogMemoryAction
 {
     public string Description => "Add account";
+    public string Title => $"{snapshot.Name} Added";
+    public string Summary => "Account added";
+    public string Details => $"{snapshot.AccountType} · Balance {LogMemoryDisplay.Amount(snapshot.Balance)}";
 
     public async Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
@@ -368,6 +392,18 @@ public sealed class EditAccountMemoryAction(
     AccountMemorySnapshot after) : ILogMemoryAction
 {
     public string Description => "Edit account";
+    public string Title => $"{after.Name} Updated";
+    public string Summary => "Account information updated";
+    public string Details => LogMemoryDisplay.Changes(
+        ("Name", before.Name, after.Name),
+        ("Type", before.AccountType.ToString(), after.AccountType.ToString()),
+        ("Balance", LogMemoryDisplay.Amount(before.Balance), LogMemoryDisplay.Amount(after.Balance)),
+        ("Account limit", LogMemoryDisplay.Amount(before.AccountLimit), LogMemoryDisplay.Amount(after.AccountLimit)),
+        ("Maximum spending", LogMemoryDisplay.Amount(before.MaximumSpending), LogMemoryDisplay.Amount(after.MaximumSpending)),
+        ("Minimum payment", LogMemoryDisplay.OptionalAmount(before.MinimumPayment), LogMemoryDisplay.OptionalAmount(after.MinimumPayment)),
+        ("Pinned", LogMemoryDisplay.YesNo(before.PinnedOnUI), LogMemoryDisplay.YesNo(after.PinnedOnUI)),
+        ("Enabled", LogMemoryDisplay.YesNo(before.IsEnabled), LogMemoryDisplay.YesNo(after.IsEnabled)),
+        ("Default", LogMemoryDisplay.YesNo(before.IsDefault), LogMemoryDisplay.YesNo(after.IsDefault)));
 
     public Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
@@ -408,6 +444,9 @@ public sealed class EditAccountMemoryAction(
 public sealed class DeleteAccountMemoryAction(AccountMemorySnapshot snapshot) : ILogMemoryAction
 {
     public string Description => "Delete account";
+    public string Title => $"{snapshot.Name} Deleted";
+    public string Summary => "Account deleted";
+    public string Details => $"{snapshot.AccountType} · Balance {LogMemoryDisplay.Amount(snapshot.Balance)}";
 
     public async Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
@@ -451,6 +490,11 @@ public sealed class DeleteAccountMemoryAction(AccountMemorySnapshot snapshot) : 
 public sealed class DeleteTagMemoryAction(TagMemorySnapshot snapshot) : ILogMemoryAction
 {
     public string Description => "Delete tag";
+    public string Title => $"{snapshot.Name} Deleted";
+    public string Summary => "Tag deleted";
+    public string Details => snapshot.SpendingLimit.HasValue
+        ? $"Limit {LogMemoryDisplay.Amount(snapshot.SpendingLimit.Value)}"
+        : "No spending limit";
 
     public async Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
@@ -485,6 +529,12 @@ public sealed class EditTagMemoryAction(
     TagMemorySnapshot after) : ILogMemoryAction
 {
     public string Description => "Edit tag";
+    public string Title => $"{after.Name} Updated";
+    public string Summary => "Tag information updated";
+    public string Details => LogMemoryDisplay.Changes(
+        ("Name", before.Name, after.Name),
+        ("Color", before.HexCode, after.HexCode),
+        ("Spending limit", LogMemoryDisplay.OptionalAmount(before.SpendingLimit), LogMemoryDisplay.OptionalAmount(after.SpendingLimit)));
 
     public Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
@@ -514,6 +564,9 @@ public sealed class EditTagMemoryAction(
 public sealed class DeleteSavingGoalMemoryAction(SavingGoalMemorySnapshot snapshot) : ILogMemoryAction
 {
     public string Description => "Delete saving goal";
+    public string Title => $"{snapshot.Name} Deleted";
+    public string Summary => "Saving goal deleted";
+    public string Details => $"{LogMemoryDisplay.Amount(snapshot.CurrentAmount)} of {LogMemoryDisplay.Amount(snapshot.TargetAmount)}";
 
     public async Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
@@ -550,6 +603,9 @@ public sealed class SetUserSettingMemoryAction(
     UserSettingMemorySnapshot after) : ILogMemoryAction
 {
     public string Description => "Update setting";
+    public string Title => $"{after.Name} Updated";
+    public string Summary => "Setting updated";
+    public string Details => string.Empty;
 
     public Task RevertAsync(IUnitOfWork unitOfWork, CancellationToken cancellationToken = default)
     {
@@ -592,6 +648,31 @@ public sealed class SetUserSettingMemoryAction(
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
+}
+
+internal static class LogMemoryDisplay
+{
+    internal static string Amount(decimal value) =>
+        value.ToString("#,0.##", CultureInfo.CurrentCulture);
+
+    internal static string OptionalAmount(decimal? value) =>
+        value.HasValue ? Amount(value.Value) : "None";
+
+    internal static string Date(DateTime value) =>
+        value.ToString("MMM d, yyyy", CultureInfo.CurrentCulture);
+
+    internal static string Text(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? "None" : value;
+
+    internal static string YesNo(bool value) => value ? "Yes" : "No";
+
+    internal static string TransactionNoun(TransactionType type) =>
+        type == TransactionType.Expense ? "Expense" : "Income";
+
+    internal static string Changes(params (string Label, string Before, string After)[] values) =>
+        string.Join(" · ", values
+            .Where(value => !string.Equals(value.Before, value.After, StringComparison.Ordinal))
+            .Select(value => $"{value.Label}: {value.Before} → {value.After}"));
 }
 
 internal static class LogMemoryPersistence
