@@ -965,7 +965,7 @@
                 </Border>
                 <Border
                     x:Name="HistoryDrawer"
-                    Width="360"
+                    Width="400"
                     Margin="0,76,24,28"
                     Padding="20"
                     HorizontalAlignment="Right"
@@ -984,19 +984,53 @@
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
-                        <StackPanel>
-                            <TextBlock
-                                FontFamily="{StaticResource Bold}"
-                                FontSize="20"
-                                Foreground="{StaticResource Brush.Text.Primary}"
-                                Text="History" />
-                            <TextBlock
-                                Margin="0,4,0,0"
-                                FontFamily="{StaticResource Regular}"
-                                FontSize="12"
-                                Foreground="{StaticResource Brush.Text.Muted}"
-                                Text="Actions from this session, oldest first" />
-                        </StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock
+                                    FontFamily="{StaticResource Bold}"
+                                    FontSize="20"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="History" />
+                                <TextBlock
+                                    Margin="0,4,0,0"
+                                    FontFamily="{StaticResource Regular}"
+                                    FontSize="12"
+                                    Foreground="{StaticResource Brush.Text.Muted}"
+                                    Text="Actions from this session, oldest first" />
+                            </StackPanel>
+                            <StackPanel
+                                Grid.Column="1"
+                                HorizontalAlignment="Right"
+                                Orientation="Horizontal">
+                                <customControls:BalloonButton
+                                    x:Name="HistoryUndoButton"
+                                    AutomationProperties.Name="Undo"
+                                    ButtonIcon="{StaticResource RegularUndo}"
+                                    ButtonText="Undo"
+                                    Click="OnHistoryUndoButtonClick"
+                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
+                                    IconSize="12"
+                                    IsEnabled="False"
+                                    ShouldExpand="True" />
+                                <customControls:BalloonButton
+                                    x:Name="HistoryRedoButton"
+                                    Margin="8,0,0,0"
+                                    AutomationProperties.Name="Redo"
+                                    ButtonIcon="{StaticResource RegularRedo}"
+                                    ButtonText="Redo"
+                                    Click="OnHistoryRedoButtonClick"
+                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
+                                    IconSize="12"
+                                    IsEnabled="False"
+                                    ShouldExpand="True" />
+                            </StackPanel>
+                        </Grid>
 
                         <Grid Grid.Row="1" Margin="0,18,0,0">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -1076,22 +1110,37 @@
                                                             </TextBlock.Style>
                                                         </TextBlock>
                                                     </StackPanel>
-                                                    <customControls:BalloonCheckBox
+                                                    <StackPanel
                                                         Grid.Column="1"
                                                         Margin="12,0,0,0"
-                                                        AutomationProperties.Name="Toggle history action"
-                                                        ButtonSize="30"
-                                                        CheckedBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
-                                                        CheckedIcon="{StaticResource RegularRedo}"
-                                                        CheckedText="Reapply"
-                                                        Click="OnHistoryActionClick"
-                                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
-                                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
-                                                        IconSize="11"
-                                                        IsChecked="{Binding IsReverted, Mode=OneWay}"
-                                                        ShouldExpand="True"
-                                                        UncheckedIcon="{StaticResource RegularUndo}"
-                                                        UncheckedText="Revert" />
+                                                        Orientation="Horizontal">
+                                                        <customControls:BalloonButton
+                                                            AutomationProperties.Name="Revert to here"
+                                                            ButtonIcon="{StaticResource History}"
+                                                            ButtonText="Revert to here"
+                                                            Click="OnRevertToHistoryItemClick"
+                                                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                                                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
+                                                            IconSize="12"
+                                                            IsEnabled="{Binding CanRevertToHere, Mode=OneWay}"
+                                                            ShouldExpand="True"
+                                                            Visibility="{Binding IsReverted, Mode=OneWay, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                                                        <customControls:BalloonCheckBox
+                                                            Margin="8,0,0,0"
+                                                            AutomationProperties.Name="Toggle history action"
+                                                            ButtonSize="30"
+                                                            CheckedBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                                                            CheckedIcon="{StaticResource RegularRedo}"
+                                                            CheckedText="Reapply"
+                                                            Click="OnHistoryActionClick"
+                                                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                                                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
+                                                            IconSize="11"
+                                                            IsChecked="{Binding IsReverted, Mode=OneWay}"
+                                                            ShouldExpand="True"
+                                                            UncheckedIcon="{StaticResource RegularUndo}"
+                                                            UncheckedText="Revert" />
+                                                    </StackPanel>
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>

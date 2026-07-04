@@ -160,6 +160,8 @@ public partial class MainWindow : Window, IPopupHost
 
         HeaderSearchResultsList.ItemsSource = _headerSearchResults;
         HistoryItemsControl.ItemsSource = _logMemoryManager.HistoryEntries;
+        _logMemoryManager.StateChanged += OnHistoryManagerStateChanged;
+        UpdateHistoryAvailability();
         DataContext = _mainVM;
         _mainVM.PropertyChanged += OnMainViewModelPropertyChanged;
 
@@ -352,6 +354,7 @@ public partial class MainWindow : Window, IPopupHost
             _appAutoLockCountdownTimer.Tick -= OnAppAutoLockCountdownTimerTick;
             _headerMenuCloseTimer.Stop();
             StopAppAutoLockTimers();
+            _logMemoryManager.StateChanged -= OnHistoryManagerStateChanged;
             _logMemoryManager.Dispose();
         }
         finally
@@ -731,6 +734,26 @@ public partial class MainWindow : Window, IPopupHost
         if (MainWindowShortcutMatcher.IsToggleHistoryShortcut(e.Key, Keyboard.Modifiers))
         {
             ToggleHistoryDrawer();
+            e.Handled = true;
+            return;
+        }
+
+        if (!IsTextInputElementFocused() &&
+            MainWindowShortcutMatcher.IsUndoShortcut(e.Key, Keyboard.Modifiers) &&
+            _logMemoryManager.CanUndo)
+        {
+            if (!IsSufficientFundsActionGateLocked())
+                await UndoLogMemoryAsync();
+            e.Handled = true;
+            return;
+        }
+
+        if (!IsTextInputElementFocused() &&
+            MainWindowShortcutMatcher.IsRedoShortcut(e.Key, Keyboard.Modifiers) &&
+            _logMemoryManager.CanRedo)
+        {
+            if (!IsSufficientFundsActionGateLocked())
+                await RedoLogMemoryAsync();
             e.Handled = true;
             return;
         }
@@ -2056,6 +2079,82 @@ public partial class MainWindow : Window, IPopupHost
         {
             HistoryItemsControl.IsEnabled = true;
         }
+    }
+
+    private async void OnHistoryUndoButtonClick(object sender, RoutedEventArgs e)
+    {
+        if (!IsSufficientFundsActionGateLocked())
+            await UndoLogMemoryAsync();
+    }
+
+    private async void OnHistoryRedoButtonClick(object sender, RoutedEventArgs e)
+    {
+        if (!IsSufficientFundsActionGateLocked())
+            await RedoLogMemoryAsync();
+    }
+
+    private async void OnRevertToHistoryItemClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not BalloonButton { DataContext: LogMemoryEntry entry } ||
+            IsSufficientFundsActionGateLocked())
+            return;
+
+        HistoryItemsControl.IsEnabled = false;
+        try
+        {
+            await _logMemoryManager.RevertToAsync(entry);
+        }
+        catch (Exception exception)
+        {
+            FloatingNotificationPublisher.LoggedFailure(
+                _messenger,
+                exception,
+                "revert history to selected action");
+        }
+        finally
+        {
+            HistoryItemsControl.IsEnabled = true;
+        }
+    }
+
+    private async Task UndoLogMemoryAsync()
+    {
+        try
+        {
+            await _logMemoryManager.UndoAsync();
+        }
+        catch (Exception exception)
+        {
+            FloatingNotificationPublisher.LoggedFailure(_messenger, exception, "undo last action");
+        }
+    }
+
+    private async Task RedoLogMemoryAsync()
+    {
+        try
+        {
+            await _logMemoryManager.RedoAsync();
+        }
+        catch (Exception exception)
+        {
+            FloatingNotificationPublisher.LoggedFailure(_messenger, exception, "redo last action");
+        }
+    }
+
+    private static bool IsTextInputElementFocused()
+    {
+        return Keyboard.FocusedElement is TextBoxBase or PasswordBox or ComboBox;
+    }
+
+    private void OnHistoryManagerStateChanged(object? sender, EventArgs e)
+    {
+        UpdateHistoryAvailability();
+    }
+
+    private void UpdateHistoryAvailability()
+    {
+        HistoryUndoButton.IsEnabled = _logMemoryManager.CanUndo;
+        HistoryRedoButton.IsEnabled = _logMemoryManager.CanRedo;
     }
 
     public void HidePopupOverlay()
