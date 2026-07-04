@@ -36,7 +36,6 @@ public sealed class SettingsIoUsTabLayoutTests
         Assert.Contains("<Run Text=\"{Binding AmountSign, Mode=OneWay}\" />", xaml);
         Assert.Contains("<Run Text=\"{Binding Amount, Converter={StaticResource NumberWithCommasConverter}}\" />", xaml);
         Assert.Contains("<Run Text=\"{Binding Amount, Converter={StaticResource MoneyFullDisplayConverter}}\" />", xaml);
-        Assert.Contains("await viewModel.ResolveAsync(item);", codeBehind);
     }
 
 }

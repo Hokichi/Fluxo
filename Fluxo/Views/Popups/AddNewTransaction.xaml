@@ -289,7 +289,7 @@
                 </Style>
             </Grid.Style>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="560" />
+                <ColumnDefinition Width="720" />
                 <ColumnDefinition Width="20" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
@@ -501,7 +501,7 @@
                                 IsEnabled="{Binding CanUseIoU}"
                                 ShouldShowText="True"
                                 UncheckedIcon="{StaticResource CreditCardMinusSolid}"
-                                UncheckedText="Unposted Debt/IoU" />
+                                UncheckedText="Unposted IoU" />
                             <customControls:BalloonRadioButton
                                 Grid.Column="8"
                                 Margin="8,0,0,0"
@@ -515,7 +515,7 @@
                                 IsEnabled="{Binding CanUseIoU}"
                                 ShouldShowText="True"
                                 UncheckedIcon="{StaticResource CreditCardMinusSolid}"
-                                UncheckedText="Posted Debt/IoU" />
+                                UncheckedText="Posted IoU" />
                         </Grid>
                         <TextBlock
                             Margin="0,8,0,0"

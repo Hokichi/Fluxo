@@ -112,6 +112,7 @@ public sealed class SettingsIoUsTabVMTests
             Name = "Lunch lend",
             Amount = 25m,
             IsIoU = true,
+            ShouldAffectBalance = true,
             Account = account,
             SourceAccountId = account.Id,
             ExpenseCategory = ExpenseCategory.Needs,
@@ -160,6 +161,7 @@ public sealed class SettingsIoUsTabVMTests
             Name = "Advance",
             Amount = 40m,
             IsIoU = true,
+            ShouldAffectBalance = true,
             Account = account,
             SourceAccountId = account.Id,
             Notes = string.Empty
@@ -190,6 +192,69 @@ public sealed class SettingsIoUsTabVMTests
             Arg.Any<CancellationToken>());
         appData.Received(1).UpdateTransaction(income);
         appData.Received(1).UpdateAccount(account);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_UnpostedWithoutSelectedAccountFailsWithoutWrites()
+    {
+        var account = new Account { Id = 10, Name = "Checking", Balance = 100m, IsEnabled = true };
+        var transaction = new Transaction
+        {
+            Id = 1,
+            Type = TransactionType.Expense,
+            Name = "Unposted lend",
+            Amount = 25m,
+            IsIoU = true,
+            ShouldAffectBalance = false,
+            Account = account,
+            SourceAccountId = account.Id
+        };
+        var appData = CreateAppData([transaction], [], [account]);
+        var vm = CreateVm(appData);
+        await vm.LoadAsync();
+
+        var result = await vm.ResolveAsync(vm.Items.Single());
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(100m, account.Balance);
+        await appData.DidNotReceive().AddTransactionAsync(
+            Arg.Any<Transaction>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ResolveAsync_UnpostedLendPostsAndSettlesSelectedAccount()
+    {
+        var originalAccount = new Account { Id = 10, Name = "Original", Balance = 100m, IsEnabled = true };
+        var selectedAccount = new Account { Id = 20, Name = "Selected", Balance = 300m, IsEnabled = true };
+        var transaction = new Transaction
+        {
+            Id = 1,
+            Type = TransactionType.Expense,
+            Name = "Unposted lend",
+            Amount = 25m,
+            IsIoU = true,
+            ShouldAffectBalance = false,
+            Account = originalAccount,
+            SourceAccountId = originalAccount.Id
+        };
+        var appData = CreateAppData([transaction], [], [originalAccount, selectedAccount]);
+        var vm = CreateVm(appData);
+        await vm.LoadAsync();
+
+        var result = await vm.ResolveAsync(vm.Items.Single(), selectedAccount.Id);
+
+        Assert.True(result.IsSuccess, result.ErrorMessage);
+        Assert.Equal(100m, originalAccount.Balance);
+        Assert.Equal(300m, selectedAccount.Balance);
+        Assert.Equal(selectedAccount.Id, transaction.SourceAccountId);
+        Assert.Same(selectedAccount, transaction.Account);
+        Assert.False(transaction.IsIoU);
+        Assert.False(transaction.ShouldAffectBalance);
+        _ = appData.Received(1).AddTransactionAsync(
+            Arg.Is<Transaction>(settlement =>
+                settlement.Type == TransactionType.Income &&
+                settlement.SourceAccountId == selectedAccount.Id),
+            Arg.Any<CancellationToken>());
     }
 
     private static SettingsIoUsTabVM CreateVm(IAppDataService appData, IMessenger? messenger = null)

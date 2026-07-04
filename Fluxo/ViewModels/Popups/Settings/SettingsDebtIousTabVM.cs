@@ -26,6 +26,7 @@ public sealed class IoUItemVM
     public decimal Amount { get; init; }
     public DateTime Date { get; init; }
     public string AccountName { get; init; } = string.Empty;
+    public bool ShouldAffectBalance { get; init; }
     public string TypeLabel => Kind == IoUKind.Lend ? "Lend" : "Debt";
     public string AmountSign => Kind == IoUKind.Debt ? "+" : "-";
 }
@@ -72,7 +73,8 @@ public partial class SettingsIoUsTabVM : ObservableObject
                 Name = transaction.Name,
                 Amount = transaction.Amount,
                 Date = transaction.OccurredOn,
-                AccountName = transaction.Account?.Name ?? string.Empty
+                AccountName = transaction.Account?.Name ?? string.Empty,
+                ShouldAffectBalance = transaction.ShouldAffectBalance
             })
             .OrderBy(item => item.Date)
             .ThenBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
@@ -88,18 +90,22 @@ public partial class SettingsIoUsTabVM : ObservableObject
 
     public async Task<SettingsOperationResult> ResolveAsync(
         IoUItemVM item,
+        int? unpostedAccountId = null,
         CancellationToken cancellationToken = default)
     {
         if (IsResolving)
             return SettingsOperationResult.Failure("A debt or IOU is already being resolved.");
+
+        if (!item.ShouldAffectBalance && unpostedAccountId is null)
+            return SettingsOperationResult.Failure("Please choose an account for this unposted debt or IOU.");
 
         IsResolving = true;
 
         try
         {
             var result = item.Kind == IoUKind.Lend
-                ? await ResolveLendAsync(item.TransactionId, cancellationToken)
-                : await ResolveDebtAsync(item.TransactionId, cancellationToken);
+                ? await ResolveLendAsync(item.TransactionId, unpostedAccountId, cancellationToken)
+                : await ResolveDebtAsync(item.TransactionId, unpostedAccountId, cancellationToken);
 
             if (!result.IsSuccess)
                 return result;
@@ -121,6 +127,7 @@ public partial class SettingsIoUsTabVM : ObservableObject
 
     private async Task<SettingsOperationResult> ResolveLendAsync(
         int transactionId,
+        int? unpostedAccountId,
         CancellationToken cancellationToken)
     {
         var source = await _appData.GetTransactionByIdAsync(transactionId, cancellationToken);
@@ -130,9 +137,16 @@ public partial class SettingsIoUsTabVM : ObservableObject
             return SettingsOperationResult.Success();
         }
 
-        var account = source.Account ?? await _appData.GetAccountByIdAsync(source.SourceAccountId, cancellationToken);
-        if (account is null)
+        var account = await ResolveAccountAsync(source, unpostedAccountId, cancellationToken);
+        if (account is null || !source.ShouldAffectBalance && (!account.IsEnabled || account.IsForDeletion))
             return SettingsOperationResult.Failure("Unable to load the IOU account.");
+
+        if (!source.ShouldAffectBalance)
+        {
+            source.Account = account;
+            source.SourceAccountId = account.Id;
+            ApplyExpenseToAccount(account, source.Amount);
+        }
 
         var income = new Transaction
         {
@@ -150,6 +164,7 @@ public partial class SettingsIoUsTabVM : ObservableObject
         ApplyIncomeToAccount(account, source.Amount);
 
         source.IsIoU = false;
+        source.ShouldAffectBalance = false;
         _appData.UpdateTransaction(source);
         _appData.UpdateAccount(account);
 
@@ -161,6 +176,7 @@ public partial class SettingsIoUsTabVM : ObservableObject
 
     private async Task<SettingsOperationResult> ResolveDebtAsync(
         int transactionId,
+        int? unpostedAccountId,
         CancellationToken cancellationToken)
     {
         var source = await _appData.GetTransactionByIdAsync(transactionId, cancellationToken);
@@ -170,9 +186,16 @@ public partial class SettingsIoUsTabVM : ObservableObject
             return SettingsOperationResult.Success();
         }
 
-        var account = source.Account ?? await _appData.GetAccountByIdAsync(source.SourceAccountId, cancellationToken);
-        if (account is null)
+        var account = await ResolveAccountAsync(source, unpostedAccountId, cancellationToken);
+        if (account is null || !source.ShouldAffectBalance && (!account.IsEnabled || account.IsForDeletion))
             return SettingsOperationResult.Failure("Unable to load the debt account.");
+
+        if (!source.ShouldAffectBalance)
+        {
+            source.Account = account;
+            source.SourceAccountId = account.Id;
+            ApplyIncomeToAccount(account, source.Amount);
+        }
 
         var reconciliationTag = await EnsureBudgetReconciliationTagAsync(cancellationToken);
         var expense = new Transaction
@@ -192,6 +215,7 @@ public partial class SettingsIoUsTabVM : ObservableObject
         ApplyExpenseToAccount(account, source.Amount);
 
         source.IsIoU = false;
+        source.ShouldAffectBalance = false;
         _appData.UpdateTransaction(source);
         _appData.UpdateAccount(account);
 
@@ -230,6 +254,27 @@ public partial class SettingsIoUsTabVM : ObservableObject
         };
         await _appData.AddTagAsync(tag, cancellationToken);
         return tag;
+    }
+
+    public async Task<IReadOnlyList<Account>> GetResolutionAccountsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var accounts = await _appData.GetAccountsAsync(cancellationToken);
+        return accounts.Where(account => account.IsEnabled && !account.IsForDeletion).ToList();
+    }
+
+    private async Task<Account?> ResolveAccountAsync(
+        Transaction source,
+        int? unpostedAccountId,
+        CancellationToken cancellationToken)
+    {
+        if (!source.ShouldAffectBalance)
+            return unpostedAccountId is { } accountId
+                ? await _appData.GetAccountByIdAsync(accountId, cancellationToken)
+                : null;
+
+        return source.Account ??
+               await _appData.GetAccountByIdAsync(source.SourceAccountId, cancellationToken);
     }
 
     private async Task ReloadAfterResolveAsync(CancellationToken cancellationToken)
