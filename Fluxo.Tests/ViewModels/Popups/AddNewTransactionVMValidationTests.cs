@@ -1700,6 +1700,62 @@ public sealed class AddNewTransactionVMValidationTests
     }
 
     [Fact]
+    public void IoUModes_SelectPostedStateAndDescription()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 500m), false);
+
+            vm.IsUnpostedIoUMode = true;
+            Assert.True(vm.IsIoU);
+            Assert.False(vm.ShouldAffectBalance);
+            Assert.Equal("A transaction marked as debt/IoU but doesn't affect the accounts", vm.TransactionModeDescription);
+
+            vm.IsPostedIoUMode = true;
+            Assert.True(vm.IsIoU);
+            Assert.True(vm.ShouldAffectBalance);
+            Assert.Equal("A transaction marked as debt/IoU and affects the accounts", vm.TransactionModeDescription);
+        });
+    }
+
+    [Theory]
+    [InlineData(false, 500)]
+    [InlineData(true, 475)]
+    public void SaveAsync_IoUBalanceImpactMatchesPostedMode(bool posted, decimal expectedBalance)
+    {
+        RunInSta(() =>
+        {
+            var account = new Account
+            {
+                Id = 1,
+                Name = "Checking",
+                AccountType = AccountType.Checking,
+                Balance = 500m,
+                IsEnabled = true
+            };
+            var appData = CreateAppData();
+            appData.GetAccountByIdAsync(account.Id, Arg.Any<CancellationToken>()).Returns(account);
+            var vm = CreateVm(
+                TransactionKind.Expense,
+                CreateCheckingSource(balance: account.Balance),
+                false,
+                25m,
+                appData: appData);
+            vm.IsIoU = true;
+            vm.ShouldAffectBalance = posted;
+
+            var result = vm.SaveAsync(false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess, result.ErrorMessage);
+            Assert.Equal(expectedBalance, account.Balance);
+            _ = appData.Received(1).AddTransactionAsync(
+                Arg.Is<Transaction>(transaction =>
+                    transaction.IsIoU && transaction.ShouldAffectBalance == posted),
+                Arg.Any<CancellationToken>());
+        });
+    }
+
+    [Fact]
     public void HandleExcludeModeClick_SelectsExclusionOnly()
     {
         RunInSta(() =>

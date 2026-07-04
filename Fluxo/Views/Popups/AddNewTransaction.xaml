@@ -444,6 +444,8 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="12" />
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <customControls:BalloonRadioButton
                                 Grid.Column="0"
@@ -495,12 +497,33 @@
                                 GroupName="AddTransactionMode"
                                 HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
                                 IconSize="14"
-                                IsChecked="{Binding IsIoU, Mode=TwoWay}"
+                                IsChecked="{Binding IsUnpostedIoUMode, Mode=TwoWay}"
                                 IsEnabled="{Binding CanUseIoU}"
                                 ShouldShowText="True"
                                 UncheckedIcon="{StaticResource CreditCardMinusSolid}"
-                                UncheckedText="Debt/IoU" />
+                                UncheckedText="Unposted Debt/IoU" />
+                            <customControls:BalloonRadioButton
+                                Grid.Column="8"
+                                Margin="8,0,0,0"
+                                CheckedBackground="{StaticResource Brush.Success}"
+                                CornerRadius="8"
+                                DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                                GroupName="AddTransactionMode"
+                                HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
+                                IconSize="14"
+                                IsChecked="{Binding IsPostedIoUMode, Mode=TwoWay}"
+                                IsEnabled="{Binding CanUseIoU}"
+                                ShouldShowText="True"
+                                UncheckedIcon="{StaticResource CreditCardMinusSolid}"
+                                UncheckedText="Posted Debt/IoU" />
                         </Grid>
+                        <TextBlock
+                            Margin="0,8,0,0"
+                            FontFamily="{StaticResource Medium}"
+                            FontSize="11"
+                            Foreground="{StaticResource Brush.Text.Secondary}"
+                            Text="{Binding TransactionModeDescription, Mode=OneWay}"
+                            TextWrapping="Wrap" />
                     </StackPanel>
 
                     <Border

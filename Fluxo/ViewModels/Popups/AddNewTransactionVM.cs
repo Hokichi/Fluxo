@@ -73,6 +73,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     [ObservableProperty] private DateTime _installmentEndDate = DateTime.Today;
     [ObservableProperty] private bool _isPinned;
     [ObservableProperty] private bool _isIoU;
+    [ObservableProperty] private bool _shouldAffectBalance;
     [ObservableProperty] private bool _isExcludedFromBudget;
     [ObservableProperty] private bool _isHistoryOpen = true;
     [ObservableProperty] private AddNewTransactionHistoryItemVM? _selectedPinnedHistoryItem;
@@ -181,6 +182,33 @@ public partial class AddNewTransactionVM : ObservableValidator
         get => !IsRecurring && !IsInstallments && !IsIoU;
         set { if (value) ClearTransactionModes(); }
     }
+    public bool IsUnpostedIoUMode
+    {
+        get => IsIoU && !ShouldAffectBalance;
+        set
+        {
+            if (!value) return;
+            ClearTransactionModes();
+            IsIoU = true;
+        }
+    }
+    public bool IsPostedIoUMode
+    {
+        get => IsIoU && ShouldAffectBalance;
+        set
+        {
+            if (!value) return;
+            ClearTransactionModes();
+            IsIoU = true;
+            ShouldAffectBalance = true;
+        }
+    }
+    public string TransactionModeDescription =>
+        IsRecurring ? "A repeating transaction that occurs on a selected date" :
+        IsInstallments ? "A repeating transaction that is split over time" :
+        IsPostedIoUMode ? "A transaction marked as debt/IoU and affects the accounts" :
+        IsUnpostedIoUMode ? "A transaction marked as debt/IoU but doesn't affect the accounts" :
+        "A one-time transaction";
     public bool ShowRecurringDayInput => IsRecurringTransactionMode;
     public bool ShowRecurringNoneInput => IsRecurringTransactionMode && SelectedRecurringPeriod == RecurringPeriod.None;
     public bool ShowRecurringWeekdayInput => IsRecurringTransactionMode && IsWeekdayRecurringPeriod(SelectedRecurringPeriod);
@@ -367,6 +395,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(CanPinTransaction));
         OnPropertyChanged(nameof(CanUseIoU));
         OnPropertyChanged(nameof(IsRegularMode));
+        OnPropertyChanged(nameof(TransactionModeDescription));
         RefreshActiveValidation(nameof(AmountText));
         RefreshAmountWarning();
         NotifyFormStateChanged();
@@ -398,6 +427,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(CanPinTransaction));
         OnPropertyChanged(nameof(CanUseIoU));
         OnPropertyChanged(nameof(IsRegularMode));
+        OnPropertyChanged(nameof(TransactionModeDescription));
         RefreshActiveValidation(nameof(AmountText));
         OnPropertyChanged(nameof(IsRegularMode));
         NotifyFormStateChanged();
@@ -447,6 +477,9 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     partial void OnIsIoUChanged(bool value)
     {
+        if (!value)
+            ShouldAffectBalance = false;
+
         if (value)
         {
             if (IsRecurring)
@@ -455,6 +488,24 @@ public partial class AddNewTransactionVM : ObservableValidator
                 IsInstallments = false;
         }
 
+        OnPropertyChanged(nameof(IsRegularMode));
+        OnPropertyChanged(nameof(IsUnpostedIoUMode));
+        OnPropertyChanged(nameof(IsPostedIoUMode));
+        OnPropertyChanged(nameof(TransactionModeDescription));
+        NotifyFormStateChanged();
+    }
+
+    partial void OnShouldAffectBalanceChanged(bool value)
+    {
+        if (value && !IsIoU)
+        {
+            ShouldAffectBalance = false;
+            return;
+        }
+
+        OnPropertyChanged(nameof(IsUnpostedIoUMode));
+        OnPropertyChanged(nameof(IsPostedIoUMode));
+        OnPropertyChanged(nameof(TransactionModeDescription));
         NotifyFormStateChanged();
     }
 
@@ -583,6 +634,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         NameText = draft.Name;
         NoteText = draft.Note;
         IsIoU = draft.IsIoU;
+        ShouldAffectBalance = draft.ShouldAffectBalance;
         IsExcludedFromBudget = draft.IsExcludedFromBudget;
         SelectedDate = draft.Date.Date;
         SelectedExpenseCategory = draft.Category ?? ExpenseCategory.Needs;
@@ -1024,13 +1076,17 @@ public partial class AddNewTransactionVM : ObservableValidator
                     TagId = tag.Id,
                     IsPinned = input.IsPinned,
                     IsIoU = input.IsIoU,
+                    ShouldAffectBalance = input.ShouldAffectBalance,
                     IsExcludedFromBudget = input.IsExcludedFromBudget
                 };
 
                 await _appData.AddTransactionAsync(transaction);
 
-                ApplyExpenseToAccount(account, input.Amount);
-                _appData.UpdateAccount(account);
+                if (transaction.AffectsAccountBalance)
+                {
+                    ApplyExpenseToAccount(account, input.Amount);
+                    _appData.UpdateAccount(account);
+                }
 
                 await _appData.SaveChangesAsync();
                 WeakReferenceMessenger.Default.Send(
@@ -1050,13 +1106,17 @@ public partial class AddNewTransactionVM : ObservableValidator
                     TagId = input.TagId,
                     IsPinned = input.IsPinned,
                     IsIoU = input.IsIoU,
+                    ShouldAffectBalance = input.ShouldAffectBalance,
                     IsExcludedFromBudget = input.IsExcludedFromBudget
                 };
 
                 await _appData.AddTransactionAsync(transaction);
 
-                ApplyIncomeToAccount(account, input.Amount);
-                _appData.UpdateAccount(account);
+                if (transaction.AffectsAccountBalance)
+                {
+                    ApplyIncomeToAccount(account, input.Amount);
+                    _appData.UpdateAccount(account);
+                }
 
                 await _appData.SaveChangesAsync();
                 WeakReferenceMessenger.Default.Send(
@@ -1152,6 +1212,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         IsRecurring = false;
         IsPinned = false;
         IsIoU = false;
+        ShouldAffectBalance = false;
         IsExcludedFromBudget = false;
         IsRecurringModeLocked = false;
         CanChangeRepaymentAccount = true;
@@ -1250,6 +1311,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             !IsRepayment && IsInstallments,
             !IsRepayment && IsPinned,
             !IsRepayment && IsIoU,
+            !IsRepayment && ShouldAffectBalance,
             IsBudgetExcluded,
             _editingRecurringTransactionId,
             SelectedRecurringPeriod,
@@ -1894,6 +1956,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             IsInstallments,
             IsPinned,
             IsIoU,
+            ShouldAffectBalance,
             IsExcludedFromBudget,
             SelectedRecurringPeriod,
             NameText ?? string.Empty,
@@ -2408,7 +2471,8 @@ public partial class AddNewTransactionVM : ObservableValidator
         int? GoalId = null,
         bool IsIoU = false,
         bool IsExcludedFromBudget = false,
-        bool LockTransactionType = false);
+        bool LockTransactionType = false,
+        bool ShouldAffectBalance = false);
 
     public readonly record struct RecurringDraftSaveInput(
         int? EditingRecurringTransactionId,
@@ -2443,6 +2507,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         bool IsInstallments,
         bool IsPinned,
         bool IsIoU,
+        bool ShouldAffectBalance,
         bool IsExcludedFromBudget,
         int? EditingRecurringTransactionId,
         RecurringPeriod RecurringPeriod,
@@ -2465,6 +2530,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         bool IsInstallments,
         bool IsPinned,
         bool IsIoU,
+        bool ShouldAffectBalance,
         bool IsExcludedFromBudget,
         RecurringPeriod SelectedRecurringPeriod,
         string NameText,

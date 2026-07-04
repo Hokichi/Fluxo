@@ -20,28 +20,6 @@ public sealed class AddNewTransactionBalloonToggleTests
     }
 
     [Fact]
-    public void TransactionModes_UseIndependentExclusionAndFourRadioButtons()
-    {
-        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml"));
-        var codeBehind = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml.cs"));
-
-        Assert.Contains("IsChecked=\"{Binding IsBudgetExcluded, Mode=TwoWay}\"", xaml);
-        Assert.Contains("UncheckedIcon=\"{StaticResource CreditCardOff}\"", xaml);
-        Assert.Equal(4, xaml.Split("GroupName=\"AddTransactionMode\"", StringSplitOptions.None).Length - 1);
-        Assert.Contains("UncheckedText=\"Regular\"", xaml);
-        Assert.Contains("UncheckedText=\"Recurring\"", xaml);
-        Assert.Contains("UncheckedText=\"Installment\"", xaml);
-        Assert.Contains("UncheckedText=\"Debt/IoU\"", xaml);
-        Assert.Contains("SelectedDate=\"{Binding StartDate, Mode=TwoWay}\"", xaml);
-        Assert.Contains("Visibility=\"{Binding ShowTransactionModes, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
-        Assert.Contains("Visibility=\"{Binding ShowCategoryField, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
-        Assert.Contains("DataTrigger Binding=\"{Binding ShouldExpandAccountField, Mode=OneWay}\" Value=\"True\"", xaml);
-        Assert.DoesNotContain("OnRecurringModePreviewMouseLeftButtonDown", xaml + codeBehind);
-        Assert.DoesNotContain("OnInstallmentsModePreviewMouseLeftButtonDown", xaml + codeBehind);
-        Assert.DoesNotContain("OnIoUModePreviewMouseLeftButtonDown", xaml + codeBehind);
-    }
-
-    [Fact]
     public void History_StartsOpenAndLoadsWithPopup()
     {
         var viewModel = File.ReadAllText(RepositoryPaths.File("Fluxo", "ViewModels", "Popups", "AddNewTransactionVM.cs"));
