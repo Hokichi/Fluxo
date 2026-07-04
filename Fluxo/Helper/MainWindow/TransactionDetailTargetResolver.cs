@@ -35,6 +35,7 @@ internal static class TransactionDetailTargetResolver
             IsForDeletion = transaction.IsForDeletion,
             IsPinned = transaction.IsPinned,
             IsIoU = transaction.IsIoU,
+            ShouldAffectBalance = transaction.ShouldAffectBalance,
             ExpenseCategory = transaction.ExpenseCategory,
             ParentTransactionId = transaction.ParentTransactionId,
             Account = new AccountVM

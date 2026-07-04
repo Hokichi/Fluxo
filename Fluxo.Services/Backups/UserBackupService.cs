@@ -984,7 +984,8 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 transaction.IsPinned,
                 transaction.IsForDeletion,
                 transaction.IsIoU,
-                transaction.IsExcludedFromBudget));
+                transaction.IsExcludedFromBudget,
+                transaction.ShouldAffectBalance));
         }
     }
 
@@ -1017,6 +1018,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 IsPinned = backup.IsPinned,
                 IsForDeletion = backup.IsForDeletion,
                 IsIoU = backup.IsIoU,
+                ShouldAffectBalance = backup.RestoredShouldAffectBalance,
                 IsExcludedFromBudget = backup.IsExcludedFromBudget
             };
             await appData.AddTransactionAsync(transaction, cancellationToken);

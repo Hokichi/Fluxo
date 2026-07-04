@@ -28,6 +28,7 @@ public sealed class LogMemorySnapshotTests
             LoggedOn = new DateTime(2026, 6, 28, 12, 30, 0),
             ExpenseCategory = ExpenseCategory.Needs,
             IsIoU = true,
+            ShouldAffectBalance = true,
             IsExcludedFromBudget = true
         };
 
@@ -35,6 +36,8 @@ public sealed class LogMemorySnapshotTests
 
         Assert.Equal(TransactionType.Expense, snapshot.Type);
         Assert.True(snapshot.IsIoU);
+        Assert.True(snapshot.ShouldAffectBalance);
+        Assert.True(snapshot.AffectsAccountBalance);
         Assert.True(snapshot.IsExcludedFromBudget);
         Assert.Equal(transaction.LoggedOn, snapshot.LoggedOn);
         Assert.Equal(goal.Id, snapshot.GoalId);

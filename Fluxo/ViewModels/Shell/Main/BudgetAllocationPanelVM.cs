@@ -1016,7 +1016,8 @@ public partial class BudgetAllocationPanelVM : ObservableRecipient,
         transaction.IsForDeletion,
         transaction.IsIoU,
         transaction.IsExcludedFromBudget,
-        transaction.LoggedOn);
+        transaction.LoggedOn,
+        transaction.ShouldAffectBalance);
 
     private static void ReplaceExpenseLogs(ObservableCollection<TransactionVM> target, IEnumerable<TransactionVM> items)
     {

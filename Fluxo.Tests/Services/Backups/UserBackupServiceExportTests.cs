@@ -166,7 +166,8 @@ public sealed class UserBackupServiceExportTests
             Amount = 100m,
             Tag = tag,
             Account = account,
-            IsIoU = true
+            IsIoU = true,
+            ShouldAffectBalance = true
         };
         var incomeLog = new Transaction
         {
@@ -203,6 +204,8 @@ public sealed class UserBackupServiceExportTests
             Assert.NotNull(document);
 
             Assert.All(document.Entities.Transactions, transaction => Assert.True(transaction.IsIoU));
+            Assert.True(document.Entities.Transactions.Single(transaction => transaction.BackupId == 1).ShouldAffectBalance);
+            Assert.False(document.Entities.Transactions.Single(transaction => transaction.BackupId == 2).ShouldAffectBalance);
         }
         finally
         {

@@ -22,5 +22,6 @@ public partial class TransactionVM : ObservableObject
     [ObservableProperty] private bool _isPinned;
     [ObservableProperty] private bool _isForDeletion;
     [ObservableProperty] private bool _isIoU;
+    [ObservableProperty] private bool _shouldAffectBalance;
     [ObservableProperty] private bool _isExcludedFromBudget;
 }

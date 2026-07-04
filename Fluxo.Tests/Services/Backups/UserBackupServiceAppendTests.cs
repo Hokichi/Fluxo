@@ -10,6 +10,16 @@ namespace Fluxo.Tests.Services.Backups;
 public sealed class UserBackupServiceAppendTests
 {
     [Fact]
+    public void LegacyIoUWithoutBalanceFlag_RestoresAsPosted()
+    {
+        var backup = new BackupTransaction(
+            1, "Expense", 2, "Loan", 10m, DateTime.Today, string.Empty,
+            nameof(ExpenseCategory.Needs), 3, null, false, false, true, false);
+
+        Assert.True(backup.RestoredShouldAffectBalance);
+    }
+
+    [Fact]
     public async Task BackupAsync_WithFileNameOnlyPath_WritesBackupWithoutDirectoryCreationFailure()
     {
         var appData = Substitute.For<IAppDataService>();

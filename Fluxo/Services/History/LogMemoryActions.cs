@@ -125,8 +125,12 @@ public sealed record TransactionMemorySnapshot(
     bool IsForDeletion,
     bool IsIoU,
     bool IsExcludedFromBudget,
-    DateTime LoggedOn = default)
+    DateTime LoggedOn = default,
+    bool ShouldAffectBalance = false)
 {
+    public bool AffectsAccountBalance =>
+        Transaction.ShouldAffectAccountBalance(IsIoU, ShouldAffectBalance);
+
     public static TransactionMemorySnapshot Create(Transaction transaction)
     {
         ArgumentNullException.ThrowIfNull(transaction);
@@ -148,7 +152,8 @@ public sealed record TransactionMemorySnapshot(
             transaction.IsForDeletion,
             transaction.IsIoU,
             transaction.IsExcludedFromBudget,
-            transaction.LoggedOn);
+            transaction.LoggedOn,
+            transaction.ShouldAffectBalance);
     }
 }
 
@@ -168,7 +173,7 @@ public sealed class AddTransactionMemoryAction(
         if (transaction is null)
             return;
 
-        if (shouldAdjustAccountTotals)
+        if (shouldAdjustAccountTotals && transaction.AffectsAccountBalance)
         {
             LogMemoryPersistence.RevertTransactionFromAccount(transaction.Account, transaction.Type, transaction.Amount);
             unitOfWork.Accounts.Update(transaction.Account);
@@ -188,7 +193,7 @@ public sealed class AddTransactionMemoryAction(
             unitOfWork, snapshot.SourceAccountId, cancellationToken);
         var transaction = CreateTransaction(snapshot, account);
         await unitOfWork.Transactions.AddAsync(transaction, cancellationToken);
-        if (shouldAdjustAccountTotals)
+        if (shouldAdjustAccountTotals && snapshot.AffectsAccountBalance)
         {
             LogMemoryPersistence.ApplyTransactionToAccount(account, snapshot.Type, snapshot.Amount);
             unitOfWork.Accounts.Update(account);
@@ -216,6 +221,7 @@ public sealed class AddTransactionMemoryAction(
         IsPinned = value.IsPinned,
         IsForDeletion = value.IsForDeletion,
         IsIoU = value.IsIoU,
+        ShouldAffectBalance = value.ShouldAffectBalance,
         IsExcludedFromBudget = value.IsExcludedFromBudget
     };
 }
@@ -253,8 +259,11 @@ public sealed class EditTransactionMemoryAction(
         var oldAccount = transaction.Account;
         var newAccount = await LogMemoryPersistence.GetRequiredAccountAsync(
             unitOfWork, snapshot.SourceAccountId, cancellationToken);
-        LogMemoryPersistence.RevertTransactionFromAccount(oldAccount, transaction.Type, transaction.Amount);
-        LogMemoryPersistence.ApplyTransactionToAccount(newAccount, snapshot.Type, snapshot.Amount);
+        var oldAffectsBalance = transaction.AffectsAccountBalance;
+        if (oldAffectsBalance)
+            LogMemoryPersistence.RevertTransactionFromAccount(oldAccount, transaction.Type, transaction.Amount);
+        if (snapshot.AffectsAccountBalance)
+            LogMemoryPersistence.ApplyTransactionToAccount(newAccount, snapshot.Type, snapshot.Amount);
 
         transaction.Type = snapshot.Type;
         transaction.SourceAccountId = snapshot.SourceAccountId;
@@ -271,11 +280,13 @@ public sealed class EditTransactionMemoryAction(
         transaction.IsPinned = snapshot.IsPinned;
         transaction.IsForDeletion = snapshot.IsForDeletion;
         transaction.IsIoU = snapshot.IsIoU;
+        transaction.ShouldAffectBalance = snapshot.ShouldAffectBalance;
         transaction.IsExcludedFromBudget = snapshot.IsExcludedFromBudget;
 
         unitOfWork.Transactions.Update(transaction);
-        unitOfWork.Accounts.Update(oldAccount);
-        if (!ReferenceEquals(oldAccount, newAccount))
+        if (oldAffectsBalance)
+            unitOfWork.Accounts.Update(oldAccount);
+        if (snapshot.AffectsAccountBalance && (!ReferenceEquals(oldAccount, newAccount) || !oldAffectsBalance))
             unitOfWork.Accounts.Update(newAccount);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
@@ -297,8 +308,11 @@ public sealed class DeleteTransactionMemoryAction(TransactionMemorySnapshot snap
         var account = await LogMemoryPersistence.GetRequiredAccountAsync(
             unitOfWork, snapshot.SourceAccountId, cancellationToken);
         await unitOfWork.Transactions.AddAsync(AddTransactionMemoryAction.CreateTransaction(snapshot, account), cancellationToken);
-        LogMemoryPersistence.ApplyTransactionToAccount(account, snapshot.Type, snapshot.Amount);
-        unitOfWork.Accounts.Update(account);
+        if (snapshot.AffectsAccountBalance)
+        {
+            LogMemoryPersistence.ApplyTransactionToAccount(account, snapshot.Type, snapshot.Amount);
+            unitOfWork.Accounts.Update(account);
+        }
         await LogMemoryPersistence.AdjustGoalAsync(
             unitOfWork, snapshot.GoalId, snapshot.Amount, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -310,8 +324,11 @@ public sealed class DeleteTransactionMemoryAction(TransactionMemorySnapshot snap
         if (transaction is null)
             return;
 
-        LogMemoryPersistence.RevertTransactionFromAccount(transaction.Account, transaction.Type, transaction.Amount);
-        unitOfWork.Accounts.Update(transaction.Account);
+        if (transaction.AffectsAccountBalance)
+        {
+            LogMemoryPersistence.RevertTransactionFromAccount(transaction.Account, transaction.Type, transaction.Amount);
+            unitOfWork.Accounts.Update(transaction.Account);
+        }
         await LogMemoryPersistence.AdjustGoalAsync(
             unitOfWork, snapshot.GoalId, -snapshot.Amount, cancellationToken);
         unitOfWork.Transactions.Remove(transaction);

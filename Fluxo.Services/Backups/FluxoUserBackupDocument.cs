@@ -109,7 +109,12 @@ public sealed record BackupTransaction(
     bool IsPinned,
     bool IsForDeletion,
     bool IsIoU,
-    bool IsExcludedFromBudget);
+    bool IsExcludedFromBudget,
+    bool? ShouldAffectBalance = null)
+{
+    [JsonIgnore]
+    public bool RestoredShouldAffectBalance => ShouldAffectBalance ?? IsIoU;
+}
 
 public sealed record BackupRecurringTransaction(
     int BackupId,
