@@ -365,75 +365,6 @@
             </Setter>
         </Style>
 
-        <Style x:Key="LedgerEditableTextBoxStyle" TargetType="TextBox">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="CaretBrush" Value="{StaticResource Brush.Text.Primary}" />
-            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
-            <Setter Property="IsReadOnly" Value="True" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsEditing}" Value="True">
-                    <Setter Property="IsReadOnly" Value="False" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="LedgerEditableMoneyTextBoxStyle" TargetType="customControls:MoneyTextBox">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="CaretBrush" Value="{StaticResource Brush.Text.Primary}" />
-            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
-            <Setter Property="HorizontalContentAlignment" Value="Right" />
-            <Setter Property="IsReadOnly" Value="True" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsEditing}" Value="True">
-                    <Setter Property="IsReadOnly" Value="False" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="LedgerEditTagListBoxStyle" TargetType="ListBox">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
-            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
-        </Style>
-
-        <Style x:Key="LedgerEditTagListBoxItemStyle" TargetType="ListBoxItem">
-            <Setter Property="Margin" Value="0,0,8,8" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ListBoxItem">
-                        <ContentPresenter />
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <DataTemplate x:Key="LedgerEditTagTemplate">
-            <ToggleButton
-                Padding="12,6"
-                Content="{Binding Name}"
-                IsChecked="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}"
-                Style="{StaticResource PopupTagItemToggleStyle}" />
-        </DataTemplate>
-
-        <DataTemplate x:Key="LedgerEditAccountTemplate">
-            <TextBlock
-                FontFamily="{StaticResource Medium}"
-                FontSize="12"
-                Foreground="{StaticResource Brush.Text.Primary}"
-                Text="{Binding Name}" />
-        </DataTemplate>
-
-        <ItemsPanelTemplate x:Key="LedgerEditTagItemsPanelTemplate">
-            <WrapPanel />
-        </ItemsPanelTemplate>
-
         <DataTemplate x:Key="LedgerChildRowTemplate">
             <Grid
                 x:Name="ChildRowRoot"
@@ -474,13 +405,12 @@
                         <StackPanel.RenderTransform>
                             <TranslateTransform />
                         </StackPanel.RenderTransform>
-                        <TextBox
+                        <TextBlock
                             MinWidth="120"
-                            VerticalContentAlignment="Center"
+                            VerticalAlignment="Center"
                             FontFamily="{StaticResource Bold}"
                             FontSize="13"
-                            Style="{StaticResource LedgerEditableTextBoxStyle}"
-                            Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            Text="{Binding Name, Mode=OneWay}" />
                         <Border
                             Margin="8,4,0,0"
                             Padding="8,3"
@@ -570,39 +500,6 @@
                             </TextBlock>
                         </Border>
 
-                        <Popup
-                            x:Name="LedgerEditTagPopup"
-                            AllowsTransparency="True"
-                            IsOpen="{Binding IsTagPopupOpen, Mode=TwoWay}"
-                            Placement="Bottom"
-                            PlacementTarget="{Binding ElementName=LedgerTransactionTagBadge}"
-                            PopupAnimation="Fade"
-                            StaysOpen="False"
-                            VerticalOffset="8">
-                            <Border
-                                MaxWidth="360"
-                                Padding="12"
-                                Background="{StaticResource Brush.Background.Elevated}"
-                                BorderBrush="{StaticResource Brush.Border.Subtle}"
-                                BorderThickness="1"
-                                CornerRadius="12">
-                                <StackPanel>
-                                    <TextBlock
-                                        Margin="0,0,0,10"
-                                        FontFamily="{StaticResource Bold}"
-                                        FontSize="12"
-                                        Foreground="{StaticResource Brush.Text.Primary}"
-                                        Text="More Tags" />
-                                    <ListBox
-                                        ItemContainerStyle="{StaticResource LedgerEditTagListBoxItemStyle}"
-                                        ItemTemplate="{StaticResource LedgerEditTagTemplate}"
-                                        ItemsPanel="{StaticResource LedgerEditTagItemsPanelTemplate}"
-                                        ItemsSource="{Binding DataContext.EditableTags, ElementName=LedgerRoot}"
-                                        SelectionChanged="OnEditTagSelectionChanged"
-                                        Style="{StaticResource LedgerEditTagListBoxStyle}" />
-                                </StackPanel>
-                            </Border>
-                        </Popup>
                     </Grid>
 
                     <Border
@@ -643,7 +540,6 @@
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
-                                <Setter Property="Visibility" Value="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding Kind}" Value="{x:Static main:LedgerTransactionKind.Income}">
                                         <Setter Property="Foreground" Value="{StaticResource Brush.Success}" />
@@ -653,20 +549,6 @@
                         </TextBlock.Style>
                     </TextBlock>
 
-                    <customControls:MoneyTextBox
-                        x:Name="ChildRowMoneyEditor"
-                        Grid.Column="5"
-                        Margin="0,8,8,8"
-                        VerticalContentAlignment="Center"
-                        FontFamily="{StaticResource Bold}"
-                        FontSize="12"
-                        Style="{StaticResource LedgerEditableMoneyTextBoxStyle}"
-                        Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}, ConverterParameter=Comma}"
-                        Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <customControls:MoneyTextBox.RenderTransform>
-                            <TranslateTransform />
-                        </customControls:MoneyTextBox.RenderTransform>
-                    </customControls:MoneyTextBox>
                 </Grid>
                 <Grid.Triggers>
                     <EventTrigger RoutedEvent="MouseEnter">
@@ -694,11 +576,6 @@
                                     Duration="0:0:0.12" />
                                 <DoubleAnimation
                                     Storyboard.TargetName="ChildRowSignedAmountText"
-                                    Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
-                                    To="3"
-                                    Duration="0:0:0.12" />
-                                <DoubleAnimation
-                                    Storyboard.TargetName="ChildRowMoneyEditor"
                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
                                     To="3"
                                     Duration="0:0:0.12" />
@@ -733,11 +610,6 @@
                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
                                     To="0"
                                     Duration="0:0:0.12" />
-                                <DoubleAnimation
-                                    Storyboard.TargetName="ChildRowMoneyEditor"
-                                    Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
-                                    To="0"
-                                    Duration="0:0:0.12" />
                             </Storyboard>
                         </BeginStoryboard>
                     </EventTrigger>
@@ -747,12 +619,6 @@
                         <Setter Property="Background" Value="Transparent" />
                         <Setter Property="IsHitTestVisible" Value="True" />
                         <Setter Property="Opacity" Value="1" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsDisabledByAnotherEdit}" Value="True">
-                                <Setter Property="IsHitTestVisible" Value="False" />
-                                <Setter Property="Opacity" Value="0.4" />
-                            </DataTrigger>
-                        </Style.Triggers>
                     </Style>
                 </Grid.Style>
             </Grid>
@@ -785,13 +651,12 @@
                             <StackPanel.RenderTransform>
                                 <TranslateTransform />
                             </StackPanel.RenderTransform>
-                            <TextBox
+                            <TextBlock
                                 MinWidth="120"
-                                VerticalContentAlignment="Center"
+                                VerticalAlignment="Center"
                                 FontFamily="{StaticResource Bold}"
                                 FontSize="13"
-                                Style="{StaticResource LedgerEditableTextBoxStyle}"
-                                Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                Text="{Binding Name, Mode=OneWay}" />
                             <Border
                                 x:Name="LedgerChildCountBadge"
                                 Width="20"
@@ -898,39 +763,6 @@
                                 </TextBlock>
                             </Border>
 
-                            <Popup
-                                x:Name="LedgerEditTagPopup"
-                                AllowsTransparency="True"
-                                IsOpen="{Binding IsTagPopupOpen, Mode=TwoWay}"
-                                Placement="Bottom"
-                                PlacementTarget="{Binding ElementName=LedgerTransactionTagBadge}"
-                                PopupAnimation="Fade"
-                                StaysOpen="False"
-                                VerticalOffset="8">
-                                <Border
-                                    MaxWidth="360"
-                                    Padding="12"
-                                    Background="{StaticResource Brush.Background.Elevated}"
-                                    BorderBrush="{StaticResource Brush.Border.Subtle}"
-                                    BorderThickness="1"
-                                    CornerRadius="12">
-                                    <StackPanel>
-                                        <TextBlock
-                                            Margin="0,0,0,10"
-                                            FontFamily="{StaticResource Bold}"
-                                            FontSize="12"
-                                            Foreground="{StaticResource Brush.Text.Primary}"
-                                            Text="More Tags" />
-                                        <ListBox
-                                            ItemContainerStyle="{StaticResource LedgerEditTagListBoxItemStyle}"
-                                            ItemTemplate="{StaticResource LedgerEditTagTemplate}"
-                                            ItemsPanel="{StaticResource LedgerEditTagItemsPanelTemplate}"
-                                            ItemsSource="{Binding DataContext.EditableTags, ElementName=LedgerRoot}"
-                                            SelectionChanged="OnEditTagSelectionChanged"
-                                            Style="{StaticResource LedgerEditTagListBoxStyle}" />
-                                    </StackPanel>
-                                </Border>
-                            </Popup>
                         </Grid>
 
                         <Grid
@@ -957,30 +789,6 @@
                                     Text="{Binding AccountName}" />
                             </Border>
 
-                            <Popup
-                                AllowsTransparency="True"
-                                IsOpen="{Binding IsAccountPopupOpen, Mode=TwoWay}"
-                                Placement="Bottom"
-                                PlacementTarget="{Binding ElementName=LedgerTransactionAccountBadge}"
-                                PopupAnimation="Fade"
-                                StaysOpen="False"
-                                VerticalOffset="8">
-                                <Border
-                                    MinWidth="180"
-                                    MaxWidth="280"
-                                    Padding="8"
-                                    Background="{StaticResource Brush.Background.Elevated}"
-                                    BorderBrush="{StaticResource Brush.Border.Subtle}"
-                                    BorderThickness="1"
-                                    CornerRadius="12">
-                                    <ListBox
-                                        ItemContainerStyle="{StaticResource LedgerEditTagListBoxItemStyle}"
-                                        ItemTemplate="{StaticResource LedgerEditAccountTemplate}"
-                                        ItemsSource="{Binding DataContext.EditableAccounts, ElementName=LedgerRoot}"
-                                        SelectionChanged="OnEditAccountSelectionChanged"
-                                        Style="{StaticResource LedgerEditTagListBoxStyle}" />
-                                </Border>
-                            </Popup>
                         </Grid>
 
                         <TextBlock
@@ -995,7 +803,6 @@
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
-                                    <Setter Property="Visibility" Value="{Binding IsEditing, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding Kind}" Value="{x:Static main:LedgerTransactionKind.Income}">
                                             <Setter Property="Foreground" Value="{StaticResource Brush.Success}" />
@@ -1008,20 +815,6 @@
                             </TextBlock.RenderTransform>
                         </TextBlock>
 
-                        <customControls:MoneyTextBox
-                            x:Name="RowMoneyEditor"
-                            Grid.Column="4"
-                            Margin="0,8,8,8"
-                            VerticalContentAlignment="Center"
-                            FontFamily="{StaticResource Bold}"
-                            FontSize="12"
-                            Style="{StaticResource LedgerEditableMoneyTextBoxStyle}"
-                            Text="{Binding Amount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}, ConverterParameter=Comma}"
-                            Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <customControls:MoneyTextBox.RenderTransform>
-                                <TranslateTransform />
-                            </customControls:MoneyTextBox.RenderTransform>
-                        </customControls:MoneyTextBox>
 
                         <Border
                             x:Name="RowActions"
@@ -1036,63 +829,34 @@
                                 <customControls:BalloonButton
                                     Width="30"
                                     Height="30"
-                                    ButtonIcon="{StaticResource CloneRegular}"
-                                    Click="OnDuplicateTransactionClick"
-                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                    ButtonIcon="{StaticResource Info}"
+                                    Click="OnViewTransactionClick"
+                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.NavInfo}"
+                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.NavInfo.Hovered}"
                                     IconSize="12"
-                                    IsEnabled="{Binding IsEditing, Converter={StaticResource BoolNegationConverter}}"
                                     Style="{StaticResource HeaderButtonStyle}"
-                                    ToolTip="Duplicate" />
-                                <customControls:BalloonCheckBox
+                                    ToolTip="View Transaction" />
+                                <customControls:BalloonButton
                                     Width="30"
                                     Height="30"
-                                    CheckedBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
-                                    CheckedIcon="{StaticResource Check}"
-                                    CheckedText="Apply"
-                                    Command="{Binding DataContext.EditTransactionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                    CommandParameter="{Binding}"
-                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                                    IconSize="12">
-                                    <customControls:BalloonCheckBox.Style>
-                                        <Style BasedOn="{StaticResource HeaderCheckBoxStyle}" TargetType="customControls:BalloonCheckBox">
-                                            <Setter Property="ToolTip" Value="Edit" />
-                                            <Setter Property="IsChecked" Value="{Binding IsEditing, Mode=OneWay}" />
-                                            <Setter Property="UncheckedIcon" Value="{StaticResource Pen}" />
-                                            <Setter Property="UncheckedText" Value="Edit" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsEditing}" Value="True">
-                                                    <Setter Property="ToolTip" Value="Apply" />
-                                                </DataTrigger>
-                                                <MultiDataTrigger>
-                                                    <MultiDataTrigger.Conditions>
-                                                        <Condition Binding="{Binding IsEditing}" Value="True" />
-                                                        <Condition Binding="{Binding CanApplyEdit}" Value="False" />
-                                                    </MultiDataTrigger.Conditions>
-                                                    <Setter Property="IsEnabled" Value="False" />
-                                                    <Setter Property="ToolTip" Value="Child amounts must equal parent amount" />
-                                                </MultiDataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </customControls:BalloonCheckBox.Style>
-                                </customControls:BalloonCheckBox>
-                                <customControls:BalloonCheckBox
-                                    Width="30"
-                                    Height="30"
-                                    CheckedBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
-                                    CheckedIcon="{StaticResource Ban}"
-                                    CheckedText="Cancel"
-                                    Click="OnDeleteOrDiscardTransactionClick"
-                                    CommandParameter="{Binding}"
+                                    ButtonIcon="{StaticResource Pen}"
+                                    Click="OnEditTransactionClick"
                                     DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                                     HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                     IconSize="12"
-                                    IsChecked="{Binding IsEditing, Mode=OneWay}"
-                                    Style="{StaticResource HeaderCheckBoxStyle}"
-                                    ToolTip="Delete"
-                                    UncheckedIcon="{StaticResource Delete}"
-                                    UncheckedText="Delete" />
+                                    IsEnabled="{Binding IsGoal, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"
+                                    Style="{StaticResource HeaderButtonStyle}"
+                                    ToolTip="Edit" />
+                                <customControls:BalloonButton
+                                    Width="30"
+                                    Height="30"
+                                    ButtonIcon="{StaticResource Delete}"
+                                    Click="OnRemoveTransactionClick"
+                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                    IconSize="12"
+                                    Style="{StaticResource HeaderButtonStyle}"
+                                    ToolTip="Delete" />
                             </StackPanel>
                             <Border.Style>
                                 <Style TargetType="Border">
@@ -1136,11 +900,6 @@
                                         To="3"
                                         Duration="0:0:0.12" />
                                     <DoubleAnimation
-                                        Storyboard.TargetName="RowMoneyEditor"
-                                        Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
-                                        To="3"
-                                        Duration="0:0:0.12" />
-                                    <DoubleAnimation
                                         Storyboard.TargetName="RowActions"
                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
                                         To="3"
@@ -1177,11 +936,6 @@
                                         To="0"
                                         Duration="0:0:0.12" />
                                     <DoubleAnimation
-                                        Storyboard.TargetName="RowMoneyEditor"
-                                        Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
-                                        To="0"
-                                        Duration="0:0:0.12" />
-                                    <DoubleAnimation
                                         Storyboard.TargetName="RowActions"
                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
                                         To="0"
@@ -1199,10 +953,6 @@
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter Property="Background" Value="{StaticResource Brush.Background.Hover}" />
                                 </Trigger>
-                                <DataTrigger Binding="{Binding IsDisabledByAnotherEdit}" Value="True">
-                                    <Setter Property="IsHitTestVisible" Value="False" />
-                                    <Setter Property="Opacity" Value="0.4" />
-                                </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </Border.Style>

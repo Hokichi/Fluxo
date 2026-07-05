@@ -7,7 +7,6 @@ using System.Windows.Threading;
 using Fluxo.Core.Enums;
 using Fluxo.Resources.Infrastructure;
 using Fluxo.Services.Dialogs;
-using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Shell.Main;
 using Fluxo.Views.Shell.Main;
 using Microsoft.Win32;
@@ -72,27 +71,6 @@ public partial class Ledger : UserControl
             return;
 
         _ = viewModel.RemoveTransactionCommand.ExecuteAsync(transaction);
-    }
-
-    private void OnDeleteOrDiscardTransactionClick(object sender, RoutedEventArgs e)
-    {
-        if (sender is not FrameworkElement { DataContext: LedgerTransactionItemVM transaction } ||
-            DataContext is not LedgerVM viewModel)
-        {
-            return;
-        }
-
-        if (transaction.IsEditing)
-        {
-            _ = viewModel.DiscardTransactionEditCommand.ExecuteAsync(transaction);
-            if (sender is ToggleButton toggleButton)
-                toggleButton.IsChecked = transaction.IsEditing;
-            return;
-        }
-
-        OnRemoveTransactionClick(sender, e);
-        if (sender is ToggleButton deleteToggleButton)
-            deleteToggleButton.IsChecked = transaction.IsEditing;
     }
 
     private void OnLedgerRowPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -186,35 +164,12 @@ public partial class Ledger : UserControl
     private void OnTransactionTagPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (sender is not FrameworkElement { DataContext: LedgerTransactionItemVM transaction } ||
+            DataContext is not LedgerVM viewModel ||
             transaction.TagId <= 0)
             return;
 
         e.Handled = true;
-        if (transaction.IsEditing)
-        {
-            OpenTransactionTagPopup(transaction);
-            return;
-        }
-
-        if (DataContext is not LedgerVM viewModel)
-            return;
-
         viewModel.ApplyTagFilter(transaction.TagId);
-    }
-
-    private void OnEditTagSelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (sender is not FrameworkElement { DataContext: LedgerTransactionItemVM transaction } ||
-            DataContext is not LedgerVM viewModel ||
-            e.AddedItems.Count == 0 ||
-            e.AddedItems[0] is not TagVM tag)
-        {
-            return;
-        }
-
-        viewModel.ApplyTransactionTag(transaction, tag);
-        if (sender is ListBox listBox)
-            listBox.SelectedItem = null;
     }
 
     private void OnTransactionAccountPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -225,57 +180,26 @@ public partial class Ledger : UserControl
             return;
 
         e.Handled = true;
-        if (transaction.IsEditing)
-        {
-            OpenTransactionAccountPopup(transaction);
-            return;
-        }
-
         viewModel.ApplyAccountFilter(transaction.AccountId);
     }
 
-    private void OnEditAccountSelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void OnViewTransactionClick(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement { DataContext: LedgerTransactionItemVM transaction } ||
-            DataContext is not LedgerVM viewModel ||
-            e.AddedItems.Count == 0 ||
-            e.AddedItems[0] is not AccountVM account)
+        if (sender is FrameworkElement { DataContext: LedgerTransactionItemVM transaction } &&
+            Window.GetWindow(this) is MainWindow ownerWindow)
         {
-            return;
+            ownerWindow.OpenLedgerTransactionDetailPopup(transaction.Id, beginEditing: false);
         }
-
-        viewModel.ApplyTransactionAccount(transaction, account);
-        transaction.IsAccountPopupOpen = false;
-        if (sender is ListBox listBox)
-            listBox.SelectedItem = null;
     }
 
-    private void OnDuplicateTransactionClick(object sender, RoutedEventArgs e)
+    private void OnEditTransactionClick(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement { DataContext: LedgerTransactionItemVM transaction } ||
-            DataContext is not LedgerVM viewModel ||
-            Window.GetWindow(this) is not MainWindow ownerWindow)
+        if (sender is FrameworkElement { DataContext: LedgerTransactionItemVM transaction } &&
+            !transaction.IsGoal &&
+            Window.GetWindow(this) is MainWindow ownerWindow)
         {
-            return;
+            ownerWindow.OpenLedgerTransactionDetailPopup(transaction.Id, beginEditing: true);
         }
-
-        var draft = viewModel.CreateDuplicateTransactionDraft(transaction);
-        ownerWindow.OpenAddNewTransactionPopup(draft);
-    }
-
-    private void OpenTransactionTagPopup(LedgerTransactionItemVM transaction)
-    {
-        if (transaction.Kind != LedgerTransactionKind.Expense)
-            return;
-
-        transaction.IsTagPopupOpen = false;
-        _ = Dispatcher.BeginInvoke(() => transaction.IsTagPopupOpen = true, DispatcherPriority.Input);
-    }
-
-    private void OpenTransactionAccountPopup(LedgerTransactionItemVM transaction)
-    {
-        transaction.IsAccountPopupOpen = false;
-        _ = Dispatcher.BeginInvoke(() => transaction.IsAccountPopupOpen = true, DispatcherPriority.Input);
     }
 
     private async void OnFilterDropDownClosed(object sender, EventArgs e)
