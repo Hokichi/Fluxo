@@ -100,11 +100,13 @@ public partial class TransactionDetailVM : ObservableObject
 
     public bool AreFieldsReadOnly => !IsEditing;
     public bool CanEditFields => IsEditing;
+
     public bool IsRegularMode
     {
         get => !IsIoU;
         set { if (value) IsIoU = false; }
     }
+
     public bool IsUnpostedIoUMode
     {
         get => IsIoU && !ShouldAffectBalance;
@@ -115,6 +117,7 @@ public partial class TransactionDetailVM : ObservableObject
             IsIoU = true;
         }
     }
+
     public bool IsPostedIoUMode
     {
         get => IsIoU && ShouldAffectBalance;
@@ -125,8 +128,10 @@ public partial class TransactionDetailVM : ObservableObject
             ShouldAffectBalance = true;
         }
     }
+
     public string TransactionModeDescription =>
         GetTransactionModeDescription(IsIoU, ShouldAffectBalance);
+
     public bool IsExpense => _transaction.Type == TransactionType.Expense;
     public string IoUTooltip => IsExpense ? "Set as lend" : "Set as debt";
     public bool IsCategoryEnabled => IsEditing && IsExpense;
@@ -138,10 +143,11 @@ public partial class TransactionDetailVM : ObservableObject
     public bool HasSplitRowsWithoutAmounts => SplitRows.Count > 0 && SplitRows.All(row => !row.HasAmount);
     public bool HasChildTransactions => ChildTransactions.Count > 0;
     public bool ShowChildTransactions => HasChildTransactions && !IsSplitMode;
-    public int DetailPopupWidth => ShowChildTransactions ? 916 : 640;
     public bool ShowSplitButton => true;
+
     public bool HasPendingSplitChanges =>
         _areSplitRowsLoaded && (HasSplitRowsWithAmounts || _removedSplitRows.Count > 0);
+
     public bool ShowNormalTransactionFields => !IsSplitMode;
     public IEnumerable<TagVM> AllSplitTags => _orderedTags.Where(tag => !tag.IsSystemTag);
     public bool HasSplitParentRemainder => IsSplitMode && AmountText > 0m;
@@ -170,7 +176,6 @@ public partial class TransactionDetailVM : ObservableObject
         OnPropertyChanged(nameof(ShowSplitButton));
         OnPropertyChanged(nameof(ShowNormalTransactionFields));
         OnPropertyChanged(nameof(ShowChildTransactions));
-        OnPropertyChanged(nameof(DetailPopupWidth));
         OnPropertyChanged(nameof(HasSplitParentRemainder));
         OnPropertyChanged(nameof(CanCloseSplitModeWithoutSaving));
         OnPropertyChanged(nameof(RequiresEmptySplitConfirmationOnClose));
@@ -313,7 +318,6 @@ public partial class TransactionDetailVM : ObservableObject
 
         OnPropertyChanged(nameof(HasChildTransactions));
         OnPropertyChanged(nameof(ShowChildTransactions));
-        OnPropertyChanged(nameof(DetailPopupWidth));
     }
 
     private async Task LoadChildTransactionsIntoSplitRowsAsync(CancellationToken cancellationToken)
