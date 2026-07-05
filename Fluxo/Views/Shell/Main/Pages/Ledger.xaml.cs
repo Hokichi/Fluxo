@@ -188,17 +188,7 @@ public partial class Ledger : UserControl
         if (sender is FrameworkElement { DataContext: LedgerTransactionItemVM transaction } &&
             Window.GetWindow(this) is MainWindow ownerWindow)
         {
-            ownerWindow.OpenLedgerTransactionDetailPopup(transaction.Id, beginEditing: false);
-        }
-    }
-
-    private void OnEditTransactionClick(object sender, RoutedEventArgs e)
-    {
-        if (sender is FrameworkElement { DataContext: LedgerTransactionItemVM transaction } &&
-            !transaction.IsGoal &&
-            Window.GetWindow(this) is MainWindow ownerWindow)
-        {
-            ownerWindow.OpenLedgerTransactionDetailPopup(transaction.Id, beginEditing: true);
+            ownerWindow.OpenLedgerTransactionDetailPopup(transaction.Id);
         }
     }
 

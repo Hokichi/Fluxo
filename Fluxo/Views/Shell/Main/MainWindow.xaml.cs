@@ -1460,7 +1460,7 @@ public partial class MainWindow : Window, IPopupHost
         await ShowTransactionDetailPopupAsync(targetTransaction, appData, beginEditing: false);
     }
 
-    public async void OpenLedgerTransactionDetailPopup(int transactionId, bool beginEditing)
+    public async void OpenLedgerTransactionDetailPopup(int transactionId)
     {
         using var scope = _serviceProvider.CreateScope();
         var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
@@ -1468,7 +1468,7 @@ public partial class MainWindow : Window, IPopupHost
         if (targetTransaction is null)
             return;
 
-        await ShowTransactionDetailPopupAsync(targetTransaction, appData, beginEditing);
+        await ShowTransactionDetailPopupAsync(targetTransaction, appData, beginEditing: false);
     }
 
     private async Task ShowTransactionDetailPopupAsync(

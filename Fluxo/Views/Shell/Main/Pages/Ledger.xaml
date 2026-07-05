@@ -410,6 +410,7 @@
                             VerticalAlignment="Center"
                             FontFamily="{StaticResource Bold}"
                             FontSize="13"
+                            Foreground="{StaticResource Brush.Text.Primary}"
                             Text="{Binding Name, Mode=OneWay}" />
                         <Border
                             Margin="8,4,0,0"
@@ -656,6 +657,7 @@
                                 VerticalAlignment="Center"
                                 FontFamily="{StaticResource Bold}"
                                 FontSize="13"
+                                Foreground="{StaticResource Brush.Text.Primary}"
                                 Text="{Binding Name, Mode=OneWay}" />
                             <Border
                                 x:Name="LedgerChildCountBadge"
@@ -827,9 +829,8 @@
                             </Border.RenderTransform>
                             <StackPanel Margin="0,0,8,0" Orientation="Horizontal">
                                 <customControls:BalloonButton
-                                    Width="30"
-                                    Height="30"
                                     ButtonIcon="{StaticResource Info}"
+                                    ButtonSize="32"
                                     Click="OnViewTransactionClick"
                                     DefaultBackground="{StaticResource Brush.BalloonButton.Background.NavInfo}"
                                     HoveredBackground="{StaticResource Brush.BalloonButton.Background.NavInfo.Hovered}"
@@ -837,20 +838,8 @@
                                     Style="{StaticResource HeaderButtonStyle}"
                                     ToolTip="View Transaction" />
                                 <customControls:BalloonButton
-                                    Width="30"
-                                    Height="30"
-                                    ButtonIcon="{StaticResource Pen}"
-                                    Click="OnEditTransactionClick"
-                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                                    IconSize="12"
-                                    IsEnabled="{Binding IsGoal, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"
-                                    Style="{StaticResource HeaderButtonStyle}"
-                                    ToolTip="Edit" />
-                                <customControls:BalloonButton
-                                    Width="30"
-                                    Height="30"
                                     ButtonIcon="{StaticResource Delete}"
+                                    ButtonSize="32"
                                     Click="OnRemoveTransactionClick"
                                     DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                                     HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
