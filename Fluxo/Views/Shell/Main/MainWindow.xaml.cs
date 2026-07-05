@@ -1457,7 +1457,29 @@ public partial class MainWindow : Window, IPopupHost
         using var scope = _serviceProvider.CreateScope();
         var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
         var targetTransaction = await TransactionDetailTargetResolver.ResolveAsync(transaction, appData);
-        var popupViewModel = new TransactionDetailVM(_mainVM, targetTransaction, appData);
+        await ShowTransactionDetailPopupAsync(targetTransaction, appData, beginEditing: false);
+    }
+
+    public async void OpenLedgerTransactionDetailPopup(int transactionId, bool beginEditing)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
+        var targetTransaction = await TransactionDetailTargetResolver.ResolveAsync(transactionId, appData);
+        if (targetTransaction is null)
+            return;
+
+        await ShowTransactionDetailPopupAsync(targetTransaction, appData, beginEditing);
+    }
+
+    private async Task ShowTransactionDetailPopupAsync(
+        TransactionVM transaction,
+        IAppDataService appData,
+        bool beginEditing)
+    {
+        var popupViewModel = new TransactionDetailVM(_mainVM, transaction, appData);
+        if (beginEditing)
+            await popupViewModel.BeginEditingAsync();
+
         _dialogService.ShowTransactionDetail(popupViewModel, this);
     }
 
@@ -1892,13 +1914,12 @@ public partial class MainWindow : Window, IPopupHost
         _dialogService.ShowAccountReconciliation(reconciliationVm, this);
     }
 
-    public async void OpenTransactionDetailPopupForEditing(TransactionVM expenseLog)
+    public async void OpenTransactionDetailPopupForEditing(TransactionVM transaction)
     {
         using var scope = _serviceProvider.CreateScope();
         var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
-        var popupViewModel = new TransactionDetailVM(_mainVM, expenseLog, appData);
-        await popupViewModel.BeginEditingAsync();
-        _dialogService.ShowTransactionDetail(popupViewModel, this);
+        var targetTransaction = await TransactionDetailTargetResolver.ResolveAsync(transaction, appData);
+        await ShowTransactionDetailPopupAsync(targetTransaction, appData, beginEditing: true);
     }
 
     private void PublishDashboardViewMode()
