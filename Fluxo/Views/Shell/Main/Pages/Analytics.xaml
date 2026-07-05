@@ -289,6 +289,7 @@
                         <components:AnalyticsBarChart
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Stretch"
+                            GridLinesSource="{Binding TrendGridLineLabels, Mode=OneWay}"
                             ItemsSource="{Binding TrendBarItems}"
                             Visibility="{Binding HasTrendData, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <TextBlock Style="{StaticResource AnalyticsNoDataTextStyle}" Visibility="{Binding HasTrendData, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />

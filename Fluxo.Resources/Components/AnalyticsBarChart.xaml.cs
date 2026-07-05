@@ -13,6 +13,12 @@ public partial class AnalyticsBarChart : UserControl
         typeof(AnalyticsBarChart),
         new PropertyMetadata(null, OnItemsSourceChanged));
 
+    public static readonly DependencyProperty GridLinesSourceProperty = DependencyProperty.Register(
+        nameof(GridLinesSource),
+        typeof(IEnumerable),
+        typeof(AnalyticsBarChart),
+        new PropertyMetadata(null));
+
     private bool _isInitialized;
     private bool _isLayerAActive = true;
     private int _transitionToken;
@@ -27,6 +33,12 @@ public partial class AnalyticsBarChart : UserControl
     {
         get => (IEnumerable?)GetValue(ItemsSourceProperty);
         set => SetValue(ItemsSourceProperty, value);
+    }
+
+    public IEnumerable? GridLinesSource
+    {
+        get => (IEnumerable?)GetValue(GridLinesSourceProperty);
+        set => SetValue(GridLinesSourceProperty, value);
     }
 
     private static void OnItemsSourceChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs eventArgs)
