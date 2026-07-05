@@ -12,6 +12,63 @@ namespace Fluxo.Tests.Views.Shell.Main;
 public sealed class TransactionDetailTargetResolverTests
 {
     [Fact]
+    public async Task ResolveAsync_ReturnsNull_WhenTransactionIdDoesNotExist()
+    {
+        var appData = Substitute.For<IAppDataService>();
+
+        Assert.Null(await TransactionDetailTargetResolver.ResolveAsync(99, appData));
+    }
+
+    [Fact]
+    public async Task ResolveAsync_LoadsTransactionById_WhenItHasNoParent()
+    {
+        var appData = Substitute.For<IAppDataService>();
+        appData.GetTransactionByIdAsync(7, Arg.Any<CancellationToken>()).Returns(new Transaction
+        {
+            Id = 7,
+            Type = TransactionType.Expense,
+            Name = "Groceries",
+            SourceAccountId = 1,
+            Account = new Account { Id = 1, Name = "Checking" }
+        });
+
+        var result = await TransactionDetailTargetResolver.ResolveAsync(7, appData);
+
+        Assert.NotNull(result);
+        Assert.Equal(7, result.Id);
+        Assert.Equal("Groceries", result.Name);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_LoadsParent_WhenTransactionIdBelongsToChild()
+    {
+        var appData = Substitute.For<IAppDataService>();
+        appData.GetTransactionByIdAsync(4, Arg.Any<CancellationToken>()).Returns(new Transaction
+        {
+            Id = 4,
+            Type = TransactionType.Expense,
+            Name = "Child",
+            ParentTransactionId = 3,
+            SourceAccountId = 1,
+            Account = new Account { Id = 1, Name = "Checking" }
+        });
+        appData.GetTransactionByIdAsync(3, Arg.Any<CancellationToken>()).Returns(new Transaction
+        {
+            Id = 3,
+            Type = TransactionType.Expense,
+            Name = "Parent",
+            SourceAccountId = 1,
+            Account = new Account { Id = 1, Name = "Checking" }
+        });
+
+        var result = await TransactionDetailTargetResolver.ResolveAsync(4, appData);
+
+        Assert.NotNull(result);
+        Assert.Equal(3, result.Id);
+        Assert.Equal("Parent", result.Name);
+    }
+
+    [Fact]
     public async Task ResolveAsync_ReturnsTransaction_WhenItHasNoParent()
     {
         var appData = Substitute.For<IAppDataService>();

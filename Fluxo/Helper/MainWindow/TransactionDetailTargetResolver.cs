@@ -6,6 +6,21 @@ namespace Fluxo.Helper.MainWindow;
 
 internal static class TransactionDetailTargetResolver
 {
+    public static async Task<TransactionVM?> ResolveAsync(
+        int transactionId,
+        IAppDataService appData,
+        CancellationToken cancellationToken = default)
+    {
+        var transaction = await appData.GetTransactionByIdAsync(transactionId, cancellationToken);
+        if (transaction is null)
+            return null;
+
+        if (transaction.ParentTransactionId is { } parentId)
+            transaction = await appData.GetTransactionByIdAsync(parentId, cancellationToken) ?? transaction;
+
+        return ToViewModel(transaction);
+    }
+
     public static async Task<TransactionVM> ResolveAsync(
         TransactionVM expenseLog,
         IAppDataService appData,
@@ -36,6 +51,7 @@ internal static class TransactionDetailTargetResolver
             IsPinned = transaction.IsPinned,
             IsIoU = transaction.IsIoU,
             ShouldAffectBalance = transaction.ShouldAffectBalance,
+            IsExcludedFromBudget = transaction.IsExcludedFromBudget,
             ExpenseCategory = transaction.ExpenseCategory,
             ParentTransactionId = transaction.ParentTransactionId,
             Account = new AccountVM
