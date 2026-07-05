@@ -51,6 +51,7 @@ public sealed partial class AnalyticsVM(
     [ObservableProperty] private string _netValueText = "0";
 
     [ObservableProperty] private IReadOnlyList<AnalyticsTrendBarItem> _trendBarItems = [];
+    [ObservableProperty] private IReadOnlyList<string> _trendGridLineLabels = [];
     [ObservableProperty] private bool _hasTrendData;
 
     [ObservableProperty] private double _needsRatio;
@@ -347,6 +348,13 @@ public sealed partial class AnalyticsVM(
                 : point.PrimaryValue)
             .DefaultIfEmpty(0m)
             .Max();
+        var scaleMaximum = CalculateTrendScaleMaximum(maxValue);
+        TrendGridLineLabels = scaleMaximum <= 0m
+            ? []
+            : Enumerable.Range(1, 4)
+                .Reverse()
+                .Select(section => FormatMoney(scaleMaximum * section / 5m))
+                .ToArray();
         var highlightedIndex = Array.FindLastIndex(
             trendBarSeeds,
             point =>
@@ -364,10 +372,10 @@ public sealed partial class AnalyticsVM(
             .Select((point, index) => new AnalyticsTrendBarItem(
                 point.Label,
                 point.PrimaryValue,
-                CalculateBarHeightRatio(point.PrimaryValue, maxValue),
+                CalculateBarHeightRatio(point.PrimaryValue, scaleMaximum),
                 point.SecondaryValue,
                 point.HasSecondaryValue
-                    ? CalculateBarHeightRatio(point.SecondaryValue, maxValue)
+                    ? CalculateBarHeightRatio(point.SecondaryValue, scaleMaximum)
                     : 0d,
                 point.HasSecondaryValue,
                 IsHighlighted: index == highlightedIndex,
@@ -462,6 +470,24 @@ public sealed partial class AnalyticsVM(
         return Math.Clamp(Math.Max(minRatio, normalized), 0d, 1d);
     }
 
+    private static decimal CalculateTrendScaleMaximum(decimal maxValue)
+    {
+        if (maxValue <= 0m)
+            return 0m;
+
+        var magnitude = (decimal)Math.Pow(10d, Math.Floor(Math.Log10((double)maxValue)));
+        var normalized = maxValue / magnitude;
+        var rounded = normalized <= 1m
+            ? 1m
+            : normalized <= 2m
+                ? 2m
+                : normalized <= 5m
+                    ? 5m
+                    : 10m;
+
+        return rounded * magnitude;
+    }
+
     private static string FormatMoney(decimal value)
     {
         return value.ToString("N0", CultureInfo.InvariantCulture);
@@ -508,8 +534,8 @@ public sealed record AnalyticsTrendBarItem(
     bool IsSecondaryExpenseMode,
     bool IsSecondaryIncomeMode)
 {
-    public string ValueText => $"${Value:N0}";
-    public string SecondaryValueText => $"${SecondaryValue:N0}";
+    public string ValueText => $"{Value:N0}";
+    public string SecondaryValueText => $"{SecondaryValue:N0}";
 }
 
 public sealed record AnalyticsTopTagCardItem(

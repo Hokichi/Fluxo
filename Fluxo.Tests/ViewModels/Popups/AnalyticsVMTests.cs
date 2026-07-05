@@ -123,6 +123,39 @@ public sealed class AnalyticsVMTests
     }
 
     [Fact]
+    public async Task TrendScale_UsesRoundedCeilingForSelectedMode()
+    {
+        var vm = CreateVm();
+
+        await vm.LoadAsync();
+
+        Assert.Equal(new[] { "160", "120", "80", "40" }, vm.TrendGridLineLabels);
+        Assert.Equal(
+            0.8d,
+            vm.TrendBarItems.Max(item => Math.Max(item.BarHeightRatio, item.SecondaryBarHeightRatio)),
+            precision: 10);
+
+        vm.SelectedTrendMode = AnalyticsTrendMode.Expenses;
+
+        Assert.Equal(new[] { "80", "60", "40", "20" }, vm.TrendGridLineLabels);
+        Assert.Equal(0.6d, vm.TrendBarItems.Max(item => item.BarHeightRatio), precision: 10);
+    }
+
+    [Fact]
+    public async Task TrendTooltips_DoNotIncludeCurrencySymbols()
+    {
+        var vm = CreateVm();
+
+        await vm.LoadAsync();
+
+        Assert.All(vm.TrendBarItems, item =>
+        {
+            Assert.DoesNotContain("$", item.ValueText);
+            Assert.DoesNotContain("$", item.SecondaryValueText);
+        });
+    }
+
+    [Fact]
     public async Task ApplyExternalDateRangeWithoutRefresh_UsesRangeOnFirstLoad()
     {
         var service = Substitute.For<IAnalyticsService>();
