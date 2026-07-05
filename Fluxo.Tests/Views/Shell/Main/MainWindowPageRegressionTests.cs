@@ -386,7 +386,7 @@ public sealed class MainWindowPageRegressionTests
     }
 
     [Fact]
-    public void Ledger_UsesRequestedDisabledHoverAndDeleteDialogStates()
+    public void Ledger_UsesRequestedHoverAndDeleteDialogStates()
     {
         var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
         var ledgerCodeBehind = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml.cs"));
@@ -399,14 +399,6 @@ public sealed class MainWindowPageRegressionTests
         Assert.Contains("Property=\"IsEnabled\" Value=\"False\"", groupingComboStyleSection);
         Assert.Contains("Property=\"Opacity\" Value=\"0.4\"", groupingComboStyleSection);
         Assert.Contains("Brush.Background.Hover", rowTemplateSection);
-        Assert.Contains("IsDisabledByAnotherEdit", rowTemplateSection);
-        Assert.Contains("Property=\"IsHitTestVisible\" Value=\"False\"", rowTemplateSection);
-        Assert.Contains("CommandParameter=\"{Binding}\"", rowTemplateSection);
-        Assert.Contains("CreateDuplicateTransactionDraft", ledgerCodeBehind);
-        Assert.Contains("ButtonIcon=\"{StaticResource CloneRegular}\"", rowTemplateSection);
-        Assert.Contains("IsEnabled=\"{Binding IsEditing, Converter={StaticResource BoolNegationConverter}}\"", rowTemplateSection);
-        Assert.Contains("CheckedIcon=\"{StaticResource Ban}\"", rowTemplateSection);
-        Assert.Contains("OnDeleteOrDiscardTransactionClick", rowTemplateSection);
         Assert.Contains("Storyboard.TargetProperty=\"(UIElement.RenderTransform).(TranslateTransform.X)\"", rowTemplateSection);
         Assert.Contains("To=\"3\"", rowTemplateSection);
         Assert.Contains("FluxoMessageBox.Show", ledgerCodeBehind);
@@ -431,21 +423,6 @@ public sealed class MainWindowPageRegressionTests
     }
 
     [Fact]
-    public void Ledger_ParentRowsShowChildTransactionCountImmediatelyAfterName()
-    {
-        var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
-        var rowTemplateSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerRowTemplate\"", "x:Key=\"LedgerGroupItemStyle\"");
-
-        var nameEditorIndex = rowTemplateSection.IndexOf("Text=\"{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}\"", StringComparison.Ordinal);
-        var countBadgeIndex = rowTemplateSection.IndexOf("x:Name=\"LedgerChildCountBadge\"", StringComparison.Ordinal);
-
-        Assert.True(nameEditorIndex >= 0);
-        Assert.True(countBadgeIndex > nameEditorIndex);
-        Assert.Contains("Text=\"{Binding ChildTransactions.Count}\"", rowTemplateSection);
-        Assert.Contains("Visibility=\"{Binding HasChildTransactions, Converter={StaticResource BoolToVisibilityConverter}}\"", rowTemplateSection);
-    }
-
-    [Fact]
     public void Ledger_ChildRowsKeepIndicatorIndentButAlignDataColumnsAndUseHoverAnimation()
     {
         var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
@@ -461,11 +438,9 @@ public sealed class MainWindowPageRegressionTests
         Assert.Contains("x:Name=\"ChildRowTagCell\"", childTemplateSection);
         Assert.Contains("x:Name=\"ChildRowAccountCell\"", childTemplateSection);
         Assert.Contains("x:Name=\"ChildRowSignedAmountText\"", childTemplateSection);
-        Assert.Contains("x:Name=\"ChildRowMoneyEditor\"", childTemplateSection);
         Assert.Contains("x:Name=\"ChildRowRoot\"", childTemplateSection);
         Assert.DoesNotContain("Width=\"{Binding ActualWidth", childTemplateSection);
         Assert.Contains("x:Name=\"ChildRowSurface\"", childTemplateSection);
-        Assert.Equal(6, CountOccurrences(childTemplateSection, "<TranslateTransform />"));
         Assert.Contains("Margin=\"0,8,8,8\"", childTemplateSection);
         Assert.DoesNotContain("Margin=\"-26,0,0,0\"", childTemplateSection);
         Assert.DoesNotContain("Margin=\"-23,0,0,0\"", childTemplateSection);
@@ -476,7 +451,6 @@ public sealed class MainWindowPageRegressionTests
         Assert.Contains("Storyboard.TargetName=\"ChildRowTagCell\"", childTemplateSection);
         Assert.Contains("Storyboard.TargetName=\"ChildRowAccountCell\"", childTemplateSection);
         Assert.Contains("Storyboard.TargetName=\"ChildRowSignedAmountText\"", childTemplateSection);
-        Assert.Contains("Storyboard.TargetName=\"ChildRowMoneyEditor\"", childTemplateSection);
         Assert.Contains("Storyboard.TargetProperty=\"(UIElement.RenderTransform).(TranslateTransform.X)\"", childTemplateSection);
         Assert.Contains("To=\"3\"", childTemplateSection);
         Assert.DoesNotContain("new(0, 0, -", ledgerCodeBehind);
@@ -505,20 +479,6 @@ public sealed class MainWindowPageRegressionTests
         Assert.Contains("Storyboard.TargetProperty=\"MaxHeight\"", groupStyleSection);
         Assert.DoesNotContain("x:Name=\"RowSeparator\"", rowTemplateSection);
         Assert.DoesNotContain("BorderThickness=\"0,0,0,1\"", rowTemplateSection);
-    }
-
-    [Fact]
-    public void Ledger_EditTagPopupUsesEditableTags()
-    {
-        var ledgerXaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml"));
-        var ledgerCodeBehind = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Shell", "Main", "Pages", "Ledger.xaml.cs"));
-        var rowTemplateSection = ExtractSection(ledgerXaml, "x:Key=\"LedgerRowTemplate\"", "x:Key=\"LedgerGroupItemStyle\"");
-
-        Assert.Contains("x:Name=\"LedgerEditTagPopup\"", rowTemplateSection);
-        Assert.Contains("ItemsSource=\"{Binding DataContext.EditableTags, ElementName=LedgerRoot}\"", rowTemplateSection);
-        Assert.Contains("SelectionChanged=\"OnEditTagSelectionChanged\"", rowTemplateSection);
-        Assert.Contains("OnTransactionTagPreviewMouseLeftButtonDown", ledgerCodeBehind);
-        Assert.Contains("ApplyTransactionTag", ledgerCodeBehind);
     }
 
     [Fact]

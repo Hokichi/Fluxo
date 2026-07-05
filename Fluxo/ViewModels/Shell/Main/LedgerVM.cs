@@ -16,7 +16,6 @@ using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.Services.History;
 using Fluxo.ViewModels.Entities;
-using Fluxo.ViewModels.Popups;
 
 namespace Fluxo.ViewModels.Shell.Main;
 
@@ -56,7 +55,6 @@ public partial class LedgerVM : ObservableRecipient,
     [ObservableProperty] private bool _areAllVisibleTransactionsSelected;
     [ObservableProperty] private int? _selectedBatchAccountId;
     [ObservableProperty] private int? _selectedBatchTagId;
-    [ObservableProperty] private LedgerTransactionItemVM? _editingTransaction;
 
     public LedgerVM(
         ITransactionService transactionService,
@@ -102,7 +100,6 @@ public partial class LedgerVM : ObservableRecipient,
     public ObservableCollection<LedgerFilterOption<int>> AccountFilters { get; } = [];
     public ObservableCollection<LedgerFilterOption<LedgerCategoryFilter>> CategoryFilters { get; } = [];
     public ObservableCollection<LedgerFilterOption<int>> TagFilters { get; } = [];
-    public ObservableCollection<AccountVM> EditableAccounts { get; } = [];
     public ObservableCollection<TagVM> EditableTags { get; } = [];
     public IReadOnlyList<LedgerFilterOption<int>> BatchAccountOptions =>
         AccountFilters.Where(option => !option.IsAll).ToList();
@@ -211,44 +208,16 @@ public partial class LedgerVM : ObservableRecipient,
     [RelayCommand]
     private void ToggleChildTransactions(LedgerTransactionItemVM? transaction)
     {
-        if (transaction is null || !transaction.HasChildTransactions || transaction.IsEditing)
+        if (transaction is null || !transaction.HasChildTransactions)
             return;
 
         transaction.IsChildrenExpanded = !transaction.IsChildrenExpanded;
     }
 
     [RelayCommand]
-    private async Task EditTransactionAsync(LedgerTransactionItemVM? transaction)
-    {
-        if (transaction is null || transaction.IsGoal)
-            return;
-
-        if (!transaction.IsEditing)
-        {
-            if (EditingTransaction is not null && !ReferenceEquals(EditingTransaction, transaction))
-                return;
-
-            transaction.IsEditing = true;
-            if (transaction.HasChildTransactions)
-                transaction.IsChildrenExpanded = true;
-            EditingTransaction = transaction;
-            RefreshEditDisabledState();
-            return;
-        }
-
-        if (!transaction.CanApplyEdit)
-            return;
-
-        await CommitTransactionEditAsync(transaction);
-        transaction.IsEditing = false;
-        EditingTransaction = null;
-        RefreshEditDisabledState();
-    }
-
-    [RelayCommand]
     private async Task RemoveTransactionAsync(LedgerTransactionItemVM? transaction)
     {
-        if (transaction is null || transaction.IsGoal || transaction.IsEditing || transaction.IsDisabledByAnotherEdit)
+        if (transaction is null || transaction.IsGoal)
             return;
 
         switch (transaction.Kind)
@@ -260,19 +229,6 @@ public partial class LedgerVM : ObservableRecipient,
                 await RemoveIncomeTransactionAsync(transaction);
                 break;
         }
-    }
-
-    [RelayCommand]
-    private async Task DiscardTransactionEditAsync(LedgerTransactionItemVM? transaction)
-    {
-        if (transaction is null || !transaction.IsEditing)
-            return;
-
-        await ReloadTransactionTreeFromStoreAsync(transaction);
-        transaction.IsEditing = false;
-        transaction.IsTagPopupOpen = false;
-        EditingTransaction = null;
-        RefreshEditDisabledState();
     }
 
     [RelayCommand]
@@ -292,7 +248,6 @@ public partial class LedgerVM : ObservableRecipient,
             transaction.IsSelectedForBatch = IsSelectionModeEnabled && TransactionsView.Contains(transaction);
 
         RefreshBatchSelectionState();
-        RefreshEditDisabledState();
     }
 
     [RelayCommand]
@@ -386,7 +341,6 @@ public partial class LedgerVM : ObservableRecipient,
         var tags = _mapper.Map<IReadOnlyList<TagVM>>(
             await _tagService.GetAllAsync(cancellationToken));
 
-        EditingTransaction = null;
         RebuildFilters(accounts, tags);
 
         var activeExpenseLogs = expenseLogs
@@ -416,7 +370,6 @@ public partial class LedgerVM : ObservableRecipient,
 
             foreach (var childExpense in childExpenses)
             {
-                childExpense.ParentTransaction = expense;
                 expense.ChildTransactions.Add(childExpense);
             }
 
@@ -434,7 +387,6 @@ public partial class LedgerVM : ObservableRecipient,
         foreach (var transaction in projected)
             _transactions.Add(transaction);
 
-        RefreshEditDisabledState();
         HasTransactions = _transactions.Count > 0;
         RefreshSummaries();
         TransactionsView.Refresh();
@@ -481,7 +433,6 @@ public partial class LedgerVM : ObservableRecipient,
 
     private void RebuildFilters(IReadOnlyList<AccountVM> accounts, IReadOnlyList<TagVM> tags)
     {
-        ReplaceEditableAccounts(accounts);
         ReplaceEditableTags(tags);
 
         RebuildFilter(TypeFilters,
@@ -520,13 +471,6 @@ public partial class LedgerVM : ObservableRecipient,
         OnPropertyChanged(nameof(BatchAccountSelectionText));
         OnPropertyChanged(nameof(BatchTagSelectionText));
         RefreshAllFilterSelectionPresentations();
-    }
-
-    private void ReplaceEditableAccounts(IReadOnlyList<AccountVM> accounts)
-    {
-        EditableAccounts.Clear();
-        foreach (var account in accounts.OrderBy(account => account.Name, StringComparer.OrdinalIgnoreCase))
-            EditableAccounts.Add(account);
     }
 
     private void ReplaceEditableTags(IReadOnlyList<TagVM> tags)
@@ -725,47 +669,6 @@ public partial class LedgerVM : ObservableRecipient,
     {
         ApplySpecificFilter(AccountFilters, accountId);
         ApplyFilters();
-    }
-
-    public void ApplyTransactionTag(LedgerTransactionItemVM? transaction, TagVM? tag)
-    {
-        if (transaction is null ||
-            tag is null ||
-            tag.IsSystemTag ||
-            transaction.Kind != LedgerTransactionKind.Expense ||
-            !transaction.IsEditing)
-        {
-            return;
-        }
-
-        transaction.TagId = tag.Id;
-        transaction.TagName = tag.Name;
-        transaction.TagHexCode = tag.HexCode;
-        transaction.IsTagPopupOpen = false;
-    }
-
-    public void ApplyTransactionAccount(LedgerTransactionItemVM? transaction, AccountVM? account)
-    {
-        if (transaction is null || account is null || !transaction.IsEditing)
-            return;
-
-        transaction.AccountId = account.Id;
-        transaction.AccountName = account.Name;
-    }
-
-    public AddNewTransactionVM.AddNewTransactionDraft CreateDuplicateTransactionDraft(LedgerTransactionItemVM transaction)
-    {
-        ArgumentNullException.ThrowIfNull(transaction);
-
-        return new AddNewTransactionVM.AddNewTransactionDraft(
-            transaction.Kind == LedgerTransactionKind.Expense,
-            transaction.Name,
-            transaction.Amount,
-            transaction.AccountId > 0 ? transaction.AccountId : null,
-            transaction.OccurredOn.Date,
-            string.Empty,
-            transaction.Kind == LedgerTransactionKind.Expense ? transaction.Category : null,
-            transaction.Kind == LedgerTransactionKind.Expense && transaction.TagId > 0 ? transaction.TagId : null);
     }
 
     private void NormalizeFilterSelection<T>(
@@ -1093,142 +996,6 @@ public partial class LedgerVM : ObservableRecipient,
         NetAmount = EarnedAmount - SpentAmount - GoalAmount;
     }
 
-    private Task CommitTransactionEditAsync(LedgerTransactionItemVM transaction)
-    {
-        return transaction.Kind switch
-        {
-            LedgerTransactionKind.Expense => CommitExpenseEditTreeAsync(transaction),
-            LedgerTransactionKind.Income => CommitIncomeEditAsync(transaction),
-            _ => Task.CompletedTask
-        };
-    }
-
-    private async Task CommitExpenseEditTreeAsync(LedgerTransactionItemVM transaction)
-    {
-        var targetAccountId = transaction.AccountId;
-        await CommitExpenseEditAsync(transaction);
-
-        foreach (var child in transaction.ChildTransactions)
-        {
-            child.AccountId = targetAccountId;
-            child.AccountName = transaction.AccountName;
-            await CommitExpenseEditAsync(child);
-        }
-    }
-
-    private Task ReloadTransactionFromStoreAsync(LedgerTransactionItemVM transaction)
-    {
-        return transaction.Kind switch
-        {
-            LedgerTransactionKind.Expense => ReloadExpenseTransactionFromStoreAsync(transaction),
-            LedgerTransactionKind.Income => ReloadIncomeTransactionFromStoreAsync(transaction),
-            _ => Task.CompletedTask
-        };
-    }
-
-    private async Task ReloadTransactionTreeFromStoreAsync(LedgerTransactionItemVM transaction)
-    {
-        await ReloadTransactionFromStoreAsync(transaction);
-
-        foreach (var child in transaction.ChildTransactions)
-            await ReloadTransactionFromStoreAsync(child);
-    }
-
-    private async Task ReloadExpenseTransactionFromStoreAsync(LedgerTransactionItemVM transaction)
-    {
-        var persisted = await _dataOperationRunner.RunAsync(async (scope, ct) =>
-            await scope.UnitOfWork.Transactions.GetByIdAsync(transaction.Id, ct));
-        if (persisted is null)
-            return;
-
-        ApplyExpenseLogToTransaction(transaction, persisted);
-    }
-
-    private async Task ReloadIncomeTransactionFromStoreAsync(LedgerTransactionItemVM transaction)
-    {
-        var persisted = await _dataOperationRunner.RunAsync(async (scope, ct) =>
-            await scope.UnitOfWork.Transactions.GetByIdAsync(transaction.Id, ct));
-        if (persisted is null)
-            return;
-
-        ApplyIncomeLogToTransaction(transaction, persisted);
-    }
-
-    private async Task CommitExpenseEditAsync(LedgerTransactionItemVM transaction)
-    {
-        var (before, after) = await _dataOperationRunner.RunAsync(async (scope, ct) =>
-        {
-            var expenseLog = await scope.UnitOfWork.Transactions.GetByIdAsync(transaction.Id, ct);
-            if (expenseLog is null)
-                return ((TransactionMemorySnapshot?)null, (TransactionMemorySnapshot?)null);
-
-            var beforeSnapshot = TransactionMemorySnapshot.Create(expenseLog);
-            var targetAccount =
-                await scope.UnitOfWork.Accounts.GetByIdAsync(transaction.AccountId, ct) ??
-                expenseLog.Account;
-            var targetTag =
-                await scope.UnitOfWork.Tags.GetByIdAsync(transaction.TagId, ct) ??
-                expenseLog.Tag;
-
-            expenseLog.Name = transaction.Name.Trim();
-            expenseLog.Amount = transaction.Amount;
-            expenseLog.Account = targetAccount;
-            expenseLog.SourceAccountId = targetAccount.Id;
-
-            expenseLog.Tag = targetTag;
-            expenseLog.TagId = targetTag.Id;
-            scope.UnitOfWork.Transactions.Update(expenseLog);
-            await scope.UnitOfWork.SaveChangesAsync(ct);
-
-            return (beforeSnapshot, TransactionMemorySnapshot.Create(expenseLog));
-        });
-
-        if (before is null || after is null)
-            return;
-
-        ApplyTransactionSnapshotToTransaction(transaction, after);
-        RefreshTransactionLookups(transaction);
-        Messenger.Send(new RecordLogMemoryMessage(new EditTransactionMemoryAction(before, after)));
-        RefreshSummaries();
-        TransactionsView.Refresh();
-        RefreshVisibleTransactionState();
-    }
-
-    private async Task CommitIncomeEditAsync(LedgerTransactionItemVM transaction)
-    {
-        var (before, after) = await _dataOperationRunner.RunAsync(async (scope, ct) =>
-        {
-            var incomeLog = await scope.UnitOfWork.Transactions.GetByIdAsync(transaction.Id, ct);
-            if (incomeLog is null)
-                return ((TransactionMemorySnapshot?)null, (TransactionMemorySnapshot?)null);
-
-            var beforeSnapshot = TransactionMemorySnapshot.Create(incomeLog);
-            var targetAccount =
-                await scope.UnitOfWork.Accounts.GetByIdAsync(transaction.AccountId, ct) ??
-                incomeLog.Account;
-
-            incomeLog.Name = transaction.Name.Trim();
-            incomeLog.Amount = transaction.Amount;
-            incomeLog.Account = targetAccount;
-            incomeLog.SourceAccountId = targetAccount.Id;
-
-            scope.UnitOfWork.Transactions.Update(incomeLog);
-            await scope.UnitOfWork.SaveChangesAsync(ct);
-
-            return (beforeSnapshot, TransactionMemorySnapshot.Create(incomeLog));
-        });
-
-        if (before is null || after is null)
-            return;
-
-        ApplyTransactionSnapshotToTransaction(transaction, after);
-        RefreshTransactionLookups(transaction);
-        Messenger.Send(new RecordLogMemoryMessage(new EditTransactionMemoryAction(before, after)));
-        RefreshSummaries();
-        TransactionsView.Refresh();
-        RefreshVisibleTransactionState();
-    }
-
     private async Task RemoveExpenseTransactionAsync(LedgerTransactionItemVM transaction)
     {
         var snapshot = await _dataOperationRunner.RunAsync(async (scope, ct) =>
@@ -1279,53 +1046,6 @@ public partial class LedgerVM : ObservableRecipient,
         RefreshSummaries();
         TransactionsView.Refresh();
         RefreshVisibleTransactionState();
-    }
-
-    private static void ApplyTransactionSnapshotToTransaction(
-        LedgerTransactionItemVM transaction,
-        TransactionMemorySnapshot snapshot)
-    {
-        transaction.Name = snapshot.Name;
-        transaction.Amount = snapshot.Amount;
-        transaction.AccountId = snapshot.SourceAccountId;
-        transaction.TagId = snapshot.TagId ?? 0;
-    }
-
-    private static void ApplyExpenseLogToTransaction(LedgerTransactionItemVM transaction, Transaction log)
-    {
-        transaction.Name = log.Name;
-        transaction.Amount = log.Amount;
-        transaction.AccountId = log.SourceAccountId;
-        transaction.AccountName = log.Account?.Name ?? transaction.AccountName;
-        transaction.TagId = log.TagId ?? 0;
-        transaction.TagName = log.Tag?.Name ?? transaction.TagName;
-        transaction.TagHexCode = log.Tag?.HexCode ?? transaction.TagHexCode;
-    }
-
-    private static void ApplyIncomeLogToTransaction(LedgerTransactionItemVM transaction, Transaction log)
-    {
-        transaction.Name = log.Name;
-        transaction.Amount = log.Amount;
-        transaction.AccountId = log.SourceAccountId;
-        transaction.AccountName = log.Account?.Name ?? transaction.AccountName;
-    }
-
-    private void RefreshTransactionLookups(LedgerTransactionItemVM transaction)
-    {
-        transaction.AccountName = AccountFilters
-            .FirstOrDefault(option => !option.IsAll && option.Value == transaction.AccountId)
-            ?.Label ?? transaction.AccountName;
-
-        if (transaction.Kind != LedgerTransactionKind.Expense)
-            return;
-
-        var tag = TagFilters.FirstOrDefault(option => !option.IsAll && option.Value == transaction.TagId);
-        if (tag is not null)
-            transaction.TagName = tag.Label;
-
-        var editableTag = EditableTags.FirstOrDefault(tag => tag.Id == transaction.TagId);
-        if (editableTag is not null)
-            transaction.TagHexCode = editableTag.HexCode;
     }
 
     private void RefreshVisibleTransactionState()
@@ -1453,17 +1173,6 @@ public partial class LedgerVM : ObservableRecipient,
             LedgerGroupingMode.Category => transaction.CategoryGroupKey,
             _ => string.Empty
         };
-    }
-
-    private void RefreshEditDisabledState()
-    {
-        foreach (var transaction in _transactions)
-        {
-            transaction.IsAccountPopupOpen = transaction.IsEditing && transaction.IsAccountPopupOpen;
-            transaction.IsTagPopupOpen = transaction.IsEditing && transaction.IsTagPopupOpen;
-            transaction.IsDisabledByAnotherEdit =
-                EditingTransaction is not null && !ReferenceEquals(EditingTransaction, transaction);
-        }
     }
 
     private string BuildSelectedPeriodText()

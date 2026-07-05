@@ -10,14 +10,9 @@ public sealed partial class LedgerTransactionItemVM : ObservableObject
     [ObservableProperty] private decimal _amount;
     [ObservableProperty] private int _accountId;
     [ObservableProperty] private int _tagId;
-    [ObservableProperty] private bool _isDisabledByAnotherEdit;
-    [ObservableProperty] private bool _isEditing;
     [ObservableProperty] private bool _isChildrenExpanded;
     [ObservableProperty] private bool _isLastVisibleInGroup;
     [ObservableProperty] private bool _isSelectedForBatch;
-    [ObservableProperty] private bool _canApplyEdit = true;
-    [ObservableProperty] private bool _isAccountPopupOpen;
-    [ObservableProperty] private bool _isTagPopupOpen;
     [ObservableProperty] private string _name = string.Empty;
     [ObservableProperty] private string _accountName = string.Empty;
     [ObservableProperty] private string _tagHexCode = string.Empty;
@@ -33,7 +28,6 @@ public sealed partial class LedgerTransactionItemVM : ObservableObject
     public bool IsChildTransaction { get; init; }
     public bool IsGoal { get; init; }
     public bool IsRecurring { get; init; }
-    public LedgerTransactionItemVM? ParentTransaction { get; internal set; }
     public ObservableCollection<LedgerTransactionItemVM> ChildTransactions { get; } = [];
     public bool HasChildTransactions => ChildTransactions.Count > 0;
 
@@ -56,17 +50,6 @@ public sealed partial class LedgerTransactionItemVM : ObservableObject
     partial void OnAmountChanged(decimal value)
     {
         OnPropertyChanged(nameof(SignedAmount));
-        RefreshCanApplyEdit();
-        ParentTransaction?.RefreshCanApplyEdit();
-    }
-
-    partial void OnIsEditingChanged(bool value)
-    {
-        foreach (var child in ChildTransactions)
-            child.IsEditing = value;
-
-        RefreshCanApplyEdit();
-        ParentTransaction?.RefreshCanApplyEdit();
     }
 
     partial void OnIsSelectedForBatchChanged(bool value)
@@ -78,13 +61,5 @@ public sealed partial class LedgerTransactionItemVM : ObservableObject
     public void RefreshChildTransactionState()
     {
         OnPropertyChanged(nameof(HasChildTransactions));
-        RefreshCanApplyEdit();
-    }
-
-    public void RefreshCanApplyEdit()
-    {
-        CanApplyEdit = !IsEditing ||
-                       !HasChildTransactions ||
-                       ChildTransactions.Sum(child => child.Amount) <= Amount;
     }
 }
