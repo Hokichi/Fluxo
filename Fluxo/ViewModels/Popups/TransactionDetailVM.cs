@@ -460,6 +460,7 @@ public partial class TransactionDetailVM : ObservableObject
             var resolvedName = BuildTransactionName(input.Name, input.Note, tag.Name);
 
             var sourceChanged = currentAccount.Id != newAccount.Id;
+            var exclusionChanged = input.IsExcludedFromBudget != _savedState.IsExcludedFromBudget;
             if (!sourceChanged)
                 newAccount = currentAccount;
             var oldAffectsBalance = transaction.AffectsAccountBalance;
@@ -505,8 +506,8 @@ public partial class TransactionDetailVM : ObservableObject
             transaction.ShouldAffectBalance = input.ShouldAffectBalance;
             transaction.IsExcludedFromBudget = input.IsExcludedFromBudget;
 
-            if (sourceChanged)
-                await CascadeAccountToChildTransactionsAsync(newAccount);
+            if (sourceChanged || exclusionChanged)
+                await CascadeParentStateToChildTransactionsAsync(newAccount, input.IsExcludedFromBudget);
 
             _appData.UpdateTransaction(transaction);
             if (oldAffectsBalance || newAffectsBalance && !sourceChanged)
@@ -733,7 +734,8 @@ public partial class TransactionDetailVM : ObservableObject
                 row.SelectedTag.Id,
                 string.Empty,
                 SelectedDate.Date,
-                row.IsIoU));
+                row.IsIoU,
+                IsExcludedFromBudget));
         }
 
         if (result.Count == 0 && _removedSplitRows.All(row => row.TransactionId is null))
@@ -842,7 +844,8 @@ public partial class TransactionDetailVM : ObservableObject
                     removedRow.SelectedTag.Id,
                     string.Empty,
                     SelectedDate.Date,
-                    removedRow.IsIoU);
+                    removedRow.IsIoU,
+                    IsExcludedFromBudget);
                 var beforeSnapshot = TransactionMemorySnapshot.Create(removedChild);
                 ApplySplitInputToExistingChild(removedChild, input, removedTag, account);
                 removedChild.IsForDeletion = true;
@@ -1100,15 +1103,29 @@ public partial class TransactionDetailVM : ObservableObject
         };
     }
 
-    private async Task CascadeAccountToChildTransactionsAsync(Account account, CancellationToken cancellationToken = default)
+    internal static void ApplyParentStateToChildTransactions(
+        IEnumerable<Transaction> childTransactions,
+        Account account,
+        bool isExcludedFromBudget)
+    {
+        foreach (var childTransaction in childTransactions)
+        {
+            childTransaction.Account = account;
+            childTransaction.SourceAccountId = account.Id;
+            childTransaction.IsExcludedFromBudget = isExcludedFromBudget;
+        }
+    }
+
+    private async Task CascadeParentStateToChildTransactionsAsync(
+        Account account,
+        bool isExcludedFromBudget,
+        CancellationToken cancellationToken = default)
     {
         var childLogs = await LoadChildTransactionEntitiesAsync(cancellationToken);
+        ApplyParentStateToChildTransactions(childLogs, account, isExcludedFromBudget);
+
         foreach (var childLog in childLogs)
-        {
-            childLog.Account = account;
-            childLog.SourceAccountId = account.Id;
             _appData.UpdateTransaction(childLog);
-        }
     }
 
     private static Transaction CreateSplitTransaction(
@@ -1132,7 +1149,8 @@ public partial class TransactionDetailVM : ObservableObject
             Tag = tag,
             ParentTransactionId = parentTransactionId,
             IsIoU = input.IsIoU,
-            ShouldAffectBalance = input.IsIoU
+            ShouldAffectBalance = input.IsIoU,
+            IsExcludedFromBudget = input.IsExcludedFromBudget
         };
     }
 
@@ -1153,6 +1171,7 @@ public partial class TransactionDetailVM : ObservableObject
         transaction.SourceAccountId = account.Id;
         transaction.IsIoU = input.IsIoU;
         transaction.ShouldAffectBalance = input.IsIoU;
+        transaction.IsExcludedFromBudget = input.IsExcludedFromBudget;
         transaction.IsForDeletion = false;
         transaction.ParentTransactionId = input.ParentTransactionId;
     }
@@ -1347,7 +1366,8 @@ public partial class TransactionDetailVM : ObservableObject
         int TagId,
         string Note,
         DateTime Date,
-        bool IsIoU);
+        bool IsIoU,
+        bool IsExcludedFromBudget);
 
     private readonly record struct TransactionDetailSavedState(
         string Name,
