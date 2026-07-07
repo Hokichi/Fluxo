@@ -51,6 +51,9 @@ namespace Fluxo.Resources.CustomControls
 
         protected override Size MeasureOverride(Size availableSize)
         {
+            if (InternalChildren.Count == 0)
+                return base.MeasureOverride(availableSize);
+
             ComputeGridDimensions();
 
             // Measure children unconstrained first to get their natural size

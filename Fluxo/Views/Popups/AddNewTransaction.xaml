@@ -435,6 +435,22 @@
                             </StackPanel>
                         </Grid>
 
+                        <StackPanel Margin="0,16,0,0" Visibility="{Binding IsRepayment, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <Grid Style="{StaticResource FieldHeaderGridStyle}">
+                                <TextBlock
+                                    Margin="0"
+                                    Style="{StaticResource SectionLabelStyle}"
+                                    Text="Amount" />
+                                <TextBlock Style="{StaticResource AmountFieldHintStyle}" Text="{Binding AmountFieldHint, Mode=OneWay}" />
+                            </Grid>
+                            <customControls:MoneyTextBox
+                                x:Name="RepaymentAmountTextBox"
+                                LostKeyboardFocus="OnTransactionAmountTextBoxLostKeyboardFocus"
+                                Style="{StaticResource RoundedMoneyTextInputStyle}"
+                                Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}"
+                                TextChanged="OnTransactionAmountTextBoxTextChanged" />
+                        </StackPanel>
+
                         <Grid Margin="0,16,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />

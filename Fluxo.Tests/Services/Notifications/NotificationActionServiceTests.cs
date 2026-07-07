@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
@@ -147,6 +148,44 @@ public sealed class NotificationActionServiceTests
         Assert.Equal(4, expense.SourceAccountId);
         Assert.Equal(9, expense.TagId);
         Assert.True(expense.IsExcludedFromBudget);
+    }
+
+    [Fact]
+    public async Task ExecuteChecklistActionAsync_ProcessLatePayment_CreatesBalanceUpdateTag_WhenMissing()
+    {
+        var persistedNotifications = new List<Notification>
+        {
+            new() { Id = 1, Type = "LatePayment-10_20260501", Message = "Card 10 late", IsCleared = false }
+        };
+        var accounts = new List<Account>
+        {
+            new() { Id = 4, Name = "Selected Checking", AccountType = AccountType.Checking, Balance = 300m },
+            new()
+            {
+                Id = 10,
+                Name = "Card 10",
+                AccountType = AccountType.Credit,
+                SpentAmount = 100m
+            }
+        };
+        var transactions = new List<Transaction>();
+        var tags = new List<Tag>();
+        var sut = CreateSut(
+            persistedNotifications,
+            accounts: accounts,
+            transactions: transactions,
+            tags: tags);
+
+        var succeeded = await sut.ExecuteChecklistActionAsync(
+            BuildChecklistCard(NotificationGroupCategory.LatePayment, "LatePayment-10_20260501"),
+            [new NotificationChecklistActionDecision(10, NotificationChecklistItemActionType.Process, 4, 60m)]);
+
+        Assert.True(succeeded);
+        var tag = Assert.Single(tags);
+        Assert.Equal(SystemTags.BalanceUpdateName, tag.Name);
+        Assert.Equal(SystemTags.BalanceUpdateHexCode, tag.HexCode);
+        var expense = Assert.Single(transactions, transaction => transaction.Type == TransactionType.Expense);
+        Assert.Equal(tag.Id, expense.TagId);
     }
 
     [Fact]
@@ -467,6 +506,16 @@ public sealed class NotificationActionServiceTests
             {
                 var id = call.Arg<int>();
                 return Task.FromResult<Tag?>(tags.FirstOrDefault(tag => tag.Id == id));
+            });
+        tagRepository.AddAsync(Arg.Any<Tag>(), Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                var tag = call.Arg<Tag>();
+                if (tag.Id <= 0)
+                    tag.Id = tags.Count == 0 ? 1 : tags.Max(item => item.Id) + 1;
+
+                tags.Add(tag);
+                return Task.CompletedTask;
             });
 
         var recurringRepository = Substitute.For<IRecurringTransactionRepository>();

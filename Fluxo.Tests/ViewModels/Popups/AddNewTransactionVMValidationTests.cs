@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Runtime.ExceptionServices;
 using AutoMapper;
 using CommunityToolkit.Mvvm.Messaging;
+using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
@@ -130,6 +131,7 @@ public sealed class AddNewTransactionVMValidationTests
                 Id = 2,
                 Name = "Visa",
                 AccountType = AccountType.Credit,
+                SpentAmount = 80m,
                 IsEnabled = true
             };
             var vm = new AddNewTransactionVM(
@@ -141,6 +143,7 @@ public sealed class AddNewTransactionVMValidationTests
             vm.IsRepayment = true;
 
             Assert.Equal("Repayment to Visa", vm.NameText);
+            Assert.Equal(80m, vm.AmountText);
             Assert.False(vm.CanEditTransactionName);
         });
     }
@@ -156,6 +159,7 @@ public sealed class AddNewTransactionVMValidationTests
                 Id = 2,
                 Name = "Visa",
                 AccountType = AccountType.Credit,
+                SpentAmount = 40m,
                 IsEnabled = true
             };
             var mastercard = new AccountVM
@@ -163,6 +167,7 @@ public sealed class AddNewTransactionVMValidationTests
                 Id = 3,
                 Name = "Mastercard",
                 AccountType = AccountType.Credit,
+                SpentAmount = 120m,
                 IsEnabled = true
             };
             var vm = new AddNewTransactionVM(
@@ -173,6 +178,7 @@ public sealed class AddNewTransactionVMValidationTests
             vm.SelectedRepaymentAccount = mastercard;
 
             Assert.Equal("Repayment to Mastercard", vm.NameText);
+            Assert.Equal(120m, vm.AmountText);
         });
     }
 
@@ -267,6 +273,70 @@ public sealed class AddNewTransactionVMValidationTests
             Assert.Equal(9, expense.TagId);
             Assert.True(expense.IsExcludedFromBudget);
             Assert.Single(saved, transaction => transaction.Type == TransactionType.Income);
+        });
+    }
+
+    [Fact]
+    public void SaveAsync_Repayment_CreatesBalanceUpdateTag_WhenMissing()
+    {
+        RunInSta(() =>
+        {
+            var checkingVm = CreateCheckingSource(balance: 500m);
+            var creditVm = new AccountVM
+            {
+                Id = 2,
+                Name = "Visa",
+                AccountType = AccountType.Credit,
+                IsEnabled = true,
+                SpentAmount = 200m,
+                DeductSource = checkingVm.Id
+            };
+            var checking = new Account
+            {
+                Id = checkingVm.Id,
+                Name = checkingVm.Name,
+                AccountType = AccountType.Checking,
+                Balance = checkingVm.Balance
+            };
+            var credit = new Account
+            {
+                Id = creditVm.Id,
+                Name = creditVm.Name,
+                AccountType = AccountType.Credit,
+                SpentAmount = creditVm.SpentAmount
+            };
+            var saved = new List<Transaction>();
+            Tag? addedTag = null;
+            var appData = CreateAppData();
+            appData.GetAccountByIdAsync(checking.Id, Arg.Any<CancellationToken>()).Returns(checking);
+            appData.GetAccountByIdAsync(credit.Id, Arg.Any<CancellationToken>()).Returns(credit);
+            appData.GetTagsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IReadOnlyList<Tag>>([]));
+            appData.AddTagAsync(
+                    Arg.Do<Tag>(tag =>
+                    {
+                        tag.Id = 9;
+                        addedTag = tag;
+                    }),
+                    Arg.Any<CancellationToken>())
+                .Returns(Task.CompletedTask);
+            appData.AddTransactionAsync(
+                    Arg.Do<Transaction>(transaction => saved.Add(transaction)),
+                    Arg.Any<CancellationToken>())
+                .Returns(Task.CompletedTask);
+            var vm = new AddNewTransactionVM(
+                CreateMainViewModel([checkingVm, creditVm]),
+                appData);
+            vm.InitializeRepayment(creditVm);
+            vm.AmountText = 75m;
+
+            var result = vm.SaveAsync(false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess, result.ErrorMessage);
+            Assert.NotNull(addedTag);
+            Assert.Equal(SystemTags.BalanceUpdateName, addedTag!.Name);
+            Assert.Equal(SystemTags.BalanceUpdateHexCode, addedTag.HexCode);
+            var expense = Assert.Single(saved, transaction => transaction.Type == TransactionType.Expense);
+            Assert.Equal(9, expense.TagId);
         });
     }
 

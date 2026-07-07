@@ -1,4 +1,5 @@
 using System.Globalization;
+using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces;
@@ -395,13 +396,25 @@ public sealed class NotificationActionService(IDataOperationRunner dataOperation
             .FirstOrDefault();
     }
 
-    private static async Task<Tag?> ResolveBalanceUpdateTagAsync(
+    private static async Task<Tag> ResolveBalanceUpdateTagAsync(
         IUnitOfWork unitOfWork,
         CancellationToken cancellationToken)
     {
         var tags = await unitOfWork.Tags.GetAllAsync(cancellationToken);
-        return tags.FirstOrDefault(tag =>
-            string.Equals(tag.Name, "Balance Update", StringComparison.OrdinalIgnoreCase));
+        var existingTag = tags.FirstOrDefault(tag =>
+            string.Equals(tag.Name, SystemTags.BalanceUpdateName, StringComparison.OrdinalIgnoreCase));
+        if (existingTag is not null)
+            return existingTag;
+
+        var balanceUpdateTag = new Tag
+        {
+            Name = SystemTags.BalanceUpdateName,
+            HexCode = SystemTags.BalanceUpdateHexCode
+        };
+
+        await unitOfWork.Tags.AddAsync(balanceUpdateTag, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return balanceUpdateTag;
     }
 
     private static void ApplyExpenseToAccount(Account account, decimal amount)

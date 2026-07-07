@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Budgeting;
+using Fluxo.Core.Constants;
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Interfaces.Services;
@@ -753,6 +754,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             ClearTransactionModes();
             IsPinned = false;
             SelectedRepaymentAccount ??= RepaymentAccounts.FirstOrDefault();
+            LoadRepaymentAmount();
             SyncRepaymentName();
         }
         else if (IsIncome || IsExpense)
@@ -789,6 +791,8 @@ public partial class AddNewTransactionVM : ObservableValidator
     partial void OnSelectedRepaymentAccountChanged(AccountVM? oldValue, AccountVM? newValue)
     {
         _isRepaymentAmountInvalid = false;
+        if (IsRepayment)
+            LoadRepaymentAmount();
         if (IsRepayment)
             SyncRepaymentName();
         NotifyFormStateChanged();
@@ -927,10 +931,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                 if (target is null || target.AccountType != AccountType.Credit)
                     return AddNewTransactionSubmissionResult.Failure("Please select a valid credit account.");
 
-                var tag = (await _appData.GetTagsAsync()).FirstOrDefault(candidate =>
-                    string.Equals(candidate.Name, "Balance Update", StringComparison.OrdinalIgnoreCase));
-                if (tag is null)
-                    return AddNewTransactionSubmissionResult.Failure("Balance Update tag is unavailable.");
+                var tag = await ResolveBalanceUpdateTagAsync();
                 if (input.Amount > target.SpentAmount)
                     return AddNewTransactionSubmissionResult.Failure("Invalid Repayment");
 
@@ -2863,5 +2864,31 @@ public partial class AddNewTransactionVM : ObservableValidator
         NameText = SelectedRepaymentAccount is { } account
             ? $"Repayment to {account.Name}"
             : string.Empty;
+    }
+
+    private void LoadRepaymentAmount()
+    {
+        if (SelectedRepaymentAccount is { } account)
+            AmountText = account.SpentAmount;
+    }
+
+    private async Task<Tag> ResolveBalanceUpdateTagAsync()
+    {
+        var tags = await _appData.GetTagsAsync();
+        var existingTag = tags.FirstOrDefault(tag =>
+            string.Equals(tag.Name, SystemTags.BalanceUpdateName, StringComparison.OrdinalIgnoreCase));
+        if (existingTag is not null)
+            return existingTag;
+
+        var balanceUpdateTag = new Tag
+        {
+            Name = SystemTags.BalanceUpdateName,
+            HexCode = SystemTags.BalanceUpdateHexCode,
+            IsSystemTag = true
+        };
+
+        await _appData.AddTagAsync(balanceUpdateTag);
+        await _appData.SaveChangesAsync();
+        return balanceUpdateTag;
     }
 }

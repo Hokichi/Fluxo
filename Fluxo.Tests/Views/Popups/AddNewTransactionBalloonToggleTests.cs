@@ -15,6 +15,8 @@ public sealed class AddNewTransactionBalloonToggleTests
         Assert.Contains("ItemsSource=\"{Binding RepaymentAccounts}\"", xaml);
         Assert.Contains("SelectedItem=\"{Binding SelectedRepaymentAccount, Mode=TwoWay}\"", xaml);
         Assert.Contains("IsEnabled=\"{Binding CanChangeRepaymentAccount}\"", xaml);
+        Assert.Contains("x:Name=\"RepaymentAmountTextBox\"", xaml);
+        Assert.Contains("Visibility=\"{Binding IsRepayment, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
         Assert.Contains("Visibility=\"{Binding ShowCategoryOrRepaymentField, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
         Assert.DoesNotContain("ShowDisabledCategoryField", xaml);
     }

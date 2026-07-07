@@ -129,7 +129,7 @@
         <Style x:Key="SplitRowTagToggleStyle" TargetType="ToggleButton">
             <Setter Property="Height" Value="28" />
             <Setter Property="Padding" Value="12,0" />
-            <Setter Property="Background" Value="{DynamicResource Brush.Background.Surface}" />
+            <Setter Property="Background" Value="{DynamicResource Brush.Background.Deepened}" />
             <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border.Subtle}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Cursor" Value="Hand" />
@@ -610,13 +610,7 @@
                 <Border
                     x:Name="SplitRowsPanel"
                     Grid.Row="3"
-                    MinWidth="800"
-                    Margin="0,16,0,0"
-                    Padding="12"
-                    Background="{DynamicResource Brush.Background.Surface}"
-                    BorderBrush="{DynamicResource Brush.Border.Subtle}"
-                    BorderThickness="1"
-                    CornerRadius="12"
+                    Padding="0,12"
                     Visibility="{Binding IsSplitMode, Converter={StaticResource BoolToVisibilityConverter}}">
                     <StackPanel Grid.IsSharedSizeScope="True">
                         <Button
@@ -632,186 +626,134 @@
                             SnapsToDevicePixels="True" />
 
                         <customControls:FadingScrollViewer
+                            Width="720"
                             MaxHeight="330"
                             Margin="0"
                             HorizontalScrollBarVisibility="Auto">
                             <ItemsControl x:Name="SplitRowsItemsControl" ItemsSource="{Binding SplitRows}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <customControls:SpacedUniformGrid Columns="1" VerticalGap="12" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <StackPanel>
-                                            <Grid Margin="0,12">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="240" />
-                                                    <ColumnDefinition Width="160" />
-                                                    <ColumnDefinition Width="Auto" SharedSizeGroup="SplitCategory" />
-                                                    <ColumnDefinition Width="200" />
-                                                </Grid.ColumnDefinitions>
+                                        <Border
+                                            Width="720"
+                                            Padding="12"
+                                            Style="{StaticResource CardBorderStyle}">
+                                            <StackPanel>
+                                                <Grid Margin="0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="240" />
+                                                        <ColumnDefinition Width="160" />
+                                                        <ColumnDefinition Width="Auto" SharedSizeGroup="SplitCategory" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
 
-                                                <TextBox
-                                                    Grid.Column="0"
-                                                    Margin="0,0,8,0"
-                                                    Style="{StaticResource RoundedTextInputStyle}"
-                                                    Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                    <TextBox
+                                                        Grid.Column="0"
+                                                        Margin="0,0,8,0"
+                                                        Style="{StaticResource RoundedTextInputStyle}"
+                                                        Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                                                <Grid Grid.Column="1" Margin="0,0,8,0">
-                                                    <customControls:MoneyTextBox Style="{StaticResource RoundedMoneyTextInputStyle}" Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
-                                                    <Border
-                                                        BorderBrush="{DynamicResource Brush.Danger}"
-                                                        BorderThickness="1"
-                                                        CornerRadius="8"
-                                                        IsHitTestVisible="False"
-                                                        Visibility="{Binding IsCausingNegativeRemainder, Converter={StaticResource BoolToVisibilityConverter}}" />
-                                                </Grid>
-
-                                                <ComboBox
-                                                    Grid.Column="2"
-                                                    Width="100"
-                                                    Margin="0,0,8,0"
-                                                    DisplayMemberPath="Label"
-                                                    ItemsSource="{Binding DataContext.ExpenseCategories, RelativeSource={RelativeSource AncestorType=customControls:BasePopup}}"
-                                                    SelectedValue="{Binding SelectedExpenseCategory, Mode=TwoWay}"
-                                                    SelectedValuePath="Value"
-                                                    Style="{StaticResource FluxoComboBoxStyle}"
-                                                    Visibility="{Binding DataContext.IsExcludedFromBudget, RelativeSource={RelativeSource AncestorType=customControls:BasePopup}, Mode=OneWay, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
-
-                                                <Grid Grid.Column="3" Margin="0,0,8,0">
-                                                    <ToggleButton
-                                                        x:Name="SplitRowTagToggleButton"
-                                                        Content="{Binding TagDisplayName}"
-                                                        IsChecked="{Binding IsTagPopupOpen, Mode=TwoWay}"
-                                                        Style="{StaticResource SplitRowTagToggleStyle}"
-                                                        Tag="{Binding SelectedTag.HexCode}" />
-
-                                                    <Popup
-                                                        AllowsTransparency="True"
-                                                        IsOpen="{Binding IsTagPopupOpen, Mode=TwoWay}"
-                                                        Placement="Bottom"
-                                                        PlacementTarget="{Binding ElementName=SplitRowTagToggleButton}"
-                                                        PopupAnimation="Fade"
-                                                        StaysOpen="False"
-                                                        VerticalOffset="8">
+                                                    <Grid Grid.Column="1" Margin="0,0,8,0">
+                                                        <customControls:MoneyTextBox Style="{StaticResource RoundedMoneyTextInputStyle}" Text="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}}" />
                                                         <Border
-                                                            MaxWidth="280"
-                                                            Padding="12"
-                                                            Background="{DynamicResource Brush.Background.Elevated}"
-                                                            BorderBrush="{DynamicResource Brush.Border.Subtle}"
+                                                            BorderBrush="{DynamicResource Brush.Danger}"
                                                             BorderThickness="1"
-                                                            CornerRadius="12">
-                                                            <ListBox
-                                                                ItemContainerStyle="{StaticResource SplitRowTagPopupItemStyle}"
-                                                                ItemTemplate="{StaticResource PopupTagTemplate}"
-                                                                ItemsSource="{Binding DataContext.AllSplitTags, RelativeSource={RelativeSource AncestorType=customControls:BasePopup}}"
-                                                                SelectedItem="{Binding SelectedTag, Mode=TwoWay}"
-                                                                Style="{StaticResource SplitRowTagPopupListBoxStyle}" />
-                                                        </Border>
-                                                    </Popup>
+                                                            CornerRadius="8"
+                                                            IsHitTestVisible="False"
+                                                            Visibility="{Binding IsCausingNegativeRemainder, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                    </Grid>
+
+                                                    <ComboBox
+                                                        Grid.Column="2"
+                                                        Width="100"
+                                                        Margin="0,0,8,0"
+                                                        DisplayMemberPath="Label"
+                                                        ItemsSource="{Binding DataContext.ExpenseCategories, RelativeSource={RelativeSource AncestorType=customControls:BasePopup}}"
+                                                        SelectedValue="{Binding SelectedExpenseCategory, Mode=TwoWay}"
+                                                        SelectedValuePath="Value"
+                                                        Style="{StaticResource FluxoComboBoxStyle}"
+                                                        Visibility="{Binding DataContext.IsExcludedFromBudget, RelativeSource={RelativeSource AncestorType=customControls:BasePopup}, Mode=OneWay, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+
+                                                    <Grid Grid.Column="3" Margin="0,0,8,0">
+                                                        <ToggleButton
+                                                            x:Name="SplitRowTagToggleButton"
+                                                            Content="{Binding TagDisplayName}"
+                                                            IsChecked="{Binding IsTagPopupOpen, Mode=TwoWay}"
+                                                            Style="{StaticResource SplitRowTagToggleStyle}"
+                                                            Tag="{Binding SelectedTag.HexCode}" />
+
+                                                        <Popup
+                                                            AllowsTransparency="True"
+                                                            IsOpen="{Binding IsTagPopupOpen, Mode=TwoWay}"
+                                                            Placement="Bottom"
+                                                            PlacementTarget="{Binding ElementName=SplitRowTagToggleButton}"
+                                                            PopupAnimation="Fade"
+                                                            StaysOpen="False"
+                                                            VerticalOffset="8">
+                                                            <Border
+                                                                MaxWidth="280"
+                                                                Padding="12"
+                                                                Background="{DynamicResource Brush.Background.Elevated}"
+                                                                BorderBrush="{DynamicResource Brush.Border.Subtle}"
+                                                                BorderThickness="1"
+                                                                CornerRadius="12">
+                                                                <ListBox
+                                                                    ItemContainerStyle="{StaticResource SplitRowTagPopupItemStyle}"
+                                                                    ItemTemplate="{StaticResource PopupTagTemplate}"
+                                                                    ItemsSource="{Binding DataContext.AllSplitTags, RelativeSource={RelativeSource AncestorType=customControls:BasePopup}}"
+                                                                    SelectedItem="{Binding SelectedTag, Mode=TwoWay}"
+                                                                    Style="{StaticResource SplitRowTagPopupListBoxStyle}" />
+                                                            </Border>
+                                                        </Popup>
+                                                    </Grid>
                                                 </Grid>
-                                            </Grid>
 
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
+                                                <Grid Margin="0,12,0,0">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <customControls:BalloonRadioButton
+                                                            CheckedBackground="{StaticResource Brush.Success}"
+                                                            CornerRadius="8"
+                                                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                                                            GroupName="AddTransactionMode"
+                                                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
+                                                            IconSize="14"
+                                                            IsChecked="{Binding IsRegularMode, Mode=TwoWay}"
+                                                            IsEnabled="{Binding CanToggleRecurring}"
+                                                            ShouldShowText="True"
+                                                            UncheckedIcon="{StaticResource CreditCardAlt}"
+                                                            UncheckedText="Regular" />
+                                                        <customControls:BalloonRadioButton
+                                                            Margin="8,0,0,0"
+                                                            CheckedBackground="{StaticResource Brush.Success}"
+                                                            CornerRadius="8"
+                                                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
+                                                            GroupName="AddTransactionMode"
+                                                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
+                                                            IconSize="14"
+                                                            IsChecked="{Binding IsPostedIoUMode, Mode=TwoWay}"
+                                                            IsEnabled="{Binding CanUseIoU}"
+                                                            ShouldShowText="True"
+                                                            UncheckedIcon="{StaticResource CreditCardMinusSolid}"
+                                                            UncheckedText="Posted IoU" />
+                                                    </StackPanel>
 
-                                                <customControls:BalloonRadioButton
-                                                    Grid.Column="0"
-                                                    CheckedBackground="{StaticResource Brush.Success}"
-                                                    CornerRadius="8"
-                                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
-                                                    GroupName="AddTransactionMode"
-                                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
-                                                    IconSize="14"
-                                                    IsChecked="{Binding IsRegularMode, Mode=TwoWay}"
-                                                    IsEnabled="{Binding CanToggleRecurring}"
-                                                    ShouldShowText="True"
-                                                    UncheckedIcon="{StaticResource CreditCardAlt}"
-                                                    UncheckedText="Regular" />
-                                                <customControls:BalloonRadioButton
-                                                    Grid.Column="1"
-                                                    Margin="8,0,0,0"
-                                                    CheckedBackground="{StaticResource Brush.Success}"
-                                                    CornerRadius="8"
-                                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
-                                                    GroupName="AddTransactionMode"
-                                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
-                                                    IconSize="14"
-                                                    IsChecked="{Binding IsUnpostedIoUMode, Mode=TwoWay}"
-                                                    IsEnabled="{Binding CanUseIoU}"
-                                                    ShouldShowText="True"
-                                                    UncheckedIcon="{StaticResource CreditCardMinusSolid}"
-                                                    UncheckedText="Unposted IoU" />
-                                                <customControls:BalloonRadioButton
-                                                    Grid.Column="2"
-                                                    Margin="8,0,0,0"
-                                                    CheckedBackground="{StaticResource Brush.Success}"
-                                                    CornerRadius="8"
-                                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
-                                                    GroupName="AddTransactionMode"
-                                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
-                                                    IconSize="14"
-                                                    IsChecked="{Binding IsPostedIoUMode, Mode=TwoWay}"
-                                                    IsEnabled="{Binding CanUseIoU}"
-                                                    ShouldShowText="True"
-                                                    UncheckedIcon="{StaticResource CreditCardMinusSolid}"
-                                                    UncheckedText="Posted IoU" />
-
-                                                <Border
-                                                    Grid.Column="3"
-                                                    Width="1"
-                                                    Background="{StaticResource Brush.Border.Default}"
-                                                    SnapsToDevicePixels="True" />
-
-                                                <customControls:BalloonCheckBox
-                                                    Grid.Column="4"
-                                                    Margin="16,0,0,0"
-                                                    ButtonIcon="{StaticResource Delete}"
-                                                    ButtonSize="32"
-                                                    ButtonText="Delete"
-                                                    CheckedIcon="{StaticResource ArrowsOutLineVertical}"
-                                                    CheckedText="Modify"
-                                                    CornerRadius="8"
-                                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.NavInfo}"
-                                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.NavInfo.Hovered}"
-                                                    IconSize="12"
-                                                    ShouldShowText="True"
-                                                    UncheckedIcon="{StaticResource ArrowsOutLineVertical}"
-                                                    UncheckedText="Modify" />
-
-                                                <customControls:BalloonCheckBox
-                                                    Grid.Column="5"
-                                                    Margin="16,0,0,0"
-                                                    ButtonIcon="{StaticResource Delete}"
-                                                    ButtonSize="32"
-                                                    ButtonText="Delete"
-                                                    CheckedIcon="{StaticResource ArrowsOutLineVertical}"
-                                                    CheckedText="Split"
-                                                    CornerRadius="8"
-                                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
-                                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}"
-                                                    IconSize="12"
-                                                    ShouldShowText="True"
-                                                    UncheckedIcon="{StaticResource ArrowsOutLineVertical}"
-                                                    UncheckedText="Split" />
-
-                                                <customControls:BalloonButton
-                                                    Grid.Column="6"
-                                                    Margin="16,0,0,0"
-                                                    ButtonIcon="{StaticResource Delete}"
-                                                    ButtonSize="32"
-                                                    ButtonText="Delete"
-                                                    Click="OnRemoveSplitRowClick"
-                                                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
-                                                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
-                                                    ShouldShowText="True"
-                                                    Style="{StaticResource ToolbarActionBalloonButtonStyle}" />
-                                            </Grid>
-                                        </StackPanel>
+                                                    <customControls:BalloonButton
+                                                        HorizontalAlignment="Right"
+                                                        ButtonIcon="{StaticResource Delete}"
+                                                        ButtonSize="32"
+                                                        ButtonText="Delete"
+                                                        Click="OnRemoveSplitRowClick"
+                                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
+                                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
+                                                        ShouldShowText="True"
+                                                        Style="{StaticResource ToolbarActionBalloonButtonStyle}" />
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>

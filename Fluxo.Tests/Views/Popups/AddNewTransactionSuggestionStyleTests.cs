@@ -82,7 +82,7 @@ public sealed class AddNewTransactionSuggestionStyleTests
 
         Assert.Contains("x:Key=\"FieldHeaderGridStyle\"", xaml);
         Assert.Equal(2, xaml.Split("Text=\"{Binding NameValidationHint}\"").Length - 1);
-        Assert.Equal(3, xaml.Split("Text=\"{Binding AmountFieldHint, Mode=OneWay}\"").Length - 1);
+        Assert.Equal(4, xaml.Split("Text=\"{Binding AmountFieldHint, Mode=OneWay}\"").Length - 1);
         Assert.Contains("Binding=\"{Binding IsAmountWarning, Mode=OneWay}\"", xaml);
         Assert.Contains("Value=\"{DynamicResource Brush.Warning}\"", xaml);
         Assert.Contains("Property=\"HorizontalAlignment\" Value=\"Right\"", xaml);
@@ -134,8 +134,8 @@ public sealed class AddNewTransactionSuggestionStyleTests
         var codeBehind = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml.cs"));
 
         Assert.Equal(2, xaml.Split("LostKeyboardFocus=\"OnTransactionNameTextBoxLostKeyboardFocus\"").Length - 1);
-        Assert.Equal(3, xaml.Split("LostKeyboardFocus=\"OnTransactionAmountTextBoxLostKeyboardFocus\"").Length - 1);
-        Assert.Equal(3, xaml.Split("TextChanged=\"OnTransactionAmountTextBoxTextChanged\"").Length - 1);
+        Assert.Equal(4, xaml.Split("LostKeyboardFocus=\"OnTransactionAmountTextBoxLostKeyboardFocus\"").Length - 1);
+        Assert.Equal(4, xaml.Split("TextChanged=\"OnTransactionAmountTextBoxTextChanged\"").Length - 1);
         Assert.Contains("_viewModel.ValidateNameField();", codeBehind);
         Assert.Contains("_viewModel.ValidateAmountField();", codeBehind);
         Assert.Contains("OnTransactionAmountTextBoxTextChanged", codeBehind);

@@ -192,6 +192,12 @@ public partial class AddNewTransaction : BasePopup
             return;
         }
 
+        if (_viewModel.IsRepayment)
+        {
+            RepaymentAmountTextBox.Focus();
+            return;
+        }
+
         ExpenseNameTextBox.Focus();
     }
 
