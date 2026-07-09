@@ -1,5 +1,6 @@
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
+using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 using Xunit;
 
@@ -66,5 +67,68 @@ public sealed class TransactionDetailVMBalloonToggleTests
         };
 
         Assert.Equal(30m, TransactionDetailVM.CalculateAccountSpending(transactions, accountId: 2));
+    }
+
+    [Fact]
+    public void CreateEqualSplitAmounts_PutsRoundingRemainderOnLastChild()
+    {
+        Assert.Equal([33.33m, 33.33m, 33.34m], TransactionDetailVM.CreateEqualSplitAmounts(100m, 3));
+    }
+
+    [Fact]
+    public void SplitRowModeToggles_BindToPostedIouState()
+    {
+        var row = new TransactionSplitRowVM();
+
+        Assert.True(row.IsRegularMode);
+        Assert.False(row.IsPostedIoUMode);
+
+        row.IsPostedIoUMode = true;
+
+        Assert.False(row.IsRegularMode);
+        Assert.True(row.IsPostedIoUMode);
+
+        row.IsRegularMode = true;
+
+        Assert.True(row.IsRegularMode);
+        Assert.False(row.IsPostedIoUMode);
+    }
+
+    [Fact]
+    public void ApplyEqualSplitAmounts_RecalculatesWhenRowsChange()
+    {
+        var rows = new List<TransactionSplitRowVM>
+        {
+            new(),
+            new()
+        };
+
+        TransactionDetailVM.ApplyEqualSplitAmounts(rows, 100m);
+        rows.Add(new TransactionSplitRowVM());
+        TransactionDetailVM.ApplyEqualSplitAmounts(rows, 100m);
+
+        Assert.Equal([33.33m, 33.33m, 33.34m], rows.Select(row => row.AmountText));
+    }
+
+    [Fact]
+    public void ClearSplitAmounts_OnlyClearsAmounts()
+    {
+        var tag = new TagVM { Id = 4, Name = "Food", HexCode = "#22C55E" };
+        var row = new TransactionSplitRowVM
+        {
+            AmountText = 25m,
+            NameText = "Lunch",
+            IsIoU = true,
+            SelectedExpenseCategory = ExpenseCategory.Wants,
+            SelectedTag = tag
+        };
+
+        TransactionDetailVM.ClearSplitAmounts([row]);
+
+        Assert.Equal(0m, row.AmountText);
+        Assert.Equal("Lunch", row.NameText);
+        Assert.True(row.IsIoU);
+        Assert.Equal(ExpenseCategory.Wants, row.SelectedExpenseCategory);
+        Assert.Same(tag, row.SelectedTag);
     }
 }

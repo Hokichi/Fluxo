@@ -16,6 +16,20 @@ public partial class TransactionSplitRowVM : ObservableObject
     [ObservableProperty] private TagVM? _selectedTag;
 
     public bool HasAmount => AmountText > 0m;
+    public bool CanToggleRecurring => true;
+    public bool CanUseIoU => true;
+
+    public bool IsRegularMode
+    {
+        get => !IsIoU;
+        set { if (value) IsIoU = false; }
+    }
+
+    public bool IsPostedIoUMode
+    {
+        get => IsIoU;
+        set { if (value) IsIoU = true; }
+    }
 
     public bool HasMeaningfulValue =>
         AmountText > 0m ||
@@ -42,6 +56,8 @@ public partial class TransactionSplitRowVM : ObservableObject
     partial void OnIsIoUChanged(bool value)
     {
         OnPropertyChanged(nameof(HasMeaningfulValue));
+        OnPropertyChanged(nameof(IsRegularMode));
+        OnPropertyChanged(nameof(IsPostedIoUMode));
     }
 
     partial void OnSelectedTagChanged(TagVM? value)

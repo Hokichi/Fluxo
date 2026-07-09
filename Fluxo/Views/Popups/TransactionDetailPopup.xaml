@@ -435,6 +435,7 @@
                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.Neutral}"
                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.Neutral.Hovered}"
                         IconSize="12"
+                        IsChecked="{Binding IsSplitEquallyEnabled, Mode=TwoWay}"
                         ShouldExpand="True"
                         UncheckedIcon="{StaticResource CallSplit}"
                         UncheckedText="Split Equally" />
@@ -741,16 +742,32 @@
                                                             UncheckedText="Posted IoU" />
                                                     </StackPanel>
 
-                                                    <customControls:BalloonButton
-                                                        HorizontalAlignment="Right"
-                                                        ButtonIcon="{StaticResource Delete}"
-                                                        ButtonSize="32"
-                                                        ButtonText="Delete"
-                                                        Click="OnRemoveSplitRowClick"
-                                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
-                                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
-                                                        ShouldShowText="True"
-                                                        Style="{StaticResource ToolbarActionBalloonButtonStyle}" />
+                                                    <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                                                        <customControls:BalloonCheckBox
+                                                            Margin="8,0,0,0"
+                                                            ButtonIcon="{StaticResource Delete}"
+                                                            ButtonSize="32"
+                                                            CheckedBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
+                                                            CheckedIcon="{StaticResource ArrowsOutLineVertical}"
+                                                            CheckedText="Split"
+                                                            CornerRadius="8"
+                                                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
+                                                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
+                                                            IconSize="12"
+                                                            ShouldShowText="True"
+                                                            UncheckedIcon="{StaticResource ArrowsOutLineVertical}"
+                                                            UncheckedText="Split" />
+
+                                                        <customControls:BalloonButton
+                                                            ButtonIcon="{StaticResource Delete}"
+                                                            ButtonSize="32"
+                                                            ButtonText="Delete"
+                                                            Click="OnRemoveSplitRowClick"
+                                                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
+                                                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
+                                                            ShouldShowText="True"
+                                                            Style="{StaticResource ToolbarActionBalloonButtonStyle}" />
+                                                    </StackPanel>
                                                 </Grid>
                                             </StackPanel>
                                         </Border>

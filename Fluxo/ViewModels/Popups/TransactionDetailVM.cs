@@ -36,6 +36,7 @@ public partial class TransactionDetailVM : ObservableObject
     [ObservableProperty] private bool _isExcludedFromBudget;
     [ObservableProperty] private bool _isEditing;
     [ObservableProperty] private bool _isSplitMode;
+    [ObservableProperty] private bool _isSplitEquallyEnabled;
     [ObservableProperty] private bool _isMoreTagsOpen;
     [ObservableProperty] private bool _hasNegativeSplitRemainder;
     [ObservableProperty] private bool _isSaving;
@@ -143,7 +144,7 @@ public partial class TransactionDetailVM : ObservableObject
     public bool HasSplitRowsWithoutAmounts => SplitRows.Count > 0 && SplitRows.All(row => !row.HasAmount);
     public bool HasChildTransactions => ChildTransactions.Count > 0;
     public bool ShowChildTransactions => HasChildTransactions && !IsSplitMode;
-    public bool ShowSplitButton => true;
+    public bool ShowSplitButton => !IsEditing;
 
     public bool HasPendingSplitChanges =>
         _areSplitRowsLoaded && (HasSplitRowsWithAmounts || _removedSplitRows.Count > 0);
@@ -281,10 +282,22 @@ public partial class TransactionDetailVM : ObservableObject
         var row = new TransactionSplitRowVM
         {
             SelectedExpenseCategory = SelectedExpenseCategory,
-            SelectedTag = SelectedTag
+            SelectedTag = SelectedTag,
+            IsIoU = IsPostedIoUMode
         };
 
         AddSplitRow(row);
+
+        if (IsSplitEquallyEnabled)
+            ApplyEqualSplitAmounts();
+    }
+
+    partial void OnIsSplitEquallyEnabledChanged(bool value)
+    {
+        if (value)
+            ApplyEqualSplitAmounts();
+        else
+            ClearSplitAmounts();
     }
 
     private void AddSplitRow(TransactionSplitRowVM row)
@@ -303,7 +316,10 @@ public partial class TransactionDetailVM : ObservableObject
 
         SplitRows.Remove(row);
         NotifySplitRowStateChanged();
-        RecalculateSplitRemainder(SplitRows.LastOrDefault());
+        if (IsSplitEquallyEnabled)
+            ApplyEqualSplitAmounts();
+        else
+            RecalculateSplitRemainder(SplitRows.LastOrDefault());
     }
 
     public async Task LoadChildTransactionsAsync(CancellationToken cancellationToken = default)
@@ -356,6 +372,7 @@ public partial class TransactionDetailVM : ObservableObject
         _removedSplitRows.Clear();
         _areSplitRowsLoaded = false;
         IsSplitMode = false;
+        IsSplitEquallyEnabled = false;
         HasNegativeSplitRemainder = false;
         NegativeRemainderRow = null;
         NotifySplitRowStateChanged();
@@ -375,6 +392,16 @@ public partial class TransactionDetailVM : ObservableObject
         }
 
         UpdateSplitNegativeRemainderState(remainder, changedRow);
+    }
+
+    private void ApplyEqualSplitAmounts()
+    {
+        ApplyEqualSplitAmounts(SplitRows, _savedState.Amount);
+    }
+
+    private void ClearSplitAmounts()
+    {
+        ClearSplitAmounts(SplitRows);
     }
 
     public async Task EnsureTagsLoadedAsync(CancellationToken cancellationToken = default)
@@ -1193,6 +1220,30 @@ public partial class TransactionDetailVM : ObservableObject
 
         foreach (var item in items)
             target.Add(item);
+    }
+
+    internal static IReadOnlyList<decimal> CreateEqualSplitAmounts(decimal amount, int count)
+    {
+        if (count <= 0)
+            return [];
+
+        var splitAmount = decimal.Round(amount / count, 2, MidpointRounding.AwayFromZero);
+        var amounts = Enumerable.Repeat(splitAmount, count).ToArray();
+        amounts[^1] = amount - splitAmount * (count - 1);
+        return amounts;
+    }
+
+    internal static void ApplyEqualSplitAmounts(IList<TransactionSplitRowVM> rows, decimal amount)
+    {
+        var amounts = CreateEqualSplitAmounts(amount, rows.Count);
+        for (var i = 0; i < amounts.Count; i++)
+            rows[i].AmountText = amounts[i];
+    }
+
+    internal static void ClearSplitAmounts(IEnumerable<TransactionSplitRowVM> rows)
+    {
+        foreach (var row in rows)
+            row.AmountText = 0m;
     }
 
     private static TransactionDetailSavedState CreateSavedState(TransactionVM transaction)

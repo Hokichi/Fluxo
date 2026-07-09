@@ -81,7 +81,7 @@
                                     <!--  Split  -->
                                     <c:BalloonCheckBox
                                         x:Name="PART_SplitButton"
-                                        CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                        CheckedBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
                                         CheckedIcon="{StaticResource ArrowsOutLineVertical}"
                                         CheckedText="Split"
                                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
