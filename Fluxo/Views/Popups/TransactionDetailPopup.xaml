@@ -9,8 +9,8 @@
     CanClone="True"
     CanDelete="True"
     CanEdit="True"
-    PopupTitle="Transaction Detail"
     Mode="Functional"
+    PopupTitle="Transaction Detail"
     mc:Ignorable="d">
 
     <customControls:BasePopup.Resources>
@@ -742,6 +742,16 @@
                                                     </StackPanel>
 
                                                     <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                                                        <customControls:BalloonButton
+                                                            ButtonIcon="{StaticResource PlusSolid}"
+                                                            ButtonSize="32"
+                                                            ButtonText="Add"
+                                                            Click="OnRemoveSplitRowClick"
+                                                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
+                                                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}"
+                                                            ShouldShowText="True"
+                                                            Style="{StaticResource ToolbarActionBalloonButtonStyle}" />
+
                                                         <customControls:BalloonCheckBox
                                                             Margin="8,0,0,0"
                                                             ButtonIcon="{StaticResource Delete}"

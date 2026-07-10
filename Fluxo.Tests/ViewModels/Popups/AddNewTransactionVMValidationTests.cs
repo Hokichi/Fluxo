@@ -21,6 +21,27 @@ namespace Fluxo.Tests.ViewModels.Popups;
 public sealed class AddNewTransactionVMValidationTests
 {
     [Fact]
+    public void UnpostedIoU_ForcesBudgetExclusion_AndRegularModeClearsIt()
+    {
+        RunInSta(() =>
+        {
+            var vm = new AddNewTransactionVM(
+                CreateMainViewModel([CreateCheckingSource(balance: 500m)]),
+                CreateAppData());
+
+            vm.IsUnpostedIoUMode = true;
+
+            Assert.True(vm.IsBudgetExcluded);
+            Assert.False(vm.CanToggleBudgetExclusion);
+
+            vm.IsRegularMode = true;
+
+            Assert.False(vm.IsBudgetExcluded);
+            Assert.True(vm.CanToggleBudgetExclusion);
+        });
+    }
+
+    [Fact]
     public void Constructor_UsesAddNewTransactionPurposeByDefault()
     {
         RunInSta(() =>

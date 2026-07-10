@@ -44,6 +44,10 @@ public class BasePopup : Window, IPopupHost
         DependencyProperty.Register(nameof(CanContinue), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(false));
 
+    public static readonly DependencyProperty CanDiscardProperty =
+        DependencyProperty.Register(nameof(CanDiscard), typeof(bool), typeof(BasePopup),
+            new PropertyMetadata(true));
+
     public static readonly DependencyProperty CanEditProperty =
         DependencyProperty.Register(nameof(CanEdit), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(false));
@@ -158,6 +162,12 @@ public class BasePopup : Window, IPopupHost
     {
         get => (bool)GetValue(CanContinueProperty);
         set => SetValue(CanContinueProperty, value);
+    }
+
+    public bool CanDiscard
+    {
+        get => (bool)GetValue(CanDiscardProperty);
+        set => SetValue(CanDiscardProperty, value);
     }
 
     public bool CanEdit
@@ -316,7 +326,7 @@ public class BasePopup : Window, IPopupHost
         switch (key)
         {
             case Key.Escape:
-                if (Mode is PopupMode.ApplyCancel or PopupMode.SaveDiscard)
+                if (CanDiscard && (Mode is PopupMode.ApplyCancel or PopupMode.SaveDiscard))
                     OnDiscardButtonClick();
                 else
                     OnCloseButtonClick();

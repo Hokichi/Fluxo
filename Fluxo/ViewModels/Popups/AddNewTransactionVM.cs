@@ -154,6 +154,11 @@ public partial class AddNewTransactionVM : ObservableValidator
     public ObservableCollection<AddNewTransactionSuggestion> TransactionNameSuggestions { get; } = [];
     public AddNewTransactionHistoryListVM PinnedHistory { get; } = new();
     public AddNewTransactionHistoryListVM TransactionHistory { get; } = new();
+    public bool IsNeedsCategory { get => SelectedExpenseCategory == ExpenseCategory.Needs; set { if (value) SelectedExpenseCategory = ExpenseCategory.Needs; } }
+    public bool IsWantsCategory { get => SelectedExpenseCategory == ExpenseCategory.Wants; set { if (value) SelectedExpenseCategory = ExpenseCategory.Wants; } }
+    public bool IsInvestCategory { get => SelectedExpenseCategory == ExpenseCategory.Savings; set { if (value) SelectedExpenseCategory = ExpenseCategory.Savings; } }
+    public IReadOnlyList<TransactionImpact> TransactionImpacts => BuildTransactionImpacts();
+    public IReadOnlyList<TransactionWarning> TransactionWarnings => BuildTransactionWarnings();
 
     public IReadOnlyList<RecurringPeriod> RecurringPeriods { get; } =
     [
@@ -191,6 +196,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             if (!value) return;
             ClearTransactionModes();
             IsIoU = true;
+            IsExcludedFromBudget = true;
         }
     }
     public bool IsPostedIoUMode
@@ -218,7 +224,7 @@ public partial class AddNewTransactionVM : ObservableValidator
     public bool ShowInstallmentEndDate => IsInstallments;
     public bool CanUseInstallments => !IsGoal && CanToggleRecurring;
     public bool CanUseIoU => !IsGoal && CanToggleRecurring;
-    public bool CanToggleBudgetExclusion => !IsGoal && !IsRepayment;
+    public bool CanToggleBudgetExclusion => !IsGoal && !IsRepayment && !IsUnpostedIoUMode;
     public bool IsBudgetExcluded
     {
         get => IsGoal || IsRepayment || IsExcludedFromBudget;
@@ -493,6 +499,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(IsUnpostedIoUMode));
         OnPropertyChanged(nameof(IsPostedIoUMode));
         OnPropertyChanged(nameof(TransactionModeDescription));
+        OnPropertyChanged(nameof(CanToggleBudgetExclusion));
         NotifyFormStateChanged();
     }
 
@@ -507,6 +514,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(IsUnpostedIoUMode));
         OnPropertyChanged(nameof(IsPostedIoUMode));
         OnPropertyChanged(nameof(TransactionModeDescription));
+        OnPropertyChanged(nameof(CanToggleBudgetExclusion));
         NotifyFormStateChanged();
     }
 
@@ -1976,7 +1984,57 @@ public partial class AddNewTransactionVM : ObservableValidator
     {
         OnPropertyChanged(nameof(CanSave));
         OnPropertyChanged(nameof(HasChanges));
+        OnPropertyChanged(nameof(TransactionImpacts));
+        OnPropertyChanged(nameof(TransactionWarnings));
+        OnPropertyChanged(nameof(IsNeedsCategory));
+        OnPropertyChanged(nameof(IsWantsCategory));
+        OnPropertyChanged(nameof(IsInvestCategory));
     }
+
+    private IReadOnlyList<TransactionImpact> BuildTransactionImpacts()
+    {
+        if (IsUnpostedIoUMode || AmountText <= 0m)
+            return [];
+
+        if (IsRepayment && SelectedRepaymentAccount is { } credit && SelectedAccount is { } source)
+            return [
+                new(credit.Name, credit.SpentAmount, Math.Max(0m, credit.SpentAmount - AmountText), true),
+                new(source.Name, source.Balance, source.Balance - AmountText, false)
+            ];
+
+        var impacts = new List<TransactionImpact>();
+        if (IsExpense && !IsExcludedFromBudget)
+            impacts.Add(new(GetExpenseCategoryLabel(SelectedExpenseCategory), GetCategoryCurrentAmount(), GetCategoryCurrentAmount() + AmountText, false));
+
+        if (SelectedAccount is { } account)
+        {
+            var current = account.IsCredit ? account.SpentAmount : account.Balance;
+            var toBe = account.IsCredit
+                ? current + (IsIncome ? -AmountText : AmountText)
+                : current + (IsIncome ? AmountText : -AmountText);
+            impacts.Add(new(account.Name, current, toBe, IsIncome));
+        }
+
+        return impacts;
+    }
+
+    private decimal GetCategoryCurrentAmount()
+    {
+        try
+        {
+            var allocation = _appData.GetBudgetAllocationAsync().GetAwaiter().GetResult();
+            return GetCategoryState(BuildBudgetAllocationSnapshotAsync(allocation, SelectedDate).GetAwaiter().GetResult(), SelectedExpenseCategory).Spent;
+        }
+        catch { return 0m; }
+    }
+
+    private IReadOnlyList<TransactionWarning> BuildTransactionWarnings() => GetErrors()
+        .OfType<ValidationResult>()
+        .Select(result => result.ErrorMessage)
+        .Where(message => !string.IsNullOrWhiteSpace(message))
+        .Distinct(StringComparer.Ordinal)
+        .Select(message => new TransactionWarning(message!, false))
+        .ToArray();
 
     private void RefreshAmountWarning()
     {
@@ -2435,6 +2493,10 @@ public partial class AddNewTransactionVM : ObservableValidator
         [ObservableProperty]
         private bool _isEnabled = true;
     }
+
+    public sealed record TransactionImpact(string Label, decimal CurrentAmount, decimal ToBeAmount, bool IsSuccess);
+
+    public sealed record TransactionWarning(string Message, bool IsWarning);
 
     public sealed record AddNewTransactionSuggestion(
         string Name,

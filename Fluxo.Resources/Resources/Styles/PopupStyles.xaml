@@ -115,6 +115,24 @@
                                 </StackPanel>
 
                                 <StackPanel
+                                    x:Name="SaveDiscardDiscardAction"
+                                    Grid.Column="0"
+                                    Orientation="Horizontal"
+                                    Visibility="Collapsed">
+                                    <c:BalloonButton
+                                        x:Name="PART_DiscardButton"
+                                        ButtonIcon="{StaticResource Ban}"
+                                        ButtonText="Discard"
+                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
+                                        ShouldShowText="True"
+                                        Style="{StaticResource HeaderButtonStyle}"
+                                        SubText="Esc"
+                                        Visibility="{TemplateBinding CanDiscard,
+                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+                                </StackPanel>
+
+                                <StackPanel
                                     x:Name="SaveDiscardActions"
                                     Grid.Column="2"
                                     Orientation="Horizontal"
@@ -142,16 +160,6 @@
                                         SubText="Shift+Enter"
                                         Visibility="{TemplateBinding CanContinue,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
-                                    <c:BalloonButton
-                                        x:Name="PART_DiscardButton"
-                                        Margin="8,0,0,0"
-                                        ButtonIcon="{StaticResource Ban}"
-                                        ButtonText="Discard"
-                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
-                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
-                                        ShouldShowText="True"
-                                        Style="{StaticResource HeaderButtonStyle}"
-                                        SubText="Esc" />
                                 </StackPanel>
 
                                 <StackPanel
@@ -181,6 +189,23 @@
                                 </StackPanel>
 
                                 <StackPanel
+                                    x:Name="FunctionalDeleteAction"
+                                    Grid.Column="0"
+                                    Orientation="Horizontal"
+                                    Visibility="Collapsed">
+                                    <c:BalloonButton
+                                        x:Name="PART_DeleteButton"
+                                        ButtonIcon="{StaticResource Delete}"
+                                        ButtonText="Delete"
+                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
+                                        ShouldShowText="True"
+                                        Style="{StaticResource HeaderButtonStyle}"
+                                        Visibility="{TemplateBinding CanDelete,
+                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+                                </StackPanel>
+
+                                <StackPanel
                                     x:Name="FunctionalActions"
                                     Grid.Column="2"
                                     Orientation="Horizontal"
@@ -194,17 +219,6 @@
                                         ShouldShowText="True"
                                         Style="{StaticResource HeaderButtonStyle}"
                                         Visibility="{TemplateBinding CanEdit,
-                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
-                                    <c:BalloonButton
-                                        x:Name="PART_DeleteButton"
-                                        Margin="8,0,0,0"
-                                        ButtonIcon="{StaticResource Delete}"
-                                        ButtonText="Delete"
-                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
-                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
-                                        ShouldShowText="True"
-                                        Style="{StaticResource HeaderButtonStyle}"
-                                        Visibility="{TemplateBinding CanDelete,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
                                     <c:BalloonButton
                                         x:Name="PART_CloneButton"
@@ -255,6 +269,7 @@
                         </Trigger>
                         <Trigger Property="Mode" Value="{x:Static c:PopupMode.SaveDiscard}">
                             <Setter TargetName="FooterHost" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="SaveDiscardDiscardAction" Property="Visibility" Value="Visible" />
                             <Setter TargetName="SaveDiscardActions" Property="Visibility" Value="Visible" />
                         </Trigger>
                         <Trigger Property="Mode" Value="{x:Static c:PopupMode.BackNext}">
@@ -264,6 +279,7 @@
                         </Trigger>
                         <Trigger Property="Mode" Value="{x:Static c:PopupMode.Functional}">
                             <Setter TargetName="FooterHost" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="FunctionalDeleteAction" Property="Visibility" Value="Visible" />
                             <Setter TargetName="FunctionalActions" Property="Visibility" Value="Visible" />
                         </Trigger>
                         <Trigger Property="IsFirstStep" Value="True">

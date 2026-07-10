@@ -7,6 +7,7 @@
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    CanDiscard="False"
     CanContinue="True"
     IsSaveAndCreateNewButtonEnabled="{Binding CanSave}"
     IsSaveButtonEnabled="{Binding CanSave}"
@@ -611,7 +612,13 @@
                         </StackPanel>
                     </Border>
 
-                    <Grid Margin="0,16,0,0">
+                    <Border Margin="0,16,0,0" Style="{StaticResource CardBorderStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="16" />
@@ -621,16 +628,11 @@
                         <StackPanel Grid.Column="0" Visibility="{Binding ShowCategoryOrRepaymentField, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                             <TextBlock Style="{StaticResource SectionLabelStyle}" Text="{Binding CategoryFieldLabel}" />
                             <Grid>
-                                <ComboBox
-                                    x:Name="ExpenseCategoryComboBox"
-                                    DisplayMemberPath="Label"
-                                    IsEnabled="{Binding CanEditCategory}"
-                                    ItemContainerStyle="{StaticResource ExpenseCategoryComboBoxItemStyle}"
-                                    ItemsSource="{Binding ExpenseCategories}"
-                                    SelectedValue="{Binding SelectedExpenseCategory, Mode=TwoWay}"
-                                    SelectedValuePath="Value"
-                                    Style="{StaticResource FluxoComboBoxStyle}"
-                                    Visibility="{Binding ShowCategoryField, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <StackPanel Orientation="Horizontal" Visibility="{Binding ShowCategoryField, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <customControls:BalloonRadioButton GroupName="ExpenseCategory" IsChecked="{Binding IsNeedsCategory, Mode=TwoWay}" IsEnabled="{Binding CanEditCategory}" ShouldShowText="True" UncheckedText="Needs" />
+                                    <customControls:BalloonRadioButton Margin="8,0,0,0" GroupName="ExpenseCategory" IsChecked="{Binding IsWantsCategory, Mode=TwoWay}" IsEnabled="{Binding CanEditCategory}" ShouldShowText="True" UncheckedText="Wants" />
+                                    <customControls:BalloonRadioButton Margin="8,0,0,0" GroupName="ExpenseCategory" IsChecked="{Binding IsInvestCategory, Mode=TwoWay}" IsEnabled="{Binding CanEditCategory}" ShouldShowText="True" UncheckedText="Invest" />
+                                </StackPanel>
                                 <ComboBox
                                     DisplayMemberPath="Name"
                                     IsEnabled="{Binding CanChangeRepaymentAccount}"
@@ -665,7 +667,15 @@
                                 </ComboBox.GroupStyle>
                             </ComboBox>
                         </StackPanel>
+                        <ItemsControl Grid.Row="1" Grid.ColumnSpan="3" Margin="0,16,0,0" ItemsSource="{Binding TransactionImpacts, Mode=OneWay}">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate><DataTemplate><StackPanel Margin="0,0,24,0"><TextBlock Text="{Binding Label}" /><StackPanel Orientation="Horizontal"><TextBlock Text="{Binding CurrentAmount, StringFormat=N2}" /><TextBlock Margin="8,0" Text="→" /><TextBlock Text="{Binding ToBeAmount, StringFormat=N2}"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{StaticResource Brush.Danger}" /><Style.Triggers><DataTrigger Binding="{Binding IsSuccess}" Value="True"><Setter Property="Foreground" Value="{StaticResource Brush.Success}" /></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock></StackPanel></StackPanel></DataTemplate></ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <ItemsControl Grid.Row="2" Grid.ColumnSpan="3" Margin="0,12,0,0" ItemsSource="{Binding TransactionWarnings, Mode=OneWay}">
+                            <ItemsControl.ItemTemplate><DataTemplate><TextBlock Foreground="{StaticResource Brush.Danger}" Text="{Binding Message}" TextWrapping="Wrap" /></DataTemplate></ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </Grid>
+                    </Border>
                 </StackPanel>
 
                 <StackPanel Visibility="Collapsed">

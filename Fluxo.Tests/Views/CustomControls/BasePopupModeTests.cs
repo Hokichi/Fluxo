@@ -11,6 +11,26 @@ namespace Fluxo.Tests.Views.CustomControls;
 public sealed class BasePopupModeTests
 {
     [Fact]
+    public void CanDiscard_DefaultsToTrue()
+    {
+        RunSta(() => Assert.True(new BasePopup().CanDiscard));
+    }
+
+    [Fact]
+    public void Escape_ClosesWhenDiscardIsUnavailable()
+    {
+        RunSta(() =>
+        {
+            var popup = new RecordingPopup { Mode = PopupMode.SaveDiscard, CanDiscard = false };
+
+            popup.InvokeShortcut(Key.Escape, ModifierKeys.None);
+
+            Assert.Equal(0, popup.DiscardCount);
+            Assert.Equal(1, popup.CloseCount);
+        });
+    }
+
+    [Fact]
     public void Enter_InvokesSaveWhenSaveIsVisible()
     {
         RunSta(() =>
