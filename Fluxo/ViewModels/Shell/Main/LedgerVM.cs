@@ -36,7 +36,7 @@ public partial class LedgerVM : ObservableRecipient,
     private bool _loadAllTransactionsOnNextLoad;
     private bool _isApplyingExternalRange;
     private bool _isSynchronizingFilters;
-    private (DateTime From, DateTime To)? _selectedRange;
+    private (DateTime From, DateTime To)? _selectedRange = (DateTime.Today, DateTime.Today);
 
     [ObservableProperty] private LedgerGroupingMode _selectedGroupingMode = LedgerGroupingMode.Date;
     [ObservableProperty] private LedgerAmountSortDirection _amountSortDirection = LedgerAmountSortDirection.Descending;
@@ -961,7 +961,7 @@ public partial class LedgerVM : ObservableRecipient,
 
             TransactionsView.SortDescriptions.Clear();
             TransactionsView.SortDescriptions.Add(new SortDescription(
-                nameof(LedgerTransactionItemVM.SignedAmount),
+                nameof(LedgerTransactionItemVM.LoggedOn),
                 AmountSortDirection == LedgerAmountSortDirection.Ascending
                     ? ListSortDirection.Ascending
                     : ListSortDirection.Descending));
@@ -1200,7 +1200,7 @@ public partial class LedgerVM : ObservableRecipient,
 
     private sealed class LedgerTransactionComparer(
         LedgerGroupingMode groupingMode,
-        LedgerAmountSortDirection amountSortDirection)
+        LedgerAmountSortDirection sortDirection)
         : IComparer
     {
         public int Compare(object? x, object? y)
@@ -1216,11 +1216,11 @@ public partial class LedgerVM : ObservableRecipient,
             if (groupComparison != 0)
                 return groupComparison;
 
-            var amountComparison = left.SignedAmount.CompareTo(right.SignedAmount);
-            if (amountSortDirection == LedgerAmountSortDirection.Descending)
-                amountComparison *= -1;
-            if (amountComparison != 0)
-                return amountComparison;
+            var loggedOnComparison = left.LoggedOn.CompareTo(right.LoggedOn);
+            if (sortDirection == LedgerAmountSortDirection.Descending)
+                loggedOnComparison *= -1;
+            if (loggedOnComparison != 0)
+                return loggedOnComparison;
 
             return string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase);
         }

@@ -115,6 +115,34 @@ public sealed class LedgerVMDateRangeTests
             vm.TransactionsView.Cast<LedgerTransactionItemVM>().Select(item => item.Name).Order());
     }
 
+    [Fact]
+    public async Task LoadAsync_OrdersTransactionsByLoggedOn()
+    {
+        var vm = CreateVm(
+        [
+            new TransactionDto { Id = 1, Type = TransactionType.Expense, Name = "Older", Amount = 1m, OccurredOn = DateTime.Today, LoggedOn = DateTime.Today.AddHours(8) },
+            new TransactionDto { Id = 2, Type = TransactionType.Expense, Name = "Newer", Amount = 100m, OccurredOn = DateTime.Today, LoggedOn = DateTime.Today.AddHours(9) }
+        ]);
+
+        await vm.LoadAsync();
+
+        Assert.Equal(["Newer", "Older"], vm.TransactionsView.Cast<LedgerTransactionItemVM>().Select(item => item.Name));
+    }
+
+    [Fact]
+    public async Task LoadAsync_InitiallyShowsOnlyTodayTransactions()
+    {
+        var vm = CreateVm(
+        [
+            new TransactionDto { Id = 1, Type = TransactionType.Expense, Name = "Older", OccurredOn = DateTime.Today.AddDays(-1), LoggedOn = DateTime.Today.AddDays(-1) },
+            new TransactionDto { Id = 2, Type = TransactionType.Income, Name = "Today", OccurredOn = DateTime.Today, LoggedOn = DateTime.Today }
+        ]);
+
+        await vm.LoadAsync();
+
+        Assert.Equal(["Today"], vm.TransactionsView.Cast<LedgerTransactionItemVM>().Select(item => item.Name));
+    }
+
     private static IReadOnlyList<TransactionDto> CreateCategoryFilterTransactions() =>
     [
         new TransactionDto { Id = 1, Type = TransactionType.Expense, Name = "Needs expense", ExpenseCategory = ExpenseCategory.Needs, OccurredOn = DateTime.Today, LoggedOn = DateTime.Today },
