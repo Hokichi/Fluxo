@@ -95,6 +95,45 @@ public sealed class TransactionDetailVMBalloonToggleTests
     }
 
     [Fact]
+    public void SplitRow_CheckingCreatesOneChildAndUncheckingPreservesIt()
+    {
+        var row = new TransactionSplitRowVM { AmountText = 100m };
+
+        row.IsSplit = true;
+        var child = Assert.Single(row.ChildRows);
+        row.IsSplit = false;
+
+        Assert.Same(child, Assert.Single(row.ChildRows));
+    }
+
+    [Fact]
+    public void SplitRow_ChildAmountsOverParentMarkChangedChildInvalid()
+    {
+        var row = new TransactionSplitRowVM { AmountText = 10m, IsSplit = true };
+        var child = Assert.Single(row.ChildRows);
+        child.AmountText = 11m;
+
+        row.RecalculateChildRemainder(child);
+
+        Assert.True(row.HasNegativeChildRemainder);
+        Assert.True(child.IsCausingNegativeRemainder);
+    }
+
+    [Fact]
+    public void RecalculateNestedSplitRemainders_RefreshesParentAmountChange()
+    {
+        var parent = new TransactionSplitRowVM { AmountText = 10m, IsSplit = true };
+        var child = Assert.Single(parent.ChildRows);
+        child.AmountText = 10m;
+
+        parent.AmountText = 9m;
+        TransactionDetailVM.RecalculateNestedSplitRemainders([parent]);
+
+        Assert.True(parent.HasNegativeChildRemainder);
+        Assert.True(child.IsCausingNegativeRemainder);
+    }
+
+    [Fact]
     public void ApplyEqualSplitAmounts_RecalculatesWhenRowsChange()
     {
         var rows = new List<TransactionSplitRowVM>

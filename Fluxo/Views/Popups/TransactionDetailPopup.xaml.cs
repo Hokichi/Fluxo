@@ -554,6 +554,18 @@ public partial class TransactionDetailPopup : BasePopup
             _viewModel.RemoveSplitRow(row);
     }
 
+    private void OnAddNestedSplitRowClick(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is TransactionSplitRowVM row)
+            _viewModel.AddNestedSplitRow(row);
+    }
+
+    private void OnRemoveNestedSplitRowClick(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is TransactionSplitRowVM row)
+            _viewModel.RemoveNestedSplitRow(row);
+    }
+
     private async Task<TransactionDetailVM.TransactionDetailSaveResult?> TrySaveWithSplitRemainderConfirmationAsync()
     {
         var result = await _viewModel.SaveAsync();

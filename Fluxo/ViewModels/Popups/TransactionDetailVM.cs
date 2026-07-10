@@ -302,7 +302,7 @@ public partial class TransactionDetailVM : ObservableObject
 
     private void AddSplitRow(TransactionSplitRowVM row)
     {
-        row.PropertyChanged += OnSplitRowPropertyChanged;
+        SubscribeSplitRow(row);
         SplitRows.Add(row);
         NotifySplitRowStateChanged();
         RecalculateSplitRemainder(row);
@@ -310,9 +310,14 @@ public partial class TransactionDetailVM : ObservableObject
 
     public void RemoveSplitRow(TransactionSplitRowVM row)
     {
-        row.PropertyChanged -= OnSplitRowPropertyChanged;
-        if (row.TransactionId is not null)
-            _removedSplitRows.Add(row);
+        foreach (var child in row.ChildRows)
+        {
+            UnsubscribeSplitRow(child);
+            TrackRemovedRow(child);
+        }
+
+        UnsubscribeSplitRow(row);
+        TrackRemovedRow(row);
 
         SplitRows.Remove(row);
         NotifySplitRowStateChanged();
@@ -320,6 +325,25 @@ public partial class TransactionDetailVM : ObservableObject
             ApplyEqualSplitAmounts();
         else
             RecalculateSplitRemainder(SplitRows.LastOrDefault());
+    }
+
+    public void AddNestedSplitRow(TransactionSplitRowVM parent)
+    {
+        parent.AddChildRow();
+        var child = parent.ChildRows[^1];
+        SubscribeSplitRow(child);
+        parent.RecalculateChildRemainder(child);
+        NotifySplitRowStateChanged();
+    }
+
+    public void RemoveNestedSplitRow(TransactionSplitRowVM child)
+    {
+        var parent = SplitRows.First(row => row.ChildRows.Contains(child));
+        UnsubscribeSplitRow(child);
+        TrackRemovedRow(child);
+        parent.ChildRows.Remove(child);
+        parent.RecalculateChildRemainder(parent.ChildRows.LastOrDefault());
+        NotifySplitRowStateChanged();
     }
 
     public async Task LoadChildTransactionsAsync(CancellationToken cancellationToken = default)
@@ -342,14 +366,37 @@ public partial class TransactionDetailVM : ObservableObject
         if (childLogs.Count == 0)
             return;
 
-        foreach (var row in SplitRows)
-            row.PropertyChanged -= OnSplitRowPropertyChanged;
+        foreach (var row in AllSplitRows())
+            UnsubscribeSplitRow(row);
 
         SplitRows.Clear();
         _removedSplitRows.Clear();
 
+        var allTransactions = await _appData.GetTransactionsAsync(cancellationToken);
+        var childIds = childLogs.Select(log => log.Id).ToHashSet();
+        var nestedByParentId = allTransactions
+            .Where(log => log.ParentTransactionId is int id && childIds.Contains(id))
+            .GroupBy(log => log.ParentTransactionId!.Value)
+            .ToDictionary(group => group.Key, group => group.ToList());
+
         foreach (var childLog in childLogs)
-            AddSplitRow(ProjectSplitRow(childLog));
+        {
+            var row = ProjectSplitRow(childLog);
+            if (nestedByParentId.TryGetValue(childLog.Id, out var nestedLogs))
+            {
+                foreach (var nestedLog in nestedLogs)
+                {
+                    var nestedRow = ProjectSplitRow(nestedLog);
+                    row.ChildRows.Add(nestedRow);
+                    SubscribeSplitRow(nestedRow);
+                }
+
+                row.IsSplit = true;
+                row.RecalculateChildRemainder(row.ChildRows.LastOrDefault());
+            }
+
+            AddSplitRow(row);
+        }
     }
 
     private async Task<IReadOnlyList<Transaction>> LoadChildTransactionEntitiesAsync(CancellationToken cancellationToken)
@@ -365,8 +412,8 @@ public partial class TransactionDetailVM : ObservableObject
 
     public void ClearSplitMode()
     {
-        foreach (var row in SplitRows)
-            row.PropertyChanged -= OnSplitRowPropertyChanged;
+        foreach (var row in AllSplitRows())
+            UnsubscribeSplitRow(row);
 
         SplitRows.Clear();
         _removedSplitRows.Clear();
@@ -739,10 +786,26 @@ public partial class TransactionDetailVM : ObservableObject
             return false;
         }
 
-        if (SplitRows.Any(row => row.AmountText < 0m))
+        if (AllSplitRows().Any(row => row.AmountText < 0m))
         {
             validationMessage = "Split amounts cannot be negative.";
             return false;
+        }
+
+        foreach (var row in SplitRows)
+        {
+            row.RecalculateChildRemainder(row.ChildRows.LastOrDefault(child => child.HasAmount));
+            if (row.HasNegativeChildRemainder)
+            {
+                validationMessage = "Split amounts exceed the parent expense amount.";
+                return false;
+            }
+
+            if (row.ChildRows.Any(child => child.AmountText > 0m && child.SelectedTag is null))
+            {
+                validationMessage = "Please choose a tag for each split row.";
+                return false;
+            }
         }
 
         _ = keepParentExpenseWhenRemainder;
@@ -892,6 +955,64 @@ public partial class TransactionDetailVM : ObservableObject
                 staleChild.IsForDeletion = true;
                 _appData.UpdateTransaction(staleChild);
                 changedSnapshots.Add((beforeSnapshot, TransactionMemorySnapshot.Create(staleChild)));
+            }
+
+            var parentTransactions = new Dictionary<TransactionSplitRowVM, Transaction>();
+            foreach (var row in SplitRows.Where(row => row.AmountText > 0m && row.TransactionId is not null))
+                parentTransactions[row] = existingChildren[row.TransactionId!.Value];
+
+            var createdParentRows = SplitRows.Where(row => row.AmountText > 0m && row.TransactionId is null).ToList();
+            for (var index = 0; index < createdParentRows.Count; index++)
+                parentTransactions[createdParentRows[index]] = createdLogs[index];
+
+            var existingNestedChildren = (await _appData.GetTransactionsAsync())
+                .Where(transaction => transaction.ParentTransactionId is not null)
+                .ToDictionary(transaction => transaction.Id);
+            foreach (var (parentRow, parentTransaction) in parentTransactions)
+            {
+                foreach (var childRow in parentRow.ChildRows.Where(row => row.AmountText > 0m))
+                {
+                    var tag = await _appData.GetTagByIdAsync(childRow.SelectedTag!.Id);
+                    if (tag is null)
+                        return TransactionDetailSaveResult.Failure("Please select a valid tag.");
+
+                    var input = new TransactionSplitInput(
+                        childRow.TransactionId,
+                        parentTransaction.Id,
+                        childRow.NameText.Trim(),
+                        childRow.AmountText,
+                        childRow.SelectedExpenseCategory,
+                        tag.Id,
+                        string.Empty,
+                        SelectedDate.Date,
+                        childRow.IsIoU,
+                        IsExcludedFromBudget);
+
+                    if (childRow.TransactionId is { } childId && existingNestedChildren.TryGetValue(childId, out var existingChild))
+                    {
+                        var beforeSnapshot = TransactionMemorySnapshot.Create(existingChild);
+                        ApplySplitInputToExistingChild(existingChild, input, tag, account);
+                        _appData.UpdateTransaction(existingChild);
+                        changedSnapshots.Add((beforeSnapshot, TransactionMemorySnapshot.Create(existingChild)));
+                        continue;
+                    }
+
+                    var child = CreateSplitTransaction(input, tag, account, parentTransaction.Id, originalLog.Type);
+                    child.ParentTransaction = parentTransaction;
+                    child.ParentTransactionId = parentTransaction.Id > 0 ? parentTransaction.Id : null;
+                    await _appData.AddTransactionAsync(child);
+                    createdLogs.Add(child);
+                }
+            }
+
+            foreach (var removedRow in _removedSplitRows.Where(row => row.TransactionId is not null))
+            {
+                if (!existingNestedChildren.TryGetValue(removedRow.TransactionId!.Value, out var removedChild) ||
+                    removedChild.IsForDeletion)
+                    continue;
+
+                removedChild.IsForDeletion = true;
+                _appData.UpdateTransaction(removedChild);
             }
 
             await _appData.SaveChangesAsync();
@@ -1332,7 +1453,36 @@ public partial class TransactionDetailVM : ObservableObject
             return;
 
         NotifySplitRowStateChanged();
+        var parent = SplitRows.FirstOrDefault(candidate => candidate.ChildRows.Contains(row));
+        if (parent is not null)
+        {
+            parent.RecalculateChildRemainder(row);
+            return;
+        }
+
         RecalculateSplitRemainder(row);
+        row.RecalculateChildRemainder(row.ChildRows.LastOrDefault(child => child.HasAmount));
+    }
+
+    internal static void RecalculateNestedSplitRemainders(IEnumerable<TransactionSplitRowVM> rows)
+    {
+        foreach (var row in rows)
+            row.RecalculateChildRemainder(row.ChildRows.LastOrDefault(child => child.HasAmount));
+    }
+
+    private IEnumerable<TransactionSplitRowVM> AllSplitRows() =>
+        SplitRows.Concat(SplitRows.SelectMany(row => row.ChildRows));
+
+    private void SubscribeSplitRow(TransactionSplitRowVM row) =>
+        row.PropertyChanged += OnSplitRowPropertyChanged;
+
+    private void UnsubscribeSplitRow(TransactionSplitRowVM row) =>
+        row.PropertyChanged -= OnSplitRowPropertyChanged;
+
+    private void TrackRemovedRow(TransactionSplitRowVM row)
+    {
+        if (row.TransactionId is not null)
+            _removedSplitRows.Add(row);
     }
 
     private void UpdateSplitNegativeRemainderState(decimal remainder, TransactionSplitRowVM? causingRow)
