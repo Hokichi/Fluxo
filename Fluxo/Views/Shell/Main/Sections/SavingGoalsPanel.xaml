@@ -172,72 +172,56 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <Border Style="{StaticResource CardBorderStyle}">
+    <customControls:CollapsingCard HeaderText="Saving Goals">
+        <customControls:CollapsingCard.SubheaderArea>
+            <StackPanel
+                VerticalAlignment="Center"
+                Orientation="Horizontal">
+                <customControls:BalloonButton
+                    ButtonIcon="{StaticResource Pen}"
+                    ButtonText="Edit Goal"
+                    Click="OnEditSavingGoalClick"
+                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                    ShouldExpand="True"
+                    Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
+                    ToolTip="Edit Goal" />
+
+                <customControls:BalloonButton
+                    ButtonIcon="{StaticResource TrackChanges}"
+                    ButtonText="Add Funds"
+                    Click="OnAddGoalFundsClick"
+                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
+                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}"
+                    ShouldExpand="True"
+                    Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
+                    ToolTip="Update Funds" />
+
+                <Border
+                    Width="1"
+                    Margin="8,2,0,2"
+                    Background="{StaticResource Brush.Text.Muted}"
+                    SnapsToDevicePixels="True" />
+
+                <customControls:BalloonButton
+                    ButtonIcon="{StaticResource PlusSolid}"
+                    ButtonText="Add New Goal"
+                    Click="OnAddSavingGoalClick"
+                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
+                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
+                    ShouldExpand="True"
+                    Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
+                    ToolTip="Add Saving Goal" />
+            </StackPanel>
+        </customControls:CollapsingCard.SubheaderArea>
+
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="12" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <TextBlock
-                    VerticalAlignment="Center"
-                    FontFamily="{StaticResource Bold}"
-                    FontSize="13"
-                    Foreground="{StaticResource Brush.Text.Primary}"
-                    Text="Saving Goals" />
-
-                <StackPanel
-                    Grid.Column="1"
-                    VerticalAlignment="Center"
-                    Orientation="Horizontal">
-                    <customControls:BalloonButton
-                        ButtonIcon="{StaticResource Pen}"
-                        ButtonText="Edit Goal"
-                        Click="OnEditSavingGoalClick"
-                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
-                        ShouldExpand="True"
-                        Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
-                        ToolTip="Edit Goal" />
-
-                    <customControls:BalloonButton
-                        ButtonIcon="{StaticResource TrackChanges}"
-                        ButtonText="Add Funds"
-                        Click="OnAddGoalFundsClick"
-                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
-                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}"
-                        ShouldExpand="True"
-                        Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
-                        ToolTip="Update Funds" />
-
-                    <Border
-                        Width="1"
-                        Margin="8,2,0,2"
-                        Background="{StaticResource Brush.Text.Muted}"
-                        SnapsToDevicePixels="True" />
-
-                    <customControls:BalloonButton
-                        ButtonIcon="{StaticResource PlusSolid}"
-                        ButtonText="Add New Goal"
-                        Click="OnAddSavingGoalClick"
-                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
-                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
-                        ShouldExpand="True"
-                        Style="{StaticResource SavingGoalActionBalloonButtonStyle}"
-                        ToolTip="Add Saving Goal" />
-                </StackPanel>
-            </Grid>
-
             <TextBlock
-                Grid.Row="2"
                 VerticalAlignment="Center"
                 FontFamily="{StaticResource Medium}"
                 FontSize="11"
@@ -247,7 +231,7 @@
                 TextWrapping="Wrap"
                 Visibility="{Binding HasSavingGoals, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
 
-            <Grid Grid.Row="2" Visibility="{Binding HasSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Grid Visibility="{Binding HasSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}">
                 <Grid
                     x:Name="CarouselViewport"
                     VerticalAlignment="Center"
@@ -262,7 +246,7 @@
             </Grid>
 
             <Grid
-                Grid.Row="3"
+                Grid.Row="1"
                 Margin="0,8,0,0"
                 HorizontalAlignment="Stretch">
                 <Grid.ColumnDefinitions>
@@ -308,7 +292,7 @@
                     Visibility="{Binding HasMultipleSavingGoals, Converter={StaticResource BoolToVisibilityConverter}}" />
             </Grid>
         </Grid>
-    </Border>
+    </customControls:CollapsingCard>
 </UserControl>
 
 

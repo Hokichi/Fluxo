@@ -1192,7 +1192,7 @@
                 Grid.Row="0"
                 Grid.RowSpan="4"
                 Grid.Column="2"
-                MaxHeight="520"
+                Width="400"
                 Visibility="{Binding IsHistoryOpen, Converter={StaticResource BoolToVisibilityConverter}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
@@ -1200,78 +1200,47 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <Border
-                    Grid.Row="0"
-                    Padding="12"
-                    Background="{DynamicResource Brush.Background.Surface}"
-                    BorderBrush="{DynamicResource Brush.Border.Subtle}"
-                    BorderThickness="1"
-                    CornerRadius="12">
+                <customControls:CollapsingCard Grid.Row="0" HeaderText="Pinned">
                     <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-
-                        <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Pinned" />
-                        <Grid Grid.Row="1">
-                            <customControls:FadingScrollViewer MaxHeight="220" VerticalScrollBarVisibility="Auto">
-                                <ListBox
-                                    behaviors:ScrollOnDemandBehavior.HasMoreItems="{Binding PinnedHistory.HasMoreItems}"
-                                    behaviors:ScrollOnDemandBehavior.IsEnabled="True"
-                                    behaviors:ScrollOnDemandBehavior.IsLoading="False"
-                                    behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding PinnedHistory.LoadMoreCommand}"
-                                    ItemContainerStyle="{StaticResource TransactionHistoryListBoxItemStyle}"
-                                    ItemTemplate="{StaticResource TransactionHistoryItemTemplate}"
-                                    ItemsSource="{Binding PinnedHistory.Items}"
-                                    PreviewMouseWheel="OnHistoryListPreviewMouseWheel"
-                                    SelectedItem="{Binding SelectedPinnedHistoryItem, Mode=TwoWay}"
-                                    Style="{StaticResource TransactionHistoryListBoxStyle}" />
-                            </customControls:FadingScrollViewer>
-                            <TextBlock
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                FontFamily="{DynamicResource Regular}"
-                                FontSize="12"
-                                Foreground="{DynamicResource Brush.Text.Muted}"
-                                Text="No pinned items"
-                                Visibility="{Binding PinnedHistory.IsEmpty, Converter={StaticResource BoolToVisibilityConverter}}" />
-                        </Grid>
-                    </Grid>
-                </Border>
-
-                <Border
-                    Grid.Row="2"
-                    Padding="12"
-                    Background="{DynamicResource Brush.Background.Surface}"
-                    BorderBrush="{DynamicResource Brush.Border.Subtle}"
-                    BorderThickness="1"
-                    CornerRadius="12">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <TextBlock Style="{StaticResource SectionLabelStyle}" Text="History" />
-                        <customControls:FadingScrollViewer
-                            Grid.Row="1"
-                            MaxHeight="220"
-                            VerticalScrollBarVisibility="Hidden">
+                        <customControls:FadingScrollViewer VerticalScrollBarVisibility="Auto">
                             <ListBox
-                                Width="320"
-                                behaviors:ScrollOnDemandBehavior.HasMoreItems="{Binding TransactionHistory.HasMoreItems}"
+                                behaviors:ScrollOnDemandBehavior.HasMoreItems="{Binding PinnedHistory.HasMoreItems}"
                                 behaviors:ScrollOnDemandBehavior.IsEnabled="True"
                                 behaviors:ScrollOnDemandBehavior.IsLoading="False"
-                                behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding TransactionHistory.LoadMoreCommand}"
+                                behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding PinnedHistory.LoadMoreCommand}"
                                 ItemContainerStyle="{StaticResource TransactionHistoryListBoxItemStyle}"
                                 ItemTemplate="{StaticResource TransactionHistoryItemTemplate}"
-                                ItemsSource="{Binding TransactionHistory.Items}"
+                                ItemsSource="{Binding PinnedHistory.Items}"
                                 PreviewMouseWheel="OnHistoryListPreviewMouseWheel"
-                                SelectedItem="{Binding SelectedHistoryItem, Mode=TwoWay}"
+                                SelectedItem="{Binding SelectedPinnedHistoryItem, Mode=TwoWay}"
                                 Style="{StaticResource TransactionHistoryListBoxStyle}" />
                         </customControls:FadingScrollViewer>
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontFamily="{DynamicResource Regular}"
+                            FontSize="12"
+                            Foreground="{DynamicResource Brush.Text.Muted}"
+                            Text="No pinned items"
+                            Visibility="{Binding PinnedHistory.IsEmpty, Converter={StaticResource BoolToVisibilityConverter}}" />
                     </Grid>
-                </Border>
+                </customControls:CollapsingCard>
+
+                <customControls:CollapsingCard Grid.Row="2" HeaderText="History">
+                    <customControls:FadingScrollViewer MaxHeight="220" VerticalScrollBarVisibility="Hidden">
+                        <ListBox
+                            behaviors:ScrollOnDemandBehavior.HasMoreItems="{Binding TransactionHistory.HasMoreItems}"
+                            behaviors:ScrollOnDemandBehavior.IsEnabled="True"
+                            behaviors:ScrollOnDemandBehavior.IsLoading="False"
+                            behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding TransactionHistory.LoadMoreCommand}"
+                            ItemContainerStyle="{StaticResource TransactionHistoryListBoxItemStyle}"
+                            ItemTemplate="{StaticResource TransactionHistoryItemTemplate}"
+                            ItemsSource="{Binding TransactionHistory.Items}"
+                            PreviewMouseWheel="OnHistoryListPreviewMouseWheel"
+                            SelectedItem="{Binding SelectedHistoryItem, Mode=TwoWay}"
+                            Style="{StaticResource TransactionHistoryListBoxStyle}" />
+                    </customControls:FadingScrollViewer>
+                </customControls:CollapsingCard>
             </Grid>
         </Grid>
     </Border>
