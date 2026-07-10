@@ -8,7 +8,6 @@
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Foreground" Value="White" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-        <Setter Property="Width" Value="{Binding RelativeSource={RelativeSource Self}, Path=ButtonSize}" />
         <Setter Property="Height" Value="{Binding RelativeSource={RelativeSource Self}, Path=ButtonSize}" />
         <Setter Property="Template">
             <Setter.Value>
@@ -62,23 +61,45 @@
                                     Width="0"
                                     ClipToBounds="True"
                                     Opacity="0">
-                                    <TextBlock
-                                        x:Name="PART_ButtonText"
+                                    <StackPanel
                                         Margin="8,0,0,0"
                                         VerticalAlignment="Center"
-                                        FontFamily="{StaticResource Bold}"
-                                        FontSize="{TemplateBinding FontSize}"
-                                        Opacity="0"
-                                        Text="{TemplateBinding ButtonText}"
-                                        TextTrimming="CharacterEllipsis"
-                                        TextWrapping="NoWrap">
-                                        <TextBlock.Foreground>
-                                            <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
-                                                <Binding ElementName="PART_Shape" Path="Fill" />
-                                                <Binding Path="Foreground" RelativeSource="{RelativeSource TemplatedParent}" />
-                                            </MultiBinding>
-                                        </TextBlock.Foreground>
-                                    </TextBlock>
+                                        Orientation="Horizontal">
+                                        <TextBlock
+                                            x:Name="PART_ButtonText"
+                                            VerticalAlignment="Center"
+                                            FontFamily="{StaticResource Bold}"
+                                            FontSize="{TemplateBinding FontSize}"
+                                            Opacity="0"
+                                            Text="{TemplateBinding ButtonText}"
+                                            TextTrimming="CharacterEllipsis"
+                                            TextWrapping="NoWrap">
+                                            <TextBlock.Foreground>
+                                                <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
+                                                    <Binding ElementName="PART_Shape" Path="Fill" />
+                                                    <Binding Path="Foreground" RelativeSource="{RelativeSource TemplatedParent}" />
+                                                </MultiBinding>
+                                            </TextBlock.Foreground>
+                                        </TextBlock>
+                                        <TextBlock
+                                            x:Name="PART_ButtonHotkeys"
+                                            Margin="8,0,0,0"
+                                            VerticalAlignment="Center"
+                                            FontFamily="{StaticResource Light}"
+                                            FontSize="12"
+                                            Opacity="0"
+                                            Text="{TemplateBinding ButtonHotkeys}"
+                                            TextTrimming="CharacterEllipsis"
+                                            TextWrapping="NoWrap"
+                                            Visibility="Collapsed">
+                                            <TextBlock.Foreground>
+                                                <MultiBinding Converter="{StaticResource ForegroundForBackgroundBrushConverter}">
+                                                    <Binding ElementName="PART_Shape" Path="Fill" />
+                                                    <Binding Path="Foreground" RelativeSource="{RelativeSource TemplatedParent}" />
+                                                </MultiBinding>
+                                            </TextBlock.Foreground>
+                                        </TextBlock>
+                                    </StackPanel>
                                 </Border>
                             </StackPanel>
                         </Grid>

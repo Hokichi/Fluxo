@@ -107,10 +107,10 @@ public class BalloonCheckBox : BalloonControl
         IsChecked ? CheckedBackground : DefaultBackground;
 
     protected override object? ResolveButtonIcon() =>
-        IsChecked ? CheckedIcon ?? UncheckedIcon : UncheckedIcon;
+        IsChecked ? CheckedIcon ?? ButtonIcon : UncheckedIcon ?? ButtonIcon;
 
     protected override string? ResolveButtonText() =>
-        IsChecked ? CheckedText ?? UncheckedText : UncheckedText;
+        IsChecked ? CheckedText ?? ButtonText : UncheckedText ?? ButtonText;
 
     private static void OnIsCheckedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {

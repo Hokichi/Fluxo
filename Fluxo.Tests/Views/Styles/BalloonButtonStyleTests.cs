@@ -7,12 +7,12 @@ namespace Fluxo.Tests.Views.Styles;
 public sealed class BalloonButtonStyleTests
 {
     [Fact]
-    public void BalloonButtonDefaultStyle_BindsDimensionsToButtonSize()
+    public void BalloonButtonDefaultStyle_BindsHeightToButtonSizeAndLeavesWidthToCode()
     {
         var style = ReadDefaultBalloonButtonStyle();
 
-        Assert.Contains("Property=\"Width\" Value=\"{Binding RelativeSource={RelativeSource Self}, Path=ButtonSize}\"", style);
         Assert.Contains("Property=\"Height\" Value=\"{Binding RelativeSource={RelativeSource Self}, Path=ButtonSize}\"", style);
+        Assert.DoesNotContain("Property=\"Width\"", style);
     }
 
     [Fact]
@@ -35,7 +35,7 @@ public sealed class BalloonButtonStyleTests
         var style = ReadDefaultBalloonButtonStyle();
 
         Assert.Contains("Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\"", style);
-        Assert.Equal(2, style.Split(
+        Assert.Equal(3, style.Split(
             "<Binding ElementName=\"PART_Shape\" Path=\"Fill\" />",
             StringSplitOptions.None).Length - 1);
         Assert.DoesNotContain("<Binding Path=\"Background\" RelativeSource=\"{RelativeSource TemplatedParent}\" />", style);

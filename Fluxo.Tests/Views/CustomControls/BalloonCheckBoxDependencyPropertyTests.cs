@@ -82,6 +82,28 @@ public sealed class BalloonCheckBoxDependencyPropertyTests
     }
 
     [Fact]
+    public void BalloonCheckBox_DefaultsStateIconAndTextToButtonIconAndText()
+    {
+        RunOnStaThread(() =>
+        {
+            var icon = Geometry.Parse("M 0,0 L 1,1");
+            var checkBox = new TestBalloonCheckBox
+            {
+                ButtonIcon = icon,
+                ButtonText = "Fallback"
+            };
+
+            Assert.Same(icon, checkBox.CurrentIcon());
+            Assert.Equal("Fallback", checkBox.CurrentText());
+
+            checkBox.IsChecked = true;
+
+            Assert.Same(icon, checkBox.CurrentIcon());
+            Assert.Equal("Fallback", checkBox.CurrentText());
+        });
+    }
+
+    [Fact]
     public void BalloonCheckBox_CoercesShouldExpandFalse_WhenShouldShowTextIsTrue()
     {
         RunOnStaThread(() =>
@@ -102,6 +124,10 @@ public sealed class BalloonCheckBoxDependencyPropertyTests
     private sealed class TestBalloonCheckBox : BalloonCheckBox
     {
         public void InvokeClick() => OnClick();
+
+        public object? CurrentIcon() => ResolveButtonIcon();
+
+        public string? CurrentText() => ResolveButtonText();
     }
 
     private static string ExtractSection(string source, string startMarker, string endMarker)

@@ -92,9 +92,9 @@ public sealed class BalloonButtonDependencyPropertyTests
             iconSize: 8,
             padding: new Thickness(6, 0, 10, 0),
             textWidth: 52,
-            textMargin: new Thickness(8, 0, 0, 0));
+            textMargin: new Thickness(8, 0, 8, 0));
 
-        Assert.Equal(88, width);
+        Assert.Equal(96, width);
     }
 
     [Fact]
