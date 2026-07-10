@@ -9,7 +9,7 @@
     SizeToContent="WidthAndHeight">
     <Border
         MinWidth="320"
-        Margin="20,20,20,20"
+        Margin="20,0"
         Background="Transparent"
         BorderThickness="0">
         <TextBlock

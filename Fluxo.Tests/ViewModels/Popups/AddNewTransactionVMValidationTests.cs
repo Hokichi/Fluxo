@@ -2302,6 +2302,54 @@ public sealed class AddNewTransactionVMValidationTests
         });
     }
 
+    [Fact]
+    public void ExpensePreview_ShowsCategoryAndAccountAmounts()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(
+                TransactionKind.Expense,
+                CreateCheckingSource(balance: 500m),
+                isRecurring: false,
+                amount: 25m,
+                appData: CreateAppData(expenseLogs: CreateTransactionsForBudget(ExpenseCategory.Needs, 40m)));
+
+            Assert.True(vm.ShowCategoryImpact);
+            Assert.True(vm.ShowAccountImpact);
+            Assert.Equal(40m, vm.CategoryCurrent);
+            Assert.Equal(65m, vm.CategoryToBe);
+            Assert.Equal(500m, vm.AccountCurrent);
+            Assert.Equal(475m, vm.AccountToBe);
+        });
+    }
+
+    [Fact]
+    public void IncomePreview_HidesCategoryAndIncreasesAccount()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(TransactionKind.Income, CreateCheckingSource(balance: 500m), isRecurring: false, amount: 25m);
+
+            Assert.False(vm.ShowCategoryImpact);
+            Assert.True(vm.ShowAccountImpact);
+            Assert.Equal(500m, vm.AccountCurrent);
+            Assert.Equal(525m, vm.AccountToBe);
+        });
+    }
+
+    [Fact]
+    public void UnpostedIoUPreview_HidesBothImpacts()
+    {
+        RunInSta(() =>
+        {
+            var vm = CreateVm(TransactionKind.Expense, CreateCheckingSource(balance: 500m), isRecurring: false, amount: 25m);
+            vm.IsUnpostedIoUMode = true;
+
+            Assert.False(vm.ShowCategoryImpact);
+            Assert.False(vm.ShowAccountImpact);
+        });
+    }
+
     private static AddNewTransactionVM CreateVm(
         TransactionKind kind,
         AccountVM source,

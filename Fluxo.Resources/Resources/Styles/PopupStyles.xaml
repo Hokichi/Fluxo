@@ -12,20 +12,24 @@
                     <Border Background="{StaticResource Brush.Background.Popup}" CornerRadius="16">
                         <Grid x:Name="PART_ContentRoot">
                             <Grid.RowDefinitions>
-                                <RowDefinition x:Name="HeaderRow" Height="60" />
-                                <RowDefinition Height="1" />
+                                <RowDefinition x:Name="HeaderRow" Height="61" />
                                 <RowDefinition Height="*" />
-                                <RowDefinition Height="1" />
                                 <RowDefinition x:Name="FooterRow" Height="Auto" />
                             </Grid.RowDefinitions>
 
-                            <Grid x:Name="HeaderHost" Margin="24,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
+                            <Grid x:Name="HeaderHost">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="60" />
+                                    <RowDefinition Height="1" />
+                                </Grid.RowDefinitions>
 
-                                <Grid VerticalAlignment="Center">
+                                <Grid Margin="24,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Grid VerticalAlignment="Center">
                                     <TextBlock
                                         x:Name="PopupTitleText"
                                         VerticalAlignment="Center"
@@ -38,9 +42,9 @@
                                         x:Name="PopupTitleContentPresenter"
                                         VerticalAlignment="Center"
                                         Content="{TemplateBinding PopupTitleContent}" />
-                                </Grid>
+                                    </Grid>
 
-                                <c:BalloonButton
+                                    <c:BalloonButton
                                     x:Name="PART_CloseButton"
                                     Grid.Column="1"
                                     ButtonIcon="{StaticResource Close}"
@@ -52,30 +56,35 @@
                                     SubText="Esc"
                                     Visibility="{TemplateBinding ShowCloseButton,
                                                                  Converter={StaticResource PopupBoolToVisibility}}" />
+                                </Grid>
+
+                                <Border
+                                    x:Name="TopContentSeparator"
+                                    Grid.Row="1"
+                                    Background="{StaticResource Brush.Border.Subtle}" />
                             </Grid>
 
-                            <Border
-                                x:Name="TopContentSeparator"
-                                Grid.Row="1"
-                                Background="{StaticResource Brush.Border.Subtle}" />
-
-                            <ContentPresenter Grid.Row="2" Margin="0,16" />
-
-                            <Border
-                                x:Name="BottomContentSeparator"
-                                Grid.Row="3"
-                                Background="{StaticResource Brush.Border.Subtle}" />
+                            <ContentPresenter Grid.Row="1" Margin="0,16" />
 
                             <Grid
                                 x:Name="FooterHost"
-                                Grid.Row="4"
-                                Margin="24,12"
+                                Grid.Row="2"
                                 Visibility="Collapsed">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="1" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <Border
+                                    x:Name="BottomContentSeparator"
+                                    Background="{StaticResource Brush.Border.Subtle}" />
+
+                                <Grid Grid.Row="1" Margin="24,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
 
                                 <c:BalloonButton
                                     x:Name="PART_BackButton"
@@ -243,11 +252,12 @@
                                         Visibility="{TemplateBinding CanSplit,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
                                 </StackPanel>
+                                </Grid>
                             </Grid>
 
                             <Rectangle
                                 x:Name="PART_PopupOverlay"
-                                Grid.RowSpan="5"
+                                Grid.RowSpan="3"
                                 Fill="#80000000"
                                 Opacity="0"
                                 Visibility="Collapsed" />

@@ -7,7 +7,7 @@
     <UserControl.Resources>
         <ItemsPanelTemplate x:Key="SettingsTagsItemsPanelTemplate">
             <customControls:SpacedUniformGrid
-                Columns="3"
+                Columns="2"
                 HorizontalGap="16"
                 VerticalGap="16" />
         </ItemsPanelTemplate>
@@ -94,9 +94,9 @@
 
                     <StackPanel
                         Grid.RowSpan="4"
-                        Margin="-8"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Bottom"
+                        Margin="-8,0"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
                         Orientation="Horizontal">
                         <customControls:BalloonButton
                             Margin="0,0,4,0"

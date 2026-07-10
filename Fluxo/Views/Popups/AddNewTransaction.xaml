@@ -7,8 +7,8 @@
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    CanDiscard="False"
     CanContinue="True"
+    CanDiscard="False"
     IsSaveAndCreateNewButtonEnabled="{Binding CanSave}"
     IsSaveButtonEnabled="{Binding CanSave}"
     Mode="SaveDiscard"
@@ -341,11 +341,6 @@
                                 Margin="0"
                                 Style="{StaticResource SectionLabelStyle}"
                                 Text="Name" />
-                            <TextBlock
-                                Grid.Column="0"
-                                Margin="0,0,80,0"
-                                Style="{StaticResource FieldValidationHintStyle}"
-                                Text="{Binding NameValidationHint}" />
                         </Grid>
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -418,7 +413,6 @@
                                         Margin="0"
                                         Style="{StaticResource SectionLabelStyle}"
                                         Text="Amount" />
-                                    <TextBlock Style="{StaticResource AmountFieldHintStyle}" Text="{Binding AmountFieldHint, Mode=OneWay}" />
                                 </Grid>
                                 <customControls:MoneyTextBox
                                     x:Name="ExpenseAmountTextBox"
@@ -613,26 +607,77 @@
                     </Border>
 
                     <Border Margin="0,16,0,0" Style="{StaticResource CardBorderStyle}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="16" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="0" Visibility="{Binding ShowCategoryOrRepaymentField, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="{Binding CategoryFieldLabel}" />
-                            <Grid>
-                                <StackPanel Orientation="Horizontal" Visibility="{Binding ShowCategoryField, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
-                                    <customControls:BalloonRadioButton GroupName="ExpenseCategory" IsChecked="{Binding IsNeedsCategory, Mode=TwoWay}" IsEnabled="{Binding CanEditCategory}" ShouldShowText="True" UncheckedText="Needs" />
-                                    <customControls:BalloonRadioButton Margin="8,0,0,0" GroupName="ExpenseCategory" IsChecked="{Binding IsWantsCategory, Mode=TwoWay}" IsEnabled="{Binding CanEditCategory}" ShouldShowText="True" UncheckedText="Wants" />
-                                    <customControls:BalloonRadioButton Margin="8,0,0,0" GroupName="ExpenseCategory" IsChecked="{Binding IsInvestCategory, Mode=TwoWay}" IsEnabled="{Binding CanEditCategory}" ShouldShowText="True" UncheckedText="Invest" />
+                            <TextBlock
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Style="{StaticResource SectionLabelStyle}"
+                                Text="{Binding CategoryFieldLabel}"
+                                Visibility="{Binding ShowCategoryOrRepaymentField, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <TextBlock
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Style="{StaticResource SectionLabelStyle}"
+                                Text="Account" />
+
+                            <Grid
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Visibility="{Binding ShowCategoryOrRepaymentField, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <StackPanel Visibility="{Binding ShowCategoryField, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <customControls:BalloonRadioButton
+                                            ButtonIcon="{StaticResource Home}"
+                                            CheckedBackground="{StaticResource Brush.Mint}"
+                                            CornerRadius="8"
+                                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                            GroupName="ExpenseCategory"
+                                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                            IconSize="12"
+                                            IsChecked="{Binding IsNeedsCategory, Mode=TwoWay}"
+                                            IsEnabled="{Binding CanEditCategory}"
+                                            ShouldShowText="True"
+                                            UncheckedText="Needs" />
+                                        <customControls:BalloonRadioButton
+                                            Margin="8,0,0,0"
+                                            ButtonIcon="{StaticResource ShoppingBag}"
+                                            CheckedBackground="{StaticResource Brush.Mint}"
+                                            CornerRadius="8"
+                                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                            GroupName="ExpenseCategory"
+                                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                            IconSize="12"
+                                            IsChecked="{Binding IsWantsCategory, Mode=TwoWay}"
+                                            IsEnabled="{Binding CanEditCategory}"
+                                            ShouldShowText="True"
+                                            UncheckedText="Wants" />
+                                        <customControls:BalloonRadioButton
+                                            Margin="8,0,0,0"
+                                            ButtonIcon="{StaticResource TrendingUp}"
+                                            CheckedBackground="{StaticResource Brush.Mint}"
+                                            CornerRadius="8"
+                                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                            GroupName="ExpenseCategory"
+                                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                            IconSize="12"
+                                            IsChecked="{Binding IsInvestCategory, Mode=TwoWay}"
+                                            IsEnabled="{Binding CanEditCategory}"
+                                            ShouldShowText="True"
+                                            UncheckedText="Invest" />
+                                    </StackPanel>
                                 </StackPanel>
+
                                 <ComboBox
                                     DisplayMemberPath="Name"
                                     IsEnabled="{Binding CanChangeRepaymentAccount}"
@@ -641,23 +686,11 @@
                                     Style="{StaticResource FluxoComboBoxStyle}"
                                     Visibility="{Binding ShowRepaymentAccountField, Converter={StaticResource BoolToVisibilityConverter}}" />
                             </Grid>
-                        </StackPanel>
 
-                        <StackPanel>
-                            <StackPanel.Style>
-                                <Style TargetType="StackPanel">
-                                    <Setter Property="Grid.Column" Value="2" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding ShouldExpandAccountField, Mode=OneWay}" Value="True">
-                                            <Setter Property="Grid.Column" Value="0" />
-                                            <Setter Property="Grid.ColumnSpan" Value="3" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </StackPanel.Style>
-                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Account" />
                             <ComboBox
                                 x:Name="ExpenseAccountComboBox"
+                                Grid.Row="1"
+                                Grid.Column="1"
                                 DisplayMemberPath="Name"
                                 ItemsSource="{Binding AccountsView}"
                                 SelectedItem="{Binding SelectedAccount, Mode=TwoWay}"
@@ -666,16 +699,84 @@
                                     <GroupStyle HeaderTemplate="{StaticResource AccountComboGroupHeaderTemplate}" />
                                 </ComboBox.GroupStyle>
                             </ComboBox>
-                        </StackPanel>
-                        <ItemsControl Grid.Row="1" Grid.ColumnSpan="3" Margin="0,16,0,0" ItemsSource="{Binding TransactionImpacts, Mode=OneWay}">
-                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate><DataTemplate><StackPanel Margin="0,0,24,0"><TextBlock Text="{Binding Label}" /><StackPanel Orientation="Horizontal"><TextBlock Text="{Binding CurrentAmount, StringFormat=N2}" /><TextBlock Margin="8,0" Text="→" /><TextBlock Text="{Binding ToBeAmount, StringFormat=N2}"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{StaticResource Brush.Danger}" /><Style.Triggers><DataTrigger Binding="{Binding IsSuccess}" Value="True"><Setter Property="Foreground" Value="{StaticResource Brush.Success}" /></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock></StackPanel></StackPanel></DataTemplate></ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                        <ItemsControl Grid.Row="2" Grid.ColumnSpan="3" Margin="0,12,0,0" ItemsSource="{Binding TransactionWarnings, Mode=OneWay}">
-                            <ItemsControl.ItemTemplate><DataTemplate><TextBlock Foreground="{StaticResource Brush.Danger}" Text="{Binding Message}" TextWrapping="Wrap" /></DataTemplate></ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </Grid>
+
+                            <StackPanel
+                                Grid.Row="2"
+                                Grid.Column="0"
+                                Margin="0,12,24,0"
+                                Orientation="Horizontal"
+                                Visibility="{Binding ShowCategoryImpact, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock
+                                    FontFamily="{StaticResource Medium}"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="{Binding CategoryCurrent, StringFormat=N0}" />
+                                <components:Icon
+                                    Width="6"
+                                    Margin="16,0"
+                                    Path="{StaticResource AngleRight}"
+                                    Color="{StaticResource Brush.Text.Primary}" />
+                                <TextBlock FontFamily="{StaticResource Medium}" Text="{Binding CategoryToBe, StringFormat=N0}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsIncome, Mode=OneWay}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource Brush.Success}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+
+                            <StackPanel
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                Margin="0,12,24,0"
+                                Orientation="Horizontal"
+                                Visibility="{Binding ShowAccountImpact, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock
+                                    FontFamily="{StaticResource Medium}"
+                                    Foreground="{StaticResource Brush.Text.Primary}"
+                                    Text="{Binding AccountCurrent, StringFormat=N0}" />
+                                <components:Icon
+                                    Width="6"
+                                    Margin="16,0"
+                                    Path="{StaticResource AngleRight}"
+                                    Color="{StaticResource Brush.Text.Primary}" />
+                                <TextBlock FontFamily="{StaticResource Medium}" Text="{Binding AccountToBe, StringFormat=N0}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsIncome, Mode=OneWay}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource Brush.Success}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+
+                            <ItemsControl
+                                Grid.Row="3"
+                                Grid.ColumnSpan="2"
+                                Margin="0,12,0,0"
+                                ItemsSource="{Binding TransactionWarnings, Mode=OneWay}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock
+                                            FontFamily="{StaticResource Medium}"
+                                            FontSize="12"
+                                            Foreground="{StaticResource Brush.Danger}"
+                                            Text="{Binding Message}"
+                                            TextWrapping="Wrap" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
                     </Border>
+
                 </StackPanel>
 
                 <StackPanel Visibility="Collapsed">

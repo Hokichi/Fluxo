@@ -157,7 +157,23 @@ public partial class AddNewTransactionVM : ObservableValidator
     public bool IsNeedsCategory { get => SelectedExpenseCategory == ExpenseCategory.Needs; set { if (value) SelectedExpenseCategory = ExpenseCategory.Needs; } }
     public bool IsWantsCategory { get => SelectedExpenseCategory == ExpenseCategory.Wants; set { if (value) SelectedExpenseCategory = ExpenseCategory.Wants; } }
     public bool IsInvestCategory { get => SelectedExpenseCategory == ExpenseCategory.Savings; set { if (value) SelectedExpenseCategory = ExpenseCategory.Savings; } }
-    public IReadOnlyList<TransactionImpact> TransactionImpacts => BuildTransactionImpacts();
+    public bool ShowCategoryImpact => AmountText > 0m && !IsUnpostedIoUMode &&
+                                      (IsRepayment || (IsExpense && !IsExcludedFromBudget));
+    public bool ShowAccountImpact => AmountText > 0m && !IsUnpostedIoUMode && SelectedAccount is not null;
+    public decimal CategoryCurrent => IsRepayment
+        ? SelectedRepaymentAccount?.SpentAmount ?? 0m
+        : ShowCategoryImpact ? GetCategoryCurrentAmount() : 0m;
+    public decimal CategoryToBe => IsRepayment
+        ? Math.Max(0m, CategoryCurrent - AmountText)
+        : CategoryCurrent + AmountText;
+    public decimal AccountCurrent => SelectedAccount is { } account
+        ? account.IsCredit ? account.SpentAmount : account.Balance
+        : 0m;
+    public decimal AccountToBe => SelectedAccount is { } account
+        ? account.IsCredit
+            ? AccountCurrent + (IsIncome ? -AmountText : AmountText)
+            : AccountCurrent + (IsIncome ? AmountText : -AmountText)
+        : 0m;
     public IReadOnlyList<TransactionWarning> TransactionWarnings => BuildTransactionWarnings();
 
     public IReadOnlyList<RecurringPeriod> RecurringPeriods { get; } =
@@ -1984,38 +2000,16 @@ public partial class AddNewTransactionVM : ObservableValidator
     {
         OnPropertyChanged(nameof(CanSave));
         OnPropertyChanged(nameof(HasChanges));
-        OnPropertyChanged(nameof(TransactionImpacts));
+        OnPropertyChanged(nameof(ShowCategoryImpact));
+        OnPropertyChanged(nameof(ShowAccountImpact));
+        OnPropertyChanged(nameof(CategoryCurrent));
+        OnPropertyChanged(nameof(CategoryToBe));
+        OnPropertyChanged(nameof(AccountCurrent));
+        OnPropertyChanged(nameof(AccountToBe));
         OnPropertyChanged(nameof(TransactionWarnings));
         OnPropertyChanged(nameof(IsNeedsCategory));
         OnPropertyChanged(nameof(IsWantsCategory));
         OnPropertyChanged(nameof(IsInvestCategory));
-    }
-
-    private IReadOnlyList<TransactionImpact> BuildTransactionImpacts()
-    {
-        if (IsUnpostedIoUMode || AmountText <= 0m)
-            return [];
-
-        if (IsRepayment && SelectedRepaymentAccount is { } credit && SelectedAccount is { } source)
-            return [
-                new(credit.Name, credit.SpentAmount, Math.Max(0m, credit.SpentAmount - AmountText), true),
-                new(source.Name, source.Balance, source.Balance - AmountText, false)
-            ];
-
-        var impacts = new List<TransactionImpact>();
-        if (IsExpense && !IsExcludedFromBudget)
-            impacts.Add(new(GetExpenseCategoryLabel(SelectedExpenseCategory), GetCategoryCurrentAmount(), GetCategoryCurrentAmount() + AmountText, false));
-
-        if (SelectedAccount is { } account)
-        {
-            var current = account.IsCredit ? account.SpentAmount : account.Balance;
-            var toBe = account.IsCredit
-                ? current + (IsIncome ? -AmountText : AmountText)
-                : current + (IsIncome ? AmountText : -AmountText);
-            impacts.Add(new(account.Name, current, toBe, IsIncome));
-        }
-
-        return impacts;
     }
 
     private decimal GetCategoryCurrentAmount()
@@ -2493,8 +2487,6 @@ public partial class AddNewTransactionVM : ObservableValidator
         [ObservableProperty]
         private bool _isEnabled = true;
     }
-
-    public sealed record TransactionImpact(string Label, decimal CurrentAmount, decimal ToBeAmount, bool IsSuccess);
 
     public sealed record TransactionWarning(string Message, bool IsWarning);
 
