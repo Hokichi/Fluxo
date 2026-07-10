@@ -363,6 +363,7 @@
                                 Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             <customControls:BalloonCheckBox
                                 Grid.Column="2"
+                                ButtonIcon="{StaticResource CreditCardOff}"
                                 ButtonSize="38"
                                 CornerRadius="12"
                                 DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
@@ -371,10 +372,10 @@
                                 IsChecked="{Binding IsBudgetExcluded, Mode=TwoWay}"
                                 IsEnabled="{Binding CanToggleBudgetExclusion}"
                                 ToolTip="Exclude from budget"
-                                UncheckedIcon="{StaticResource CreditCardOff}"
                                 UncheckedText="Exclude" />
                             <customControls:BalloonCheckBox
                                 Grid.Column="4"
+                                ButtonIcon="{StaticResource Pin}"
                                 ButtonSize="38"
                                 CheckedBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
                                 CornerRadius="12"
@@ -384,7 +385,6 @@
                                 IsChecked="{Binding IsPinned, Mode=TwoWay}"
                                 IsEnabled="{Binding CanPinTransaction}"
                                 ToolTip="Pin transaction"
-                                UncheckedIcon="{StaticResource Pin}"
                                 UncheckedText="Pinned" />
                         </Grid>
                         <Popup
@@ -449,17 +449,17 @@
                                 TextChanged="OnTransactionAmountTextBoxTextChanged" />
                         </StackPanel>
 
-                        <Grid Margin="0,16,0,0">
+                        <Grid Margin="0,16,0,0" HorizontalAlignment="Center">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="12" />
-                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="12" />
-                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="12" />
-                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="12" />
-                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <customControls:BalloonRadioButton
                                 Grid.Column="0"
@@ -532,8 +532,9 @@
                                 UncheckedText="Posted IoU" />
                         </Grid>
                         <TextBlock
-                            Margin="0,8,0,0"
-                            FontFamily="{StaticResource Medium}"
+                            Margin="0,12,0,0"
+                            HorizontalAlignment="Center"
+                            FontFamily="{StaticResource Bold}"
                             FontSize="11"
                             Foreground="{StaticResource Brush.Text.Secondary}"
                             Text="{Binding TransactionModeDescription, Mode=OneWay}"

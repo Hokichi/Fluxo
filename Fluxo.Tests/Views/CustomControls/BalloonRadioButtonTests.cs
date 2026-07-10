@@ -49,9 +49,22 @@ public sealed class BalloonRadioButtonTests
         });
     }
 
+    [Fact]
+    public void CheckedRadio_KeepsItsUncheckedText()
+    {
+        RunOnStaThread(() =>
+        {
+            var radio = new TestBalloonRadioButton { IsChecked = true, UncheckedText = "Regular" };
+
+            Assert.Equal("Regular", radio.ResolveText());
+        });
+    }
+
     private sealed class TestBalloonRadioButton : BalloonRadioButton
     {
         public void InvokeClick() => OnClick();
+
+        public string? ResolveText() => ResolveButtonText();
     }
 
     private static void RunOnStaThread(Action action)

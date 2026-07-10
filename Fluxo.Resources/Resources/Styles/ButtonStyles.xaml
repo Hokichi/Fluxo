@@ -82,13 +82,13 @@
                                             </TextBlock.Foreground>
                                         </TextBlock>
                                         <TextBlock
-                                            x:Name="PART_ButtonHotkeys"
+                                            x:Name="PART_SubText"
                                             Margin="8,1,0,0"
                                             VerticalAlignment="Center"
                                             FontFamily="{StaticResource Light}"
                                             FontSize="10"
                                             Opacity="0"
-                                            Text="{TemplateBinding ButtonHotkeys}"
+                                            Text="{TemplateBinding SubText}"
                                             TextTrimming="CharacterEllipsis"
                                             TextWrapping="NoWrap"
                                             Visibility="Collapsed">
@@ -416,7 +416,7 @@
                                     Color="{StaticResource Brush.Background.Surface}" />
                             </Grid>
                             <TextBlock
-                                Margin="8,0,0,0"
+                                        Margin="24,0,0,0"
                                 FontFamily="{StaticResource Bold}"
                                 Foreground="{StaticResource Brush.Text.Primary}"
                                 Text="{Binding Name}" />

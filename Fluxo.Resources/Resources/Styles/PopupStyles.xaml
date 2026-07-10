@@ -43,13 +43,13 @@
                                 <c:BalloonButton
                                     x:Name="PART_CloseButton"
                                     Grid.Column="1"
-                                    ButtonHotkeys="Esc"
                                     ButtonIcon="{StaticResource Close}"
                                     ButtonText="Close"
                                     DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
                                     HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
                                     ShouldExpand="True"
                                     Style="{StaticResource HeaderButtonStyle}"
+                                    SubText="Esc"
                                     Visibility="{TemplateBinding ShowCloseButton,
                                                                  Converter={StaticResource PopupBoolToVisibility}}" />
                             </Grid>
@@ -79,13 +79,13 @@
 
                                 <c:BalloonButton
                                     x:Name="PART_BackButton"
-                                    ButtonHotkeys="Backspace"
                                     ButtonIcon="{StaticResource AngleLeft}"
                                     ButtonText="Back"
                                     DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                                     HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                     ShouldShowText="True"
                                     Style="{StaticResource HeaderButtonStyle}"
+                                    SubText="Backspace"
                                     Visibility="Collapsed" />
 
                                 <StackPanel
@@ -94,24 +94,24 @@
                                     Orientation="Horizontal"
                                     Visibility="Collapsed">
                                     <c:BalloonButton
-                                        x:Name="PART_ApplyButton"
-                                        ButtonHotkeys="Enter"
+                                        x:Name="PART_ProceedButton"
                                         ButtonIcon="{StaticResource Check}"
-                                        ButtonText="Apply"
+                                        ButtonText="Proceed"
                                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
                                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}"
                                         ShouldShowText="True"
-                                        Style="{StaticResource HeaderButtonStyle}" />
+                                        Style="{StaticResource HeaderButtonStyle}"
+                                        SubText="Enter" />
                                     <c:BalloonButton
                                         x:Name="PART_CancelButton"
                                         Margin="8,0,0,0"
-                                        ButtonHotkeys="Esc"
                                         ButtonIcon="{StaticResource Ban}"
                                         ButtonText="Cancel"
                                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                                         ShouldShowText="True"
-                                        Style="{StaticResource HeaderButtonStyle}" />
+                                        Style="{StaticResource HeaderButtonStyle}"
+                                        SubText="Esc" />
                                 </StackPanel>
 
                                 <StackPanel
@@ -121,18 +121,17 @@
                                     Visibility="Collapsed">
                                     <c:BalloonButton
                                         x:Name="PART_SaveButton"
-                                        ButtonHotkeys="Enter"
                                         ButtonIcon="{StaticResource ContentSave}"
                                         ButtonText="Save"
                                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
                                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
                                         IsEnabled="{TemplateBinding IsSaveButtonEnabled}"
                                         ShouldShowText="True"
-                                        Style="{StaticResource HeaderButtonStyle}" />
+                                        Style="{StaticResource HeaderButtonStyle}"
+                                        SubText="Enter" />
                                     <c:BalloonButton
                                         x:Name="PART_SaveAndCreateNewButton"
                                         Margin="8,0,0,0"
-                                        ButtonHotkeys="Shift+Enter"
                                         ButtonIcon="{StaticResource ContentSaveMove}"
                                         ButtonText="Save &amp; New"
                                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
@@ -140,18 +139,19 @@
                                         IsEnabled="{TemplateBinding IsSaveAndCreateNewButtonEnabled}"
                                         ShouldShowText="True"
                                         Style="{StaticResource HeaderButtonStyle}"
+                                        SubText="Shift+Enter"
                                         Visibility="{TemplateBinding CanContinue,
                                                                      Converter={StaticResource PopupBoolToVisibility}}" />
                                     <c:BalloonButton
                                         x:Name="PART_DiscardButton"
                                         Margin="8,0,0,0"
-                                        ButtonHotkeys="Esc"
                                         ButtonIcon="{StaticResource Ban}"
                                         ButtonText="Discard"
-                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Destructive.Hovered}"
                                         ShouldShowText="True"
-                                        Style="{StaticResource HeaderButtonStyle}" />
+                                        Style="{StaticResource HeaderButtonStyle}"
+                                        SubText="Esc" />
                                 </StackPanel>
 
                                 <StackPanel
@@ -161,22 +161,22 @@
                                     Visibility="Collapsed">
                                     <c:BalloonButton
                                         x:Name="PART_NextButton"
-                                        ButtonHotkeys="Enter"
                                         ButtonIcon="{StaticResource AngleRight}"
                                         ButtonText="Next"
                                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.Default}"
                                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.Default.Hovered}"
                                         ShouldShowText="True"
-                                        Style="{StaticResource HeaderButtonStyle}" />
+                                        Style="{StaticResource HeaderButtonStyle}"
+                                        SubText="Enter" />
                                     <c:BalloonButton
                                         x:Name="PART_FinishButton"
-                                        ButtonHotkeys="Enter"
                                         ButtonIcon="{StaticResource Check}"
                                         ButtonText="Finish"
                                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave}"
                                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}"
                                         ShouldShowText="True"
                                         Style="{StaticResource HeaderButtonStyle}"
+                                        SubText="Enter"
                                         Visibility="Collapsed" />
                                 </StackPanel>
 

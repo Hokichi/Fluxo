@@ -22,6 +22,12 @@ public class BalloonRadioButton : BalloonCheckBox
 
     protected override bool CanUncheckOnClick => false;
 
+    protected override object? ResolveButtonIcon() =>
+        IsChecked ? CheckedIcon ?? UncheckedIcon ?? ButtonIcon : base.ResolveButtonIcon();
+
+    protected override string? ResolveButtonText() =>
+        IsChecked ? CheckedText ?? UncheckedText ?? ButtonText : base.ResolveButtonText();
+
     protected override void OnChecked(RoutedEventArgs e)
     {
         if (Parent is DependencyObject parent)

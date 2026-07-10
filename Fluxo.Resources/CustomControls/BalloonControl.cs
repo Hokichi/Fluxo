@@ -14,7 +14,7 @@ namespace Fluxo.Resources.CustomControls;
 [TemplatePart(Name = PartIcon, Type = typeof(Path))]
 [TemplatePart(Name = PartTextReveal, Type = typeof(Border))]
 [TemplatePart(Name = PartButtonText, Type = typeof(TextBlock))]
-[TemplatePart(Name = PartButtonHotkeys, Type = typeof(TextBlock))]
+[TemplatePart(Name = PartSubText, Type = typeof(TextBlock))]
 public class BalloonControl : ButtonBase
 {
     private const string PartShape = "PART_Shape";
@@ -23,9 +23,9 @@ public class BalloonControl : ButtonBase
     private const string PartIcon = "PART_Icon";
     private const string PartTextReveal = "PART_TextReveal";
     private const string PartButtonText = "PART_ButtonText";
-    private const string PartButtonHotkeys = "PART_ButtonHotkeys";
-    private static readonly Thickness ButtonTextMargin = new(8, 0, 8, 0);
-    private static readonly Thickness ButtonHotkeysMargin = new(8, 0, 0, 0);
+    private const string PartSubText = "PART_SubText";
+    private static readonly Thickness ButtonTextMargin = new(24, 0, 8, 0);
+    private static readonly Thickness SubTextMargin = new(8, 0, 0, 0);
 
     private static readonly Duration ExpandDuration = new(TimeSpan.FromSeconds(0.18));
     private static readonly Duration CollapseDuration = new(TimeSpan.FromSeconds(0.16));
@@ -61,9 +61,9 @@ public class BalloonControl : ButtonBase
         DependencyProperty.Register(nameof(ButtonText), typeof(string), typeof(BalloonControl),
             new PropertyMetadata(null, OnPresentationPropertyChanged));
 
-    // --- ButtonHotkeys ---
-    public static readonly DependencyProperty ButtonHotkeysProperty =
-        DependencyProperty.Register(nameof(ButtonHotkeys), typeof(string), typeof(BalloonControl),
+    // --- SubText ---
+    public static readonly DependencyProperty SubTextProperty =
+        DependencyProperty.Register(nameof(SubText), typeof(string), typeof(BalloonControl),
             new PropertyMetadata(null, OnPresentationPropertyChanged));
 
     // --- ShouldExpand ---
@@ -149,10 +149,10 @@ public class BalloonControl : ButtonBase
         set => SetValue(ButtonTextProperty, value);
     }
 
-    public string? ButtonHotkeys
+    public string? SubText
     {
-        get => (string?)GetValue(ButtonHotkeysProperty);
-        set => SetValue(ButtonHotkeysProperty, value);
+        get => (string?)GetValue(SubTextProperty);
+        set => SetValue(SubTextProperty, value);
     }
 
     public bool ShouldExpand
@@ -202,7 +202,7 @@ public class BalloonControl : ButtonBase
         _icon = GetTemplateChild(PartIcon) as Path;
         _textReveal = GetTemplateChild(PartTextReveal) as Border;
         _buttonText = GetTemplateChild(PartButtonText) as TextBlock;
-        _buttonHotkeys = GetTemplateChild(PartButtonHotkeys) as TextBlock;
+        _buttonHotkeys = GetTemplateChild(PartSubText) as TextBlock;
         RefreshPresentation();
         RebuildGeometry();
     }
@@ -376,7 +376,7 @@ public class BalloonControl : ButtonBase
             IconSize,
             Padding,
             MeasureButtonTextWidth(),
-            MeasureButtonHotkeysWidth());
+            MeasureSubTextWidth());
 
         return ResolveOpenWidth(ButtonSize, autoWidth);
     }
@@ -412,7 +412,7 @@ public class BalloonControl : ButtonBase
         if (textWidth > 0)
             contentWidth += ButtonTextMargin.Left + textWidth + ButtonTextMargin.Right;
         if (hotkeysWidth > 0)
-            contentWidth += ButtonHotkeysMargin.Left + hotkeysWidth + ButtonHotkeysMargin.Right;
+            contentWidth += SubTextMargin.Left + hotkeysWidth + SubTextMargin.Right;
 
         var totalWidth = padding.Left + contentWidth + padding.Right;
         return Math.Max(buttonSize, Math.Ceiling(totalWidth));
@@ -427,9 +427,9 @@ public class BalloonControl : ButtonBase
     {
         _ = width;
         var widthTarget = ButtonTextMargin.Left + MeasureButtonTextWidth() + ButtonTextMargin.Right;
-        var hotkeysWidth = MeasureButtonHotkeysWidth();
+        var hotkeysWidth = MeasureSubTextWidth();
         if (hotkeysWidth > 0)
-            widthTarget += ButtonHotkeysMargin.Left + hotkeysWidth + ButtonHotkeysMargin.Right;
+            widthTarget += SubTextMargin.Left + hotkeysWidth + SubTextMargin.Right;
         return widthTarget;
     }
 
@@ -455,12 +455,12 @@ public class BalloonControl : ButtonBase
         return MeasureText(buttonText, _buttonText, FontFamily, FontSize, FontStretch, FontStyle, FontWeight);
     }
 
-    private double MeasureButtonHotkeysWidth()
+    private double MeasureSubTextWidth()
     {
-        if (string.IsNullOrEmpty(ButtonHotkeys))
+        if (string.IsNullOrEmpty(SubText))
             return 0;
 
-        return MeasureText(ButtonHotkeys, _buttonHotkeys, FontFamily, 12, FontStretch, FontStyle, FontWeight);
+        return MeasureText(SubText, _buttonHotkeys, FontFamily, 10, FontStretch, FontStyle, FontWeight);
     }
 
     private void ApplyIcon()
@@ -475,8 +475,8 @@ public class BalloonControl : ButtonBase
             _buttonText.Text = ResolveButtonText();
         if (_buttonHotkeys is not null)
         {
-            _buttonHotkeys.Text = ButtonHotkeys;
-            _buttonHotkeys.Visibility = string.IsNullOrEmpty(ButtonHotkeys) ? Visibility.Collapsed : Visibility.Visible;
+            _buttonHotkeys.Text = SubText;
+            _buttonHotkeys.Visibility = string.IsNullOrEmpty(SubText) ? Visibility.Collapsed : Visibility.Visible;
         }
     }
 

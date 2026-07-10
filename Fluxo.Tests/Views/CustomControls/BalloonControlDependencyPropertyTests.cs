@@ -39,9 +39,9 @@ public sealed class BalloonControlDependencyPropertyTests
     }
 
     [Fact]
-    public void BalloonControl_CalculatesAutoOpenWidthWithHotkeys()
+    public void BalloonControl_CalculatesAutoOpenWidthWithSubText()
     {
-        Assert.Equal(122, BalloonControl.CalculateAutoOpenWidth(
+        Assert.Equal(138, BalloonControl.CalculateAutoOpenWidth(
             28,
             8,
             new Thickness(6, 0, 10, 0),
@@ -65,13 +65,13 @@ public sealed class BalloonControlDependencyPropertyTests
     }
 
     [Fact]
-    public void BalloonControl_ExposesButtonHotkeys()
+    public void BalloonControl_ExposesSubText()
     {
         RunOnStaThread(() =>
         {
-            var button = new BalloonControl { ButtonHotkeys = "Ctrl+S" };
+            var button = new BalloonControl { SubText = "Ctrl+S" };
 
-            Assert.Equal("Ctrl+S", button.ButtonHotkeys);
+            Assert.Equal("Ctrl+S", button.SubText);
         });
     }
 
