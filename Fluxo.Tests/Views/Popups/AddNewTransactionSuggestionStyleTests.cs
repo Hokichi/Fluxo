@@ -102,11 +102,10 @@ public sealed class AddNewTransactionSuggestionStyleTests
     }
 
     [Fact]
-    public void TransactionMode_UsesSharedLayoutAndKeepsHistoryAvailableForGoalUpdates()
+    public void TransactionMode_UsesSharedLayoutForGoalUpdates()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml"));
 
-        Assert.Contains("IsHistoryOpen=\"{Binding IsHistoryOpen, Mode=TwoWay}\"", xaml);
         Assert.DoesNotContain("Visibility=\"{Binding IsExpense, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
         Assert.DoesNotContain("Visibility=\"{Binding IsIncome, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);
         Assert.DoesNotContain("Visibility=\"{Binding IsGoal, Converter={StaticResource BoolToVisibilityConverter}}\"", xaml);

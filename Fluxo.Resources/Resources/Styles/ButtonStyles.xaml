@@ -62,7 +62,7 @@
                                     ClipToBounds="True"
                                     Opacity="0">
                                     <StackPanel
-                                        Margin="8,0,0,0"
+                                        Margin="24,0,0,0"
                                         VerticalAlignment="Center"
                                         Orientation="Horizontal">
                                         <TextBlock
@@ -83,10 +83,10 @@
                                         </TextBlock>
                                         <TextBlock
                                             x:Name="PART_ButtonHotkeys"
-                                            Margin="8,0,0,0"
+                                            Margin="8,1,0,0"
                                             VerticalAlignment="Center"
                                             FontFamily="{StaticResource Light}"
-                                            FontSize="12"
+                                            FontSize="10"
                                             Opacity="0"
                                             Text="{TemplateBinding ButtonHotkeys}"
                                             TextTrimming="CharacterEllipsis"

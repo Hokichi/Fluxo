@@ -6,8 +6,7 @@
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     Width="640"
     PopupTitle="Data Management"
-    ShowRevertButton="False"
-    ShowSaveButton="False">
+    Mode="None">
     <customControls:BasePopup.Resources>
         <Style x:Key="InitialPageStyle" TargetType="Grid">
             <Setter Property="Visibility" Value="Collapsed" />

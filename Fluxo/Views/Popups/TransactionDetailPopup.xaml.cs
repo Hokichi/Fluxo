@@ -148,21 +148,14 @@ public partial class TransactionDetailPopup : BasePopup
 
     protected override async void OnSplitButtonClick()
     {
-        if (IsSplitButtonChecked)
-        {
-            await _viewModel.BeginSplitModeAsync();
-            SplitTransactionAmountTextBox.Focus();
-        }
-        else
-        {
-            _viewModel.ShowParentTransaction();
-        }
+        await _viewModel.BeginSplitModeAsync();
+        SplitTransactionAmountTextBox.Focus();
 
         UpdateButtonStates();
         SyncMoreTagsPopupState();
     }
 
-    protected override void OnCancelButtonClick()
+    protected override void OnDiscardButtonClick()
     {
         _viewModel.CancelEditing();
         SyncNoteDocumentFromViewModel();
@@ -174,7 +167,7 @@ public partial class TransactionDetailPopup : BasePopup
     {
         if (e.Key == Key.D && Keyboard.Modifiers == ModifierKeys.Control)
         {
-            if (ShowCloneButton)
+            if (CanClone)
             {
                 OnCloneButtonClick();
                 e.Handled = true;
@@ -281,12 +274,13 @@ public partial class TransactionDetailPopup : BasePopup
 
     private void UpdateButtonStates()
     {
-        ShowEditButton = !_viewModel.IsEditing && !_viewModel.IsSplitMode;
-        ShowDeleteButton = !_viewModel.IsEditing && !_viewModel.IsSplitMode;
-        ShowSaveButton = _viewModel.IsEditing;
-        ShowCloneButton = !_viewModel.IsEditing && !_viewModel.IsSplitMode;
-        ShowCancelButton = _viewModel.IsEditing;
-        ShowSplitButton = _viewModel.ShowSplitButton;
+        var isEditing = _viewModel.IsEditing || _viewModel.IsSplitMode;
+        Mode = isEditing ? PopupMode.SaveDiscard : PopupMode.Functional;
+        CanContinue = false;
+        CanEdit = !isEditing;
+        CanDelete = !isEditing;
+        CanClone = !isEditing;
+        CanSplit = _viewModel.ShowSplitButton && !isEditing;
     }
 
     private void ShowValidationMessage(string? message)

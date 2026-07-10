@@ -6,8 +6,7 @@
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:tabs="clr-namespace:Fluxo.Views.Popups.Settings.Tabs"
     PopupTitle="Settings"
-    ShowRevertButton="False"
-    ShowSaveButton="False">
+    Mode="None">
 
     <customControls:BasePopup.Resources>
         <ResourceDictionary>

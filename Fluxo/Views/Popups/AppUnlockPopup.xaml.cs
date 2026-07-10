@@ -16,7 +16,7 @@ public partial class AppUnlockPopup : BasePopup
         Loaded += (_, _) => UnlockPasswordBox.Focus();
     }
 
-    protected override void OnCancelButtonClick()
+    protected override void OnCloseButtonClick()
     {
         DialogResult = false;
         Close();

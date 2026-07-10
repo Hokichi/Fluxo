@@ -6,12 +6,11 @@
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    IsSplitButtonChecked="{Binding IsSplitMode, Mode=TwoWay}"
+    CanClone="True"
+    CanDelete="True"
+    CanEdit="True"
     PopupTitle="Transaction Detail"
-    ShowCloneButton="True"
-    ShowDeleteButton="True"
-    ShowEditButton="True"
-    ShowSplitButton="{Binding ShowSplitButton, Mode=OneWay}"
+    Mode="Functional"
     mc:Ignorable="d">
 
     <customControls:BasePopup.Resources>

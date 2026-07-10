@@ -66,22 +66,6 @@ public sealed class SettingsSpendingAmountGateTextTests
     }
 
     [Fact]
-    public void SettingsPopup_HidesFooterSaveAndRevertButtons()
-    {
-        var xaml = File.ReadAllText(GetRepositoryFilePath(
-            "Fluxo",
-            "Views",
-            "Popups",
-            "Settings",
-            "SettingsPopup.xaml"));
-
-        Assert.Contains("ShowSaveButton=\"False\"", xaml);
-        Assert.Contains("ShowRevertButton=\"False\"", xaml);
-        Assert.DoesNotContain("IsSaveButtonEnabled=\"{Binding HasPendingConfigurationChanges}\"", xaml);
-        Assert.DoesNotContain("IsRevertButtonEnabled=\"{Binding HasPendingConfigurationChanges}\"", xaml);
-    }
-
-    [Fact]
     public void SettingsPopup_TabButtonsUseBudgetNavigationGuard()
     {
         var xaml = File.ReadAllText(GetRepositoryFilePath(

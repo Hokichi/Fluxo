@@ -6,15 +6,6 @@ namespace Fluxo.Tests.Views.Popups;
 public sealed class AddAccountPopupCallsiteTests
 {
     [Fact]
-    public void AddAccountPopup_EnablesSaveAndCreateNew()
-    {
-        var xaml = ReadPopupXaml();
-
-        Assert.Contains("ShowSaveAndCreateNewButton=\"True\"", xaml);
-        Assert.Contains("IsSaveAndCreateNewButtonEnabled=\"{Binding CanSave}\"", xaml);
-    }
-
-    [Fact]
     public void AddAccountPopup_ShowsFieldValidationHints()
     {
         var xaml = ReadPopupXaml();

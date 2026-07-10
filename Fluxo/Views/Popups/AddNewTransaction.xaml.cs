@@ -104,16 +104,6 @@ public partial class AddNewTransaction : BasePopup
         FocusPrimaryInput();
     }
 
-    protected override async void OnHistoryButtonClick()
-    {
-        if (!_viewModel.CanUseHistory)
-            return;
-
-        _viewModel.IsHistoryOpen = !_viewModel.IsHistoryOpen;
-        if (_viewModel.IsHistoryOpen)
-            await _viewModel.LoadHistoryAsync();
-    }
-
     private async Task<bool> ShouldSaveCurrentTransactionAsync()
     {
         if (_viewModel.TryGetRepaymentCorrection(out var correctedAmount))

@@ -306,7 +306,7 @@ public class BalloonControl : ButtonBase
         ApplyIconSlotLayout(ShouldShowText);
         var openWidth = GetEffectiveOpenWidth();
         SetCurrentWidth(ShouldShowText
-            ? _explicitWidth ?? double.NaN
+            ? _explicitWidth ?? openWidth
             : ButtonSize);
         MinWidth = ShouldShowText ? openWidth : ButtonSize;
 

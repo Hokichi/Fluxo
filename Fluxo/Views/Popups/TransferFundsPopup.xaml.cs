@@ -29,8 +29,5 @@ public partial class TransferFundsPopup : BasePopup
         Close();
     }
 
-    protected override void OnApplyButtonClick()
-    {
-        base.OnCloseButtonClick();
-    }
+    protected override void OnApplyButtonClick() => OnSaveButtonClick();
 }

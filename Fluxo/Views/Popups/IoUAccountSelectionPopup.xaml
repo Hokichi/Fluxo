@@ -5,8 +5,7 @@
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     Width="460"
     PopupTitle="Select Account"
-    ShowCancelButton="True"
-    ShowSaveButton="True">
+    Mode="SaveDiscard">
 
     <StackPanel Margin="24,0,24,24">
         <TextBlock

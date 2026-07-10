@@ -7,13 +7,11 @@
     xmlns:customControls="clr-namespace:Fluxo.Resources.CustomControls;assembly=Fluxo.Resources"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    IsHistoryOpen="{Binding IsHistoryOpen, Mode=TwoWay}"
+    CanContinue="True"
     IsSaveAndCreateNewButtonEnabled="{Binding CanSave}"
     IsSaveButtonEnabled="{Binding CanSave}"
+    Mode="SaveDiscard"
     PopupTitle="{Binding PopupTitle}"
-    ShowHistoryButton="{Binding CanUseHistory}"
-    ShowSaveAndCreateNewButton="True"
-    ShowSaveButton="True"
     mc:Ignorable="d">
 
     <customControls:BasePopup.Resources>

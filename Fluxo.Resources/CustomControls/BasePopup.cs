@@ -9,6 +9,15 @@ using System.Windows.Threading;
 
 namespace Fluxo.Resources.CustomControls;
 
+public enum PopupMode
+{
+    None,
+    ApplyCancel,
+    SaveDiscard,
+    BackNext,
+    Functional
+}
+
 [TemplatePart(Name = "PART_ContentRoot", Type = typeof(FrameworkElement))]
 [TemplatePart(Name = "PART_PopupOverlay", Type = typeof(UIElement))]
 public class BasePopup : Window, IPopupHost
@@ -26,66 +35,58 @@ public class BasePopup : Window, IPopupHost
         DependencyProperty.Register(nameof(PopupTitleContent), typeof(object), typeof(BasePopup),
             new PropertyMetadata(null));
 
-    // --- Button visibility ---
-    public static readonly DependencyProperty ShowSaveButtonProperty =
-        DependencyProperty.Register(nameof(ShowSaveButton), typeof(bool), typeof(BasePopup),
+    // --- Footer mode ---
+    public static readonly DependencyProperty ModeProperty =
+        DependencyProperty.Register(nameof(Mode), typeof(PopupMode), typeof(BasePopup),
+            new PropertyMetadata(PopupMode.None));
+
+    public static readonly DependencyProperty CanContinueProperty =
+        DependencyProperty.Register(nameof(CanContinue), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(false));
+
+    public static readonly DependencyProperty CanEditProperty =
+        DependencyProperty.Register(nameof(CanEdit), typeof(bool), typeof(BasePopup),
+            new PropertyMetadata(false));
+
+    public static readonly DependencyProperty CanDeleteProperty =
+        DependencyProperty.Register(nameof(CanDelete), typeof(bool), typeof(BasePopup),
+            new PropertyMetadata(false));
+
+    public static readonly DependencyProperty CanCloneProperty =
+        DependencyProperty.Register(nameof(CanClone), typeof(bool), typeof(BasePopup),
+            new PropertyMetadata(false));
+
+    public static readonly DependencyProperty CanSplitProperty =
+        DependencyProperty.Register(nameof(CanSplit), typeof(bool), typeof(BasePopup),
+            new PropertyMetadata(false));
+
+    public static readonly DependencyProperty CurrentStepProperty =
+        DependencyProperty.Register(nameof(CurrentStep), typeof(int), typeof(BasePopup),
+            new PropertyMetadata(1, OnStepChanged));
+
+    public static readonly DependencyProperty StepCountProperty =
+        DependencyProperty.Register(nameof(StepCount), typeof(int), typeof(BasePopup),
+            new PropertyMetadata(1, OnStepChanged));
+
+    private static readonly DependencyPropertyKey IsFirstStepPropertyKey =
+        DependencyProperty.RegisterReadOnly(nameof(IsFirstStep), typeof(bool), typeof(BasePopup),
+            new PropertyMetadata(true));
+
+    public static readonly DependencyProperty IsFirstStepProperty = IsFirstStepPropertyKey.DependencyProperty;
+
+    private static readonly DependencyPropertyKey IsLastStepPropertyKey =
+        DependencyProperty.RegisterReadOnly(nameof(IsLastStep), typeof(bool), typeof(BasePopup),
+            new PropertyMetadata(true));
+
+    public static readonly DependencyProperty IsLastStepProperty = IsLastStepPropertyKey.DependencyProperty;
 
     public static readonly DependencyProperty IsSaveButtonEnabledProperty =
         DependencyProperty.Register(nameof(IsSaveButtonEnabled), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(true));
 
-    public static readonly DependencyProperty ShowSaveAndCreateNewButtonProperty =
-        DependencyProperty.Register(nameof(ShowSaveAndCreateNewButton), typeof(bool), typeof(BasePopup),
-            new PropertyMetadata(false));
-
     public static readonly DependencyProperty IsSaveAndCreateNewButtonEnabledProperty =
         DependencyProperty.Register(nameof(IsSaveAndCreateNewButtonEnabled), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(true));
-
-    public static readonly DependencyProperty ShowApplyButtonProperty =
-        DependencyProperty.Register(nameof(ShowApplyButton), typeof(bool), typeof(BasePopup),
-            new PropertyMetadata(false));
-
-    public static readonly DependencyProperty ShowRevertButtonProperty =
-        DependencyProperty.Register(nameof(ShowRevertButton), typeof(bool), typeof(BasePopup),
-            new PropertyMetadata(false));
-
-    public static readonly DependencyProperty IsRevertButtonEnabledProperty =
-        DependencyProperty.Register(nameof(IsRevertButtonEnabled), typeof(bool), typeof(BasePopup),
-            new PropertyMetadata(true));
-
-    public static readonly DependencyProperty ShowEditButtonProperty =
-        DependencyProperty.Register(nameof(ShowEditButton), typeof(bool), typeof(BasePopup),
-            new PropertyMetadata(false));
-
-    public static readonly DependencyProperty ShowDeleteButtonProperty =
-        DependencyProperty.Register(nameof(ShowDeleteButton), typeof(bool), typeof(BasePopup),
-            new PropertyMetadata(false));
-
-    public static readonly DependencyProperty ShowCloneButtonProperty =
-        DependencyProperty.Register(nameof(ShowCloneButton), typeof(bool), typeof(BasePopup),
-            new PropertyMetadata(false));
-
-    public static readonly DependencyProperty ShowHistoryButtonProperty =
-        DependencyProperty.Register(nameof(ShowHistoryButton), typeof(bool), typeof(BasePopup),
-            new PropertyMetadata(false));
-
-    public static readonly DependencyProperty IsHistoryOpenProperty =
-        DependencyProperty.Register(nameof(IsHistoryOpen), typeof(bool), typeof(BasePopup),
-            new PropertyMetadata(false));
-
-    public static readonly DependencyProperty ShowSplitButtonProperty =
-        DependencyProperty.Register(nameof(ShowSplitButton), typeof(bool), typeof(BasePopup),
-            new PropertyMetadata(false));
-
-    public static readonly DependencyProperty IsSplitButtonCheckedProperty =
-        DependencyProperty.Register(nameof(IsSplitButtonChecked), typeof(bool), typeof(BasePopup),
-            new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
-
-    public static readonly DependencyProperty ShowCancelButtonProperty =
-        DependencyProperty.Register(nameof(ShowCancelButton), typeof(bool), typeof(BasePopup),
-            new PropertyMetadata(false));
 
     public static readonly DependencyProperty ShowCloseButtonProperty =
         DependencyProperty.Register(nameof(ShowCloseButton), typeof(bool), typeof(BasePopup),
@@ -147,11 +148,57 @@ public class BasePopup : Window, IPopupHost
         set => SetValue(PopupTitleContentProperty, value);
     }
 
-    public bool ShowSaveButton
+    public PopupMode Mode
     {
-        get => (bool)GetValue(ShowSaveButtonProperty);
-        set => SetValue(ShowSaveButtonProperty, value);
+        get => (PopupMode)GetValue(ModeProperty);
+        set => SetValue(ModeProperty, value);
     }
+
+    public bool CanContinue
+    {
+        get => (bool)GetValue(CanContinueProperty);
+        set => SetValue(CanContinueProperty, value);
+    }
+
+    public bool CanEdit
+    {
+        get => (bool)GetValue(CanEditProperty);
+        set => SetValue(CanEditProperty, value);
+    }
+
+    public bool CanDelete
+    {
+        get => (bool)GetValue(CanDeleteProperty);
+        set => SetValue(CanDeleteProperty, value);
+    }
+
+    public bool CanClone
+    {
+        get => (bool)GetValue(CanCloneProperty);
+        set => SetValue(CanCloneProperty, value);
+    }
+
+    public bool CanSplit
+    {
+        get => (bool)GetValue(CanSplitProperty);
+        set => SetValue(CanSplitProperty, value);
+    }
+
+    public int CurrentStep
+    {
+        get => (int)GetValue(CurrentStepProperty);
+        set => SetValue(CurrentStepProperty, value);
+    }
+
+    public int StepCount
+    {
+        get => (int)GetValue(StepCountProperty);
+        set => SetValue(StepCountProperty, value);
+    }
+
+    public bool IsFirstStep => (bool)GetValue(IsFirstStepProperty);
+
+    public bool IsLastStep => (bool)GetValue(IsLastStepProperty);
 
     public bool IsSaveButtonEnabled
     {
@@ -159,76 +206,10 @@ public class BasePopup : Window, IPopupHost
         set => SetValue(IsSaveButtonEnabledProperty, value);
     }
 
-    public bool ShowSaveAndCreateNewButton
-    {
-        get => (bool)GetValue(ShowSaveAndCreateNewButtonProperty);
-        set => SetValue(ShowSaveAndCreateNewButtonProperty, value);
-    }
-
     public bool IsSaveAndCreateNewButtonEnabled
     {
         get => (bool)GetValue(IsSaveAndCreateNewButtonEnabledProperty);
         set => SetValue(IsSaveAndCreateNewButtonEnabledProperty, value);
-    }
-
-    public bool ShowApplyButton
-    {
-        get => (bool)GetValue(ShowApplyButtonProperty);
-        set => SetValue(ShowApplyButtonProperty, value);
-    }
-
-    public bool ShowRevertButton
-    {
-        get => (bool)GetValue(ShowRevertButtonProperty);
-        set => SetValue(ShowRevertButtonProperty, value);
-    }
-
-    public bool IsRevertButtonEnabled
-    {
-        get => (bool)GetValue(IsRevertButtonEnabledProperty);
-        set => SetValue(IsRevertButtonEnabledProperty, value);
-    }
-
-    public bool ShowEditButton
-    {
-        get => (bool)GetValue(ShowEditButtonProperty);
-        set => SetValue(ShowEditButtonProperty, value);
-    }
-
-    public bool ShowDeleteButton
-    {
-        get => (bool)GetValue(ShowDeleteButtonProperty);
-        set => SetValue(ShowDeleteButtonProperty, value);
-    }
-
-    public bool ShowCloneButton
-    {
-        get => (bool)GetValue(ShowCloneButtonProperty);
-        set => SetValue(ShowCloneButtonProperty, value);
-    }
-
-    public bool ShowHistoryButton
-    {
-        get => (bool)GetValue(ShowHistoryButtonProperty);
-        set => SetValue(ShowHistoryButtonProperty, value);
-    }
-
-    public bool IsHistoryOpen
-    {
-        get => (bool)GetValue(IsHistoryOpenProperty);
-        set => SetValue(IsHistoryOpenProperty, value);
-    }
-
-    public bool ShowSplitButton
-    {
-        get => (bool)GetValue(ShowSplitButtonProperty);
-        set => SetValue(ShowSplitButtonProperty, value);
-    }
-
-    public bool ShowCancelButton
-    {
-        get => (bool)GetValue(ShowCancelButtonProperty);
-        set => SetValue(ShowCancelButtonProperty, value);
     }
 
     public bool ShowCloseButton
@@ -251,13 +232,15 @@ public class BasePopup : Window, IPopupHost
         WireButton("PART_SaveButton", _ => OnSaveButtonClick());
         WireButton("PART_SaveAndCreateNewButton", _ => OnSaveAndCreateNewButtonClick());
         WireButton("PART_ApplyButton", _ => OnApplyButtonClick());
-        WireButton("PART_RevertButton", _ => OnRevertButtonClick());
+        WireButton("PART_CancelButton", _ => OnDiscardButtonClick());
+        WireButton("PART_DiscardButton", _ => OnDiscardButtonClick());
+        WireButton("PART_BackButton", _ => OnBackButtonClick());
+        WireButton("PART_NextButton", _ => OnNextButtonClick());
+        WireButton("PART_FinishButton", _ => OnFinishButtonClick());
         WireButton("PART_EditButton", _ => OnEditButtonClick());
         WireButton("PART_DeleteButton", _ => OnDeleteButtonClick());
         WireButton("PART_CloneButton", _ => OnCloneButtonClick());
-        WireButton("PART_HistoryButton", _ => OnHistoryButtonClick());
         WireButton("PART_SplitButton", _ => OnSplitButtonClick());
-        WireButton("PART_CancelButton", _ => OnCancelButtonClick());
 
         _contentRoot = GetTemplateChild("PART_ContentRoot") as FrameworkElement;
         _popupOverlay = GetTemplateChild("PART_PopupOverlay") as UIElement;
@@ -267,12 +250,6 @@ public class BasePopup : Window, IPopupHost
     {
         if (GetTemplateChild(partName) is ButtonBase btn)
             btn.Click += (_, e) => handler(e);
-    }
-
-    public bool IsSplitButtonChecked
-    {
-        get => (bool)GetValue(IsSplitButtonCheckedProperty);
-        set => SetValue(IsSplitButtonCheckedProperty, value);
     }
 
     // Virtual button handlers (override in child popups)
@@ -300,10 +277,6 @@ public class BasePopup : Window, IPopupHost
     {
     }
 
-    protected virtual void OnRevertButtonClick()
-    {
-    }
-
     protected virtual void OnEditButtonClick()
     {
     }
@@ -316,17 +289,17 @@ public class BasePopup : Window, IPopupHost
     {
     }
 
-    protected virtual void OnHistoryButtonClick()
-    {
-    }
-
     protected virtual void OnSplitButtonClick()
     {
     }
 
-    protected virtual void OnCancelButtonClick()
-    {
-    }
+    protected virtual void OnDiscardButtonClick() => OnCloseButtonClick();
+
+    protected virtual void OnBackButtonClick() { }
+
+    protected virtual void OnNextButtonClick() { }
+
+    protected virtual void OnFinishButtonClick() { }
 
     // Keyboard shortcuts
 
@@ -334,44 +307,73 @@ public class BasePopup : Window, IPopupHost
     {
         base.OnPreviewKeyDown(e);
 
-        switch (e.Key)
+        if (TryHandlePopupShortcut(e.Key, Keyboard.Modifiers))
+            e.Handled = true;
+    }
+
+    protected bool TryHandlePopupShortcut(Key key, ModifierKeys modifiers)
+    {
+        switch (key)
         {
             case Key.Escape:
-                OnCloseButtonClick();
-                e.Handled = true;
-                break;
+                if (Mode is PopupMode.ApplyCancel or PopupMode.SaveDiscard)
+                    OnDiscardButtonClick();
+                else
+                    OnCloseButtonClick();
+                return true;
 
-            case Key.S when Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift):
-                if (ShowSaveAndCreateNewButton && IsSaveAndCreateNewButtonEnabled)
+            case Key.Enter when modifiers == ModifierKeys.Shift:
+                if (Mode == PopupMode.SaveDiscard && CanContinue && IsSaveAndCreateNewButtonEnabled)
                 {
                     OnSaveAndCreateNewButtonClick();
-                    e.Handled = true;
+                    return true;
                 }
 
-                break;
+                return false;
 
-            case Key.S when Keyboard.Modifiers == ModifierKeys.Control:
-                if (ShowApplyButton)
+            case Key.Enter when modifiers == ModifierKeys.None:
+                if (Mode == PopupMode.ApplyCancel)
                 {
                     OnApplyButtonClick();
-                    e.Handled = true;
+                    return true;
                 }
-                else if (ShowSaveButton)
+
+                if (Mode == PopupMode.SaveDiscard && IsSaveButtonEnabled)
                 {
-                    if (IsSaveButtonEnabled)
-                    {
-                        OnSaveButtonClick();
-                        e.Handled = true;
-                    }
+                    OnSaveButtonClick();
+                    return true;
                 }
 
-                break;
+                if (Mode == PopupMode.BackNext)
+                {
+                    if (IsLastStep)
+                        OnFinishButtonClick();
+                    else
+                        OnNextButtonClick();
 
-            case Key.Delete:
-                OnDeleteButtonClick();
-                e.Handled = true;
-                break;
+                    return true;
+                }
+
+                return false;
+
+            case Key.Back when modifiers == ModifierKeys.None:
+                if (Mode == PopupMode.BackNext && !IsFirstStep)
+                {
+                    OnBackButtonClick();
+                    return true;
+                }
+
+                return false;
         }
+
+        return false;
+    }
+
+    private static void OnStepChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var popup = (BasePopup)d;
+        popup.SetValue(IsFirstStepPropertyKey, popup.CurrentStep <= 1);
+        popup.SetValue(IsLastStepPropertyKey, popup.StepCount <= 1 || popup.CurrentStep >= popup.StepCount);
     }
 
     // Overlay & blur on owner
