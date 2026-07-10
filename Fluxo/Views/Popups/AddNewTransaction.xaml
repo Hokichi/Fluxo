@@ -607,7 +607,7 @@
                     </Border>
 
                     <Border Margin="0,16,0,0" Style="{StaticResource CardBorderStyle}">
-                        <Grid>
+                        <Grid x:Name="CategoryAccountGrid">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
@@ -615,7 +615,30 @@
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition>
+                                    <ColumnDefinition.Style>
+                                        <Style TargetType="ColumnDefinition">
+                                            <Setter Property="Width" Value="*" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding DataContext.ShowCategoryOrRepaymentField, ElementName=CategoryAccountGrid}" Value="False">
+                                                    <Setter Property="Width" Value="0" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ColumnDefinition.Style>
+                                </ColumnDefinition>
+                                <ColumnDefinition>
+                                    <ColumnDefinition.Style>
+                                        <Style TargetType="ColumnDefinition">
+                                            <Setter Property="Width" Value="16" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding DataContext.ShowCategoryOrRepaymentField, ElementName=CategoryAccountGrid}" Value="False">
+                                                    <Setter Property="Width" Value="0" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ColumnDefinition.Style>
+                                </ColumnDefinition>
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
 
@@ -627,7 +650,7 @@
                                 Visibility="{Binding ShowCategoryOrRepaymentField, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
                             <TextBlock
                                 Grid.Row="0"
-                                Grid.Column="1"
+                                Grid.Column="2"
                                 Style="{StaticResource SectionLabelStyle}"
                                 Text="Account" />
 
@@ -690,7 +713,7 @@
                             <ComboBox
                                 x:Name="ExpenseAccountComboBox"
                                 Grid.Row="1"
-                                Grid.Column="1"
+                                Grid.Column="2"
                                 DisplayMemberPath="Name"
                                 ItemsSource="{Binding AccountsView}"
                                 SelectedItem="{Binding SelectedAccount, Mode=TwoWay}"
@@ -731,7 +754,7 @@
 
                             <StackPanel
                                 Grid.Row="2"
-                                Grid.Column="1"
+                                Grid.Column="2"
                                 Margin="0,12,24,0"
                                 Orientation="Horizontal"
                                 Visibility="{Binding ShowAccountImpact, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -760,7 +783,7 @@
 
                             <ItemsControl
                                 Grid.Row="3"
-                                Grid.ColumnSpan="2"
+                                Grid.ColumnSpan="3"
                                 Margin="0,12,0,0"
                                 ItemsSource="{Binding TransactionWarnings, Mode=OneWay}">
                                 <ItemsControl.ItemTemplate>
