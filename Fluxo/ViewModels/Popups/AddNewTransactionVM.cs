@@ -49,6 +49,10 @@ public partial class AddNewTransactionVM : ObservableValidator
     private bool _isTransactionTypeLocked;
     private bool _isRepaymentAmountInvalid;
     private int _transactionNameSuggestionRequestVersion;
+    private readonly List<AccountVM> _processingRepayments = [];
+    private readonly List<SavingGoalVM> _processingGoals = [];
+    private readonly List<RecurringTransactionVM> _processingRecurringTransactions = [];
+    private int? _currentProcessingRecurringTransactionId;
 
     [ObservableProperty]
     [CustomValidation(typeof(AddNewTransactionVM), nameof(ValidateAmountText))]
@@ -343,6 +347,44 @@ public partial class AddNewTransactionVM : ObservableValidator
     }
 
     public bool HasMoreTags => OverflowTags.Count > 0;
+    public bool IsProcessingSession => _processingRepayments.Count + _processingGoals.Count + _processingRecurringTransactions.Count > 0;
+    public PopupMode PopupMode => IsProcessingSession ? PopupMode.BackNext : PopupMode.SaveDiscard;
+    public int CurrentProcessingStep { get; private set; } = 1;
+    public int ProcessingStepCount { get; private set; }
+    public int? CurrentProcessingRecurringTransactionId => _currentProcessingRecurringTransactionId;
+
+    public void InitializeRepaymentProcessing(IReadOnlyList<AccountVM> accounts)
+    {
+        _processingRepayments.Clear(); _processingRepayments.AddRange(accounts); ProcessingStepCount = accounts.Count; CurrentProcessingStep = 1;
+        if (accounts.Count > 0) InitializeRepayment(accounts[0]);
+        NotifyProcessingChanged();
+    }
+
+    public void InitializeGoalProcessing(IReadOnlyList<SavingGoalVM> goals)
+    {
+        _processingGoals.Clear(); _processingGoals.AddRange(goals); ProcessingStepCount = goals.Count; CurrentProcessingStep = 1;
+        if (goals.Count > 0) { IsGoal = true; SelectedGoal = goals[0]; SyncGoalUpdateName(); }
+        NotifyProcessingChanged();
+    }
+
+    public void InitializeRecurringProcessing(IReadOnlyList<RecurringTransactionVM> recurringTransactions)
+    {
+        _processingRecurringTransactions.Clear(); _processingRecurringTransactions.AddRange(recurringTransactions); ProcessingStepCount = recurringTransactions.Count; CurrentProcessingStep = 1;
+        LoadRecurringProcessingCurrent();
+        NotifyProcessingChanged();
+    }
+
+    public async Task<AddNewTransactionSubmissionResult> SaveCurrentAndAdvanceAsync()
+    {
+        var result = await SaveAsync(false);
+        if (!result.IsSuccess || !IsProcessingSession) return result;
+        if (_processingRepayments.Count > 0) { _processingRepayments.RemoveAt(0); if (_processingRepayments.Count > 0) InitializeRepayment(_processingRepayments[0]); }
+        else if (_processingGoals.Count > 0) { _processingGoals.RemoveAt(0); if (_processingGoals.Count > 0) { ResetForm(false); IsGoal = true; SelectedGoal = _processingGoals[0]; SyncGoalUpdateName(); } }
+        else if (_processingRecurringTransactions.Count > 0) { _processingRecurringTransactions.RemoveAt(0); LoadRecurringProcessingCurrent(); }
+        CurrentProcessingStep++;
+        NotifyProcessingChanged();
+        return result;
+    }
 
     public void InitializeRepayment(AccountVM? target = null)
     {
@@ -1022,6 +1064,8 @@ public partial class AddNewTransactionVM : ObservableValidator
                     await _appData.AddRecurringTransactionAsync(recurring);
 
                 await _appData.SaveChangesAsync();
+                if (input.EditingRecurringTransactionId is not > 0)
+                    WeakReferenceMessenger.Default.Send(new NotificationEntityCreatedMessage(NotificationEntityKind.RecurringTransaction, recurring.Id));
             }
             else if (input.IsGoal)
             {
@@ -1059,6 +1103,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                     TagId = goalUpdateTag.Id,
                     IsPinned = false,
                     IsExcludedFromBudget = input.IsExcludedFromBudget
+                    ,RelatedRecurringTransactionId = input.RelatedRecurringTransactionId
                 };
 
                 goal.CurrentAmount += input.Amount;
@@ -1103,6 +1148,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                     IsIoU = input.IsIoU,
                     ShouldAffectBalance = input.ShouldAffectBalance,
                     IsExcludedFromBudget = input.IsExcludedFromBudget
+                    ,RelatedRecurringTransactionId = input.RelatedRecurringTransactionId
                 };
 
                 await _appData.AddTransactionAsync(transaction);
@@ -1350,7 +1396,8 @@ public partial class AddNewTransactionVM : ObservableValidator
             category,
             tagId,
             goalId,
-            SelectedRepaymentAccount?.Id);
+            SelectedRepaymentAccount?.Id,
+            _currentProcessingRecurringTransactionId);
 
         return true;
     }
@@ -2576,7 +2623,24 @@ public partial class AddNewTransactionVM : ObservableValidator
         ExpenseCategory? Category,
         int? TagId,
         int? GoalId,
-        int? RepaymentAccountId);
+        int? RepaymentAccountId,
+        int? RelatedRecurringTransactionId);
+
+    private void LoadRecurringProcessingCurrent()
+    {
+        _currentProcessingRecurringTransactionId = _processingRecurringTransactions.FirstOrDefault()?.Id;
+        if (_processingRecurringTransactions.FirstOrDefault() is not { } recurring) return;
+        ResetForm(false); IsRecurring = false; IsExpense = recurring.Type != RecurringTransactionType.Income;
+        NameText = recurring.Name; AmountText = recurring.Amount; SelectedExpenseCategory = recurring.Category ?? ExpenseCategory.Needs;
+        SelectedAccount = Accounts.FirstOrDefault(account => account.Id == recurring.Source.Id);
+        SelectedTag = recurring.Tag; SelectedDate = DateTime.Today;
+    }
+
+    private void NotifyProcessingChanged()
+    {
+        OnPropertyChanged(nameof(IsProcessingSession)); OnPropertyChanged(nameof(CurrentProcessingStep));
+        OnPropertyChanged(nameof(ProcessingStepCount)); OnPropertyChanged(nameof(CurrentProcessingRecurringTransactionId)); OnPropertyChanged(nameof(PopupMode));
+    }
 
     private readonly record struct FormState(
         bool IsExpense,

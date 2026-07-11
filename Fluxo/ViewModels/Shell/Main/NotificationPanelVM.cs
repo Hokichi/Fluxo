@@ -29,7 +29,6 @@ public partial class NotificationPanelVM : ObservableRecipient,
         IDataOperationRunner dataOperationRunner,
         IMapper mapper,
         INotificationGroupingService? notificationGroupingService = null,
-        INotificationActionService? notificationActionService = null,
         IDialogService? dialogService = null,
         IMessenger? messenger = null,
         IAppUpdateInteractionService? appUpdateInteractionService = null,
@@ -39,7 +38,6 @@ public partial class NotificationPanelVM : ObservableRecipient,
         _ = transactionService;
         _ = accountService;
         _ = mapper;
-        _ = notificationActionService;
         _ = dialogService;
         _ = appUpdateInteractionService;
         _runner = dataOperationRunner;

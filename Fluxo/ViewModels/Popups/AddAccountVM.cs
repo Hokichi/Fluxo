@@ -458,6 +458,9 @@ public partial class AddAccountVM : ObservableValidator
 
             await _appData.SaveChangesAsync();
 
+            if (!EditingId.HasValue)
+                WeakReferenceMessenger.Default.Send(new NotificationEntityCreatedMessage(NotificationEntityKind.Account, account.Id));
+
             if (!EditingId.HasValue &&
                 account.AccountType == AccountType.Credit &&
                 account.MonthlyDueDate.HasValue &&

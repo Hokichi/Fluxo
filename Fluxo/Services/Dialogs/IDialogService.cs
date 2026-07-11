@@ -46,9 +46,6 @@ public interface IDialogService
 
     bool? ShowAddSavingGoal(AddSavingGoalVM viewModel, Window? owner = null);
 
-    bool? ShowNotificationChecklistAction(NotificationChecklistActionVM viewModel, Window? owner = null);
-
-    bool? ShowGoalDeadlineAction(GoalDeadlineActionVM viewModel, Window? owner = null);
 
     bool? ShowAddTag(SettingsTagsTabVM settingsViewModel, Window? owner = null);
     bool? ShowAddTag(AddTagVM viewModel, Func<string, string, string, Task<SettingsOperationResult>> saveTagAsync,

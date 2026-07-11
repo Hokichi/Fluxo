@@ -191,6 +191,26 @@ public partial class AddNewTransaction : BasePopup
         ExpenseNameTextBox.Focus();
     }
 
+    protected override async void OnNextButtonClick() => await SaveAndAdvanceAsync();
+
+    protected override async void OnFinishButtonClick() => await SaveAndAdvanceAsync();
+
+    private async Task SaveAndAdvanceAsync()
+    {
+        if (!await ShouldSaveCurrentTransactionAsync())
+            return;
+
+        var result = await _viewModel.SaveCurrentAndAdvanceAsync();
+        if (!result.IsSuccess)
+        {
+            ShowValidationMessage(result.ErrorMessage);
+            return;
+        }
+
+        if (!_viewModel.IsProcessingSession)
+            Close();
+    }
+
     private void SyncNoteDocumentFromViewModel()
     {
         _isSyncingNoteDocument = true;

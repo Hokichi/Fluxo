@@ -78,6 +78,7 @@ public partial class AddSavingGoalVM : ObservableObject
 
         try
         {
+            SavingGoal? createdGoal = null;
             if (EditingId.HasValue)
             {
                 var existing = await _appData.GetSavingGoalByIdAsync(EditingId.Value);
@@ -101,9 +102,12 @@ public partial class AddSavingGoalVM : ObservableObject
                     CreatedOn = DateTime.UtcNow
                 };
                 await _appData.AddSavingGoalAsync(savingGoal);
+                createdGoal = savingGoal;
             }
 
             await _appData.SaveChangesAsync();
+            if (createdGoal is not null)
+                WeakReferenceMessenger.Default.Send(new NotificationEntityCreatedMessage(NotificationEntityKind.SavingGoal, createdGoal.Id));
             WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.SavingGoals));
 

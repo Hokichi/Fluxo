@@ -47,16 +47,16 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
     private static readonly IReadOnlyDictionary<string, string> SettingsDefaultsAfterDeletion =
         new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            [UserSettingNames.IsRecurringTransactionsDeductionNotifEnabled] = bool.TrueString,
-            [UserSettingNames.IsCreditDeadlineNotifEnabled] = bool.TrueString,
-            [UserSettingNames.IsGoalDeadlineNotifEnabled] = bool.FalseString,
+            [UserSettingNames.IsRecurringOverdueNotifEnabled] = bool.TrueString,
+            [UserSettingNames.IsGoalOverdueNotifEnabled] = bool.TrueString,
+            [UserSettingNames.IsDailyAllowanceNotifEnabled] = bool.TrueString,
             [UserSettingNames.IsLatePaymentNotifEnabled] = bool.FalseString,
             [UserSettingNames.IsBudgetThresholdNotifEnabled] = bool.FalseString,
             [UserSettingNames.IsLowCreditNotifEnabled] = bool.FalseString,
             [UserSettingNames.IsLowAccountBalanceNotifEnabled] = bool.FalseString,
             [UserSettingNames.ShouldRunAtStartup] = bool.FalseString,
             [UserSettingNames.CloseBehavior] = AppCloseBehavior.Exit.ToString(),
-            [UserSettingNames.NotificationsSnoozePeriod] = "24"
+            [UserSettingNames.NotificationsSnoozeEndDate] = string.Empty
         };
 
     private readonly MainVM _mainViewModel;

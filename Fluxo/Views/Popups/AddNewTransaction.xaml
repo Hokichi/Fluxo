@@ -11,7 +11,9 @@
     CanDiscard="False"
     IsSaveAndCreateNewButtonEnabled="{Binding CanSave}"
     IsSaveButtonEnabled="{Binding CanSave}"
-    Mode="SaveDiscard"
+    Mode="{Binding PopupMode, Mode=OneWay}"
+    CurrentStep="{Binding CurrentProcessingStep, Mode=OneWay}"
+    StepCount="{Binding ProcessingStepCount, Mode=OneWay}"
     PopupTitle="{Binding PopupTitle}"
     mc:Ignorable="d">
 
