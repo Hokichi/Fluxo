@@ -688,7 +688,6 @@ public sealed class SettingsConfigTabVMTests
         public ISavingGoalRepository SavingGoals => throw new NotSupportedException();
         public IAccountRepository Accounts { get; } = new TestAccountRepository();
         public IRecurringTransactionRepository RecurringTransactions => throw new NotSupportedException();
-        public INotificationRepository Notifications => throw new NotSupportedException();
         public IUserSettingsRepository UserSettings => new TestUserSettingsRepository(_settings);
         public IBudgetAllocationRepository BudgetAllocation => new TestBudgetAllocationRepository();
 
@@ -759,7 +758,6 @@ public sealed class SettingsConfigTabVMTests
         public ISavingGoalRepository SavingGoals => throw new NotSupportedException();
         public IAccountRepository Accounts { get; } = new TestAccountRepository();
         public IRecurringTransactionRepository RecurringTransactions => throw new NotSupportedException();
-        public INotificationRepository Notifications => throw new NotSupportedException();
         public IUserSettingsRepository UserSettings => throw new NotSupportedException();
         public IBudgetAllocationRepository BudgetAllocation => BudgetAllocationRepository;
 

@@ -17,4 +17,5 @@ public partial class RecurringTransactionVM : ObservableObject
     [ObservableProperty] private SavingGoalVM? _goal;
     [ObservableProperty] private bool _isEnabled = true;
     [ObservableProperty] private DateTime? _endDate;
+    [ObservableProperty] private bool _isOverdue;
 }

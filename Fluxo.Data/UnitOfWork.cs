@@ -11,7 +11,6 @@ public sealed class UnitOfWork(
     ISavingGoalRepository savingGoals,
     IAccountRepository accounts,
     IRecurringTransactionRepository recurringTransactions,
-    INotificationRepository notifications,
     IUserSettingsRepository userSettings,
     IBudgetAllocationRepository budgetAllocation) : IUnitOfWork
 {
@@ -22,7 +21,6 @@ public sealed class UnitOfWork(
     public ISavingGoalRepository SavingGoals { get; } = savingGoals;
     public IAccountRepository Accounts { get; } = accounts;
     public IRecurringTransactionRepository RecurringTransactions { get; } = recurringTransactions;
-    public INotificationRepository Notifications { get; } = notifications;
     public IUserSettingsRepository UserSettings { get; } = userSettings;
     public IBudgetAllocationRepository BudgetAllocation { get; } = budgetAllocation;
 

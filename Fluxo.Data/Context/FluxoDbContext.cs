@@ -11,7 +11,6 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
     public DbSet<SavingGoal> SavingGoals => Set<SavingGoal>();
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<RecurringTransaction> RecurringTransactions => Set<RecurringTransaction>();
-    public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<UserSettings> UserSettings => Set<UserSettings>();
     public DbSet<BudgetAllocation> BudgetAllocation => Set<BudgetAllocation>();
 
@@ -36,7 +35,6 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         ConfigureSavingGoal(modelBuilder.Entity<SavingGoal>());
         ConfigureAccount(modelBuilder.Entity<Account>());
         ConfigureRecurringTransaction(modelBuilder.Entity<RecurringTransaction>());
-        ConfigureNotification(modelBuilder.Entity<Notification>());
         ConfigureUserSettings(modelBuilder.Entity<UserSettings>());
         ConfigureBudgetAllocation(modelBuilder.Entity<BudgetAllocation>());
         ConfigureReferenceAutoIncludes(modelBuilder);
@@ -88,20 +86,6 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
             .HasFilter("IsDefault = 1");
         entity.Property(source => source.PinnedOnUI);
         entity.Property(source => source.InterestRate).HasColumnType("REAL");
-    }
-
-    private static void ConfigureNotification(EntityTypeBuilder<Notification> entity)
-    {
-        entity.ToTable("Notifications");
-        entity.Property(notification => notification.Id).ValueGeneratedOnAdd();
-        entity.HasKey(notification => notification.Id);
-
-        entity.Property(notification => notification.Type).IsRequired();
-        entity.Property(notification => notification.Header).IsRequired();
-        entity.Property(notification => notification.Message).IsRequired();
-        entity.Property(notification => notification.CreatedOn);
-        entity.Property(notification => notification.IsCleared);
-        entity.Property(notification => notification.IsForDeletion);
     }
 
     private static void ConfigureRecurringTransaction(EntityTypeBuilder<RecurringTransaction> entity)
@@ -168,6 +152,8 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.HasOne(transaction => transaction.Account).WithMany().HasForeignKey(transaction => transaction.SourceAccountId).OnDelete(DeleteBehavior.Restrict);
         entity.HasOne(transaction => transaction.Goal).WithMany().HasForeignKey(transaction => transaction.GoalId).OnDelete(DeleteBehavior.SetNull);
         entity.HasOne(transaction => transaction.RepaymentAccount).WithMany().HasForeignKey(transaction => transaction.RepaymentAccountId).OnDelete(DeleteBehavior.SetNull);
+        entity.HasOne(transaction => transaction.RelatedRecurringTransaction).WithMany().HasForeignKey(transaction => transaction.RelatedRecurringTransactionId).OnDelete(DeleteBehavior.SetNull);
+        entity.HasIndex(transaction => transaction.RelatedRecurringTransactionId);
         entity.HasOne(transaction => transaction.Tag).WithMany().HasForeignKey(transaction => transaction.TagId).OnDelete(DeleteBehavior.Restrict);
         entity.HasOne(transaction => transaction.ParentTransaction).WithMany().HasForeignKey(transaction => transaction.ParentTransactionId).OnDelete(DeleteBehavior.Restrict);
     }

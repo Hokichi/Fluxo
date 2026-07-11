@@ -44,7 +44,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISavingGoalRepository, SavingGoalRepository>();
         services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<IRecurringTransactionRepository, RecurringTransactionRepository>();
-        services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
         services.AddScoped<IBudgetAllocationRepository, BudgetAllocationRepository>();
 
@@ -53,7 +52,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRepository<SavingGoal>, SavingGoalRepository>();
         services.AddScoped<IRepository<Account>, AccountRepository>();
         services.AddScoped<IRepository<RecurringTransaction>, RecurringTransactionRepository>();
-        services.AddScoped<IRepository<Notification>, NotificationRepository>();
 
         services.AddSingleton<IDataOperationScopeFactory, DataOperationScopeFactory>();
         services.AddSingleton<IDataOperationRunner, DataOperationRunner>();

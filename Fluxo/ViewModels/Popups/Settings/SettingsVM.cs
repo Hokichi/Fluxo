@@ -395,7 +395,6 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
             var accounts = await _appData.GetAccountsAsync();
             var tags = await _appData.GetTagsAsync();
             var recurringTransactions = await _appData.GetRecurringTransactionsAsync();
-            var notifications = await _appData.GetNotificationsAsync();
             var settings = keepSettings ? [] : await _appData.GetUserSettingsAsync();
 
             ApplyDeleteAllDataRemovalPolicy(
@@ -404,8 +403,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
                 accounts,
                 transactions,
                 savingGoals,
-                recurringTransactions,
-                notifications);
+                recurringTransactions);
 
             if (!keepSettings)
             {
@@ -560,12 +558,6 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         return !tag.IsSystemTag;
     }
 
-    internal static bool ShouldDeleteNotificationOnDeleteAllData(Notification notification)
-    {
-        ArgumentNullException.ThrowIfNull(notification);
-        return true;
-    }
-
     internal static async Task EnsureDeleteAllDataSystemTagsAsync(
         IAppDataService appData,
         IReadOnlyList<Tag> existingTags,
@@ -608,8 +600,7 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         IReadOnlyList<Account> accounts,
         IReadOnlyList<Transaction> transactions,
         IReadOnlyList<SavingGoal> savingGoals,
-        IReadOnlyList<RecurringTransaction> recurringTransactions,
-        IReadOnlyList<Notification> notifications)
+        IReadOnlyList<RecurringTransaction> recurringTransactions)
     {
         ArgumentNullException.ThrowIfNull(appData);
         ArgumentNullException.ThrowIfNull(tags);
@@ -617,7 +608,6 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
         ArgumentNullException.ThrowIfNull(transactions);
         ArgumentNullException.ThrowIfNull(savingGoals);
         ArgumentNullException.ThrowIfNull(recurringTransactions);
-        ArgumentNullException.ThrowIfNull(notifications);
 
         foreach (var recurringTransaction in recurringTransactions)
             appData.RemoveRecurringTransaction(recurringTransaction);
@@ -635,9 +625,6 @@ public partial class SettingsVM : ObservableRecipient, IRecipient<SettingsPendin
             if (ShouldDeleteTagOnDeleteAllData(tag))
                 appData.RemoveTag(tag);
 
-        foreach (var notification in notifications)
-            if (ShouldDeleteNotificationOnDeleteAllData(notification))
-                appData.RemoveNotification(notification);
     }
 
     internal static (HashSet<string> RemovedSettingNames, Dictionary<string, string> UpsertSettingValues)

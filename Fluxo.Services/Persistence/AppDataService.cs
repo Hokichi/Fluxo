@@ -97,21 +97,6 @@ public sealed class AppDataService(IDataOperationRunner runner) : IAppDataServic
     public void RemoveRecurringTransaction(RecurringTransaction entity) =>
         Enqueue(unitOfWork => unitOfWork.RecurringTransactions.Remove(entity));
 
-    public Task<IReadOnlyList<Notification>> GetNotificationsAsync(CancellationToken cancellationToken = default) =>
-        runner.RunAsync((scope, ct) => scope.UnitOfWork.Notifications.GetAllAsync(ct), cancellationToken);
-
-    public Task<Notification?> GetNotificationByIdAsync(int id, CancellationToken cancellationToken = default) =>
-        runner.RunAsync((scope, ct) => scope.UnitOfWork.Notifications.GetByIdAsync(id, ct), cancellationToken);
-
-    public Task AddNotificationAsync(Notification entity, CancellationToken cancellationToken = default) =>
-        Enqueue((unitOfWork, ct) => unitOfWork.Notifications.AddAsync(entity, ct), cancellationToken);
-
-    public void UpdateNotification(Notification entity) =>
-        Enqueue(unitOfWork => unitOfWork.Notifications.Update(entity));
-
-    public void RemoveNotification(Notification entity) =>
-        Enqueue(unitOfWork => unitOfWork.Notifications.Remove(entity));
-
     public Task<IReadOnlyList<UserSettings>> GetUserSettingsAsync(CancellationToken cancellationToken = default) =>
         runner.RunAsync((scope, ct) => scope.UnitOfWork.UserSettings.GetAllAsync(ct), cancellationToken);
 

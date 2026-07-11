@@ -10,6 +10,7 @@ public sealed class TransactionDto
     public AccountDto Account { get; set; } = new();
     public int? GoalId { get; set; }
     public int? RepaymentAccountId { get; set; }
+    public int? RelatedRecurringTransactionId { get; set; }
     public string Name { get; set; } = string.Empty;
     public decimal Amount { get; set; }
     public DateTime OccurredOn { get; set; }

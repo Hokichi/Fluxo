@@ -23,6 +23,7 @@ public partial class AccountVM : ObservableObject
     [ObservableProperty] private decimal _spentAmount;
     [ObservableProperty] private bool _isSelected;
     [ObservableProperty] private decimal _difference;
+    [ObservableProperty] private bool _isOverdue;
 
     public bool IsCashOrChecking =>
         AccountType is AccountType.Cash or AccountType.Checking;

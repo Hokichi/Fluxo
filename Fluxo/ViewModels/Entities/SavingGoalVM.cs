@@ -13,6 +13,7 @@ public partial class SavingGoalVM : ObservableObject
     [ObservableProperty] private string _name = string.Empty;
     [ObservableProperty] private DateTime? _savingEndDate;
     [ObservableProperty] private decimal _targetAmount;
+    [ObservableProperty] private bool _isOverdue;
 
     public string AmountLeftText => FormatMoneyAmount(RemainingAmount);
     public string WeeklyAverageText => FormatMoneyAmount(Math.Ceiling(CurrentAmount / GetElapsedCompletedWeeks()));

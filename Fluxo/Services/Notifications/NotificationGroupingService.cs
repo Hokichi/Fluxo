@@ -46,6 +46,15 @@ public sealed class NotificationGroupingService : INotificationGroupingService
         if (typeToken.StartsWith("RecurringTransactionDue", StringComparison.OrdinalIgnoreCase))
             return NotificationGroupCategory.RecurringTransactionDue;
 
+        if (typeToken.StartsWith("RecurringTransactionOverdue", StringComparison.OrdinalIgnoreCase))
+            return NotificationGroupCategory.RecurringTransactionOverdue;
+
+        if (typeToken.StartsWith("GoalOverdue", StringComparison.OrdinalIgnoreCase))
+            return NotificationGroupCategory.GoalOverdue;
+
+        if (typeToken.StartsWith("DailyAllowance", StringComparison.OrdinalIgnoreCase))
+            return NotificationGroupCategory.DailyAllowance;
+
         if (typeToken.StartsWith("UpcomingDeduction", StringComparison.OrdinalIgnoreCase))
             return NotificationGroupCategory.RecurringTransactionDue;
 
@@ -82,6 +91,8 @@ public sealed class NotificationGroupingService : INotificationGroupingService
             or NotificationGroupCategory.UpcomingPayment
             or NotificationGroupCategory.LatePayment
             or NotificationGroupCategory.GoalDeadline
+            or NotificationGroupCategory.RecurringTransactionOverdue
+            or NotificationGroupCategory.GoalOverdue
             or NotificationGroupCategory.AppUpdate;
     }
 
@@ -126,6 +137,9 @@ public sealed class NotificationGroupingService : INotificationGroupingService
             NotificationGroupCategory.UpcomingPayment => "Upcoming Payment",
             NotificationGroupCategory.LatePayment => "Late Payment",
             NotificationGroupCategory.GoalDeadline => "Goal Deadline",
+            NotificationGroupCategory.RecurringTransactionOverdue => "Recurring Transaction Overdue",
+            NotificationGroupCategory.GoalOverdue => "Goal Overdue",
+            NotificationGroupCategory.DailyAllowance => "Daily Allowance",
             NotificationGroupCategory.LowBalance => "Low Balance",
             NotificationGroupCategory.LowCredit => "Low Credit",
             NotificationGroupCategory.BudgetThreshold => "Budget Threshold",

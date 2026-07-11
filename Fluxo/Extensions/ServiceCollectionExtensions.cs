@@ -64,6 +64,7 @@ public static class ServiceCollectionExtensions
             new AppDataService(provider.GetRequiredService<Fluxo.Core.Interfaces.Operations.IDataOperationRunner>()));
         services.AddTransient<IBudgetAllocationPeriodSyncService, BudgetAllocationPeriodSyncService>();
         services.AddTransient<IUserBackupService, UserBackupService>();
+        services.AddTransient<StartupNotificationEvaluator>();
 
         return services;
     }
@@ -79,7 +80,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAppUpdateService, AppUpdateService>();
         services.AddSingleton<IAppUpdateLifecycleService, AppUpdateLifecycleService>();
         services.AddSingleton<IAppUpdateInteractionService, AppUpdateInteractionService>();
-        services.AddSingleton<IStartupUpdateNotificationService, StartupUpdateNotificationService>();
 
         services.AddSingleton<MainVM>();
         services.AddSingleton<DashboardVM>();
@@ -148,8 +148,6 @@ public static class ServiceCollectionExtensions
         services.AddTransient<Calendar>();
         services.AddTransient<Ledger>();
         services.AddTransient<INotificationGroupingService, NotificationGroupingService>();
-        services.AddTransient<INotificationActionService, NotificationActionService>();
-        services.AddTransient<IStartupNotificationSummaryService, StartupNotificationSummaryService>();
 
         services.AddSingleton<MainWindow>();
         services.AddSingleton<FloatingNotificationOverlayWindow>();

@@ -12,6 +12,8 @@ public sealed class Transaction
     public SavingGoal? Goal { get; set; }
     public int? RepaymentAccountId { get; set; }
     public Account? RepaymentAccount { get; set; }
+    public int? RelatedRecurringTransactionId { get; set; }
+    public RecurringTransaction? RelatedRecurringTransaction { get; set; }
     public string Name { get; set; } = string.Empty;
     public decimal Amount { get; set; }
     public DateTime OccurredOn { get; set; }

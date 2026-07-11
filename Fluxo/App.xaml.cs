@@ -51,16 +51,11 @@ public partial class App : Application
     private readonly ITransactionService _transactionService;
     private readonly MainVM _mainVM;
     private readonly IStartupRegistrationService _startupRegistrationService;
-    private readonly IStartupUpdateNotificationService _startupUpdateNotificationService;
-    private readonly IStartupNotificationSummaryService _startupNotificationSummaryService;
-    private readonly StartupTrayPopupDisplayPolicy _startupTrayPopupDisplayPolicy = new();
     private readonly IUiSettleAwaiter _uiSettleAwaiter;
     private readonly IServiceProvider _serviceProvider;
     private readonly DispatcherTimer _trayLeftClickTimer;
     private Forms.NotifyIcon? _trayIcon;
     private TrayMenuPopup? _trayMenuPopup;
-    private StartupNotificationPopup? _startupNotificationPopup;
-    private bool _hasShownStartupTrayPopup;
     private bool _isTrayLeftClickPending;
     private bool _isForcedShutdownRequested;
     private bool _isPrimaryActivationPending;
@@ -85,8 +80,6 @@ public partial class App : Application
         _budgetAllocationPeriodSyncService = _serviceProvider.GetRequiredService<IBudgetAllocationPeriodSyncService>();
         _transactionService = _serviceProvider.GetRequiredService<ITransactionService>();
         _startupRegistrationService = _serviceProvider.GetRequiredService<IStartupRegistrationService>();
-        _startupUpdateNotificationService = _serviceProvider.GetRequiredService<IStartupUpdateNotificationService>();
-        _startupNotificationSummaryService = _serviceProvider.GetRequiredService<IStartupNotificationSummaryService>();
         _uiSettleAwaiter = _serviceProvider.GetRequiredService<IUiSettleAwaiter>();
 
         _trayLeftClickTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(260) };
@@ -196,7 +189,6 @@ public partial class App : Application
                 else
                 {
                     HideMainWindowToTray(mainWindow);
-                    await TryShowStartupNotificationPopupOnceAsync();
                 }
             }
             else
@@ -441,63 +433,11 @@ public partial class App : Application
         _trayMenuPopup.ExitRequested += (_, _) => ExitFromTray();
     }
 
-    private void EnsureStartupNotificationPopupInitialized()
-    {
-        if (_startupNotificationPopup is not null)
-            return;
-
-        _startupNotificationPopup = new StartupNotificationPopup();
-        _startupNotificationPopup.OpenAppRequested += OnStartupNotificationPopupOpenAppRequested;
-        _startupNotificationPopup.DismissRequested += OnStartupNotificationPopupDismissRequested;
-    }
-
-    private async Task TryShowStartupNotificationPopupOnceAsync()
-    {
-        try
-        {
-            var summary = await _startupNotificationSummaryService.BuildAsync();
-            var shouldShow = _startupTrayPopupDisplayPolicy.ShouldShow(
-                _launchInTrayMode,
-                _hasShownStartupTrayPopup,
-                summary is not null);
-
-            if (!shouldShow || summary is null)
-                return;
-
-            if (!IsMainWindowHiddenToTray())
-                return;
-
-            EnsureStartupNotificationPopupInitialized();
-            if (_startupNotificationPopup is null)
-                return;
-
-            var cursorPosition = Forms.Cursor.Position;
-            _startupNotificationPopup.SummaryText = summary.Message;
-            _startupNotificationPopup.ShowNearScreenPoint(new System.Windows.Point(cursorPosition.X, cursorPosition.Y));
-            _hasShownStartupTrayPopup = true;
-        }
-        catch (Exception exception)
-        {
-            FluxoLogManager.LogFailureForProcess(exception, "show startup notification popup");
-            Debug.WriteLine($"Startup notification popup failed: {exception}");
-        }
-    }
-
     private bool IsMainWindowHiddenToTray()
     {
         return MainWindow is MainWindow mainWindow
                && !mainWindow.IsVisible
                && !mainWindow.ShowInTaskbar;
-    }
-
-    private void OnStartupNotificationPopupOpenAppRequested(object? sender, EventArgs e)
-    {
-        RestoreMainWindowFromTray();
-    }
-
-    private void OnStartupNotificationPopupDismissRequested(object? sender, EventArgs e)
-    {
-        _hasShownStartupTrayPopup = true;
     }
 
     private void OnTrayIconMouseClick(object? sender, Forms.MouseEventArgs e)
@@ -565,7 +505,6 @@ public partial class App : Application
     private void RestoreMainWindowFromTray()
     {
         _trayMenuPopup?.Hide();
-        _startupNotificationPopup?.Hide();
 
         if (MainWindow is MainWindow mainWindow)
             mainWindow.ShowFromTray();
@@ -631,13 +570,6 @@ public partial class App : Application
             _trayMenuPopup = null;
         }
 
-        if (_startupNotificationPopup is not null)
-        {
-            _startupNotificationPopup.OpenAppRequested -= OnStartupNotificationPopupOpenAppRequested;
-            _startupNotificationPopup.DismissRequested -= OnStartupNotificationPopupDismissRequested;
-            _startupNotificationPopup.Close();
-            _startupNotificationPopup = null;
-        }
     }
 
     private void RunOnUiThread(Action action)

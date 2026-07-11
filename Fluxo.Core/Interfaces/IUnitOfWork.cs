@@ -9,7 +9,6 @@ public interface IUnitOfWork : IDisposable, IAsyncDisposable
     ISavingGoalRepository SavingGoals { get; }
     IAccountRepository Accounts { get; }
     IRecurringTransactionRepository RecurringTransactions { get; }
-    INotificationRepository Notifications { get; }
     IUserSettingsRepository UserSettings { get; }
     IBudgetAllocationRepository BudgetAllocation { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

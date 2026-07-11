@@ -40,6 +40,13 @@ public sealed class ModelSchemaTests
         Assert.Equal(false, transaction.FindProperty(nameof(Transaction.ShouldAffectBalance))!.GetDefaultValue());
         Assert.Equal(false, transaction.FindProperty(nameof(Transaction.IsExcludedFromBudget))!.GetDefaultValue());
         Assert.True(transaction.FindProperty(nameof(Transaction.ParentTransactionId))!.IsNullable);
+        var relatedRecurringTransaction = transaction.FindProperty(nameof(Transaction.RelatedRecurringTransactionId));
+        Assert.NotNull(relatedRecurringTransaction);
+        Assert.True(relatedRecurringTransaction!.IsNullable);
+        Assert.Contains(transaction.GetForeignKeys(), foreignKey =>
+            foreignKey.Properties.Any(property => property.Name == nameof(Transaction.RelatedRecurringTransactionId)) &&
+            foreignKey.PrincipalEntityType.ClrType == typeof(RecurringTransaction) &&
+            foreignKey.DeleteBehavior == DeleteBehavior.SetNull);
         Assert.NotNull(transaction.FindProperty(nameof(Transaction.LoggedOn)));
         Assert.Contains(transaction.GetForeignKeys(), foreignKey =>
             foreignKey.Properties.Any(property => property.Name == nameof(Transaction.ParentTransactionId)) &&

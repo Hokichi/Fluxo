@@ -141,11 +141,13 @@ public sealed class AppDatabaseMigrationTests
             Assert.True(await ColumnExistsAsync(connection, "Transactions", "SourceAccountId"));
             Assert.True(await ColumnExistsAsync(connection, "Transactions", "GoalId"));
             Assert.True(await ColumnExistsAsync(connection, "Transactions", "RepaymentAccountId"));
+            Assert.True(await ColumnExistsAsync(connection, "Transactions", "RelatedRecurringTransactionId"));
             Assert.False(await ColumnExistsAsync(connection, "Transactions", "AccountId"));
             Assert.True(await ColumnExistsAsync(connection, "RecurringTransactions", "EndDate"));
             Assert.False(await TableExistsAsync(connection, "Expenses"));
             Assert.False(await TableExistsAsync(connection, "ExpenseLogs"));
             Assert.False(await TableExistsAsync(connection, "IncomeLogs"));
+            Assert.False(await TableExistsAsync(connection, "Notifications"));
         }
         finally
         {
@@ -166,7 +168,6 @@ public sealed class AppDatabaseMigrationTests
         services.AddScoped<ISavingGoalRepository, SavingGoalRepository>();
         services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<IRecurringTransactionRepository, RecurringTransactionRepository>();
-        services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
         services.AddScoped<IBudgetAllocationRepository, BudgetAllocationRepository>();
         services.AddSingleton<IDataOperationScopeFactory, DataOperationScopeFactory>();

@@ -11,5 +11,8 @@ public enum NotificationGroupCategory
     LowCredit = 6,
     BudgetThreshold = 7,
     AutoExpenseProcessed = 8,
-    AppUpdate = 9
+    AppUpdate = 9,
+    RecurringTransactionOverdue = 10,
+    GoalOverdue = 11,
+    DailyAllowance = 12
 }
