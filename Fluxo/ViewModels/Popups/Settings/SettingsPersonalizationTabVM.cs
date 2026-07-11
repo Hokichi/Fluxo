@@ -412,20 +412,20 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
         SettingsShared.ReplaceCollection(NotificationSettings,
         [
             new SettingsNotificationOptionVM(
-                "Upcoming recurring transaction reminders",
-                "Warn before recurring transactions are due.",
-                UserSettingNames.IsRecurringTransactionsDeductionNotifEnabled,
-                SettingsShared.ParseBool(settingsByName, UserSettingNames.IsRecurringTransactionsDeductionNotifEnabled, false)),
+                "Overdue recurring transactions",
+                "Warn when a recurring transaction needs completion.",
+                UserSettingNames.IsRecurringOverdueNotifEnabled,
+                SettingsShared.ParseBool(settingsByName, UserSettingNames.IsRecurringOverdueNotifEnabled, true)),
             new SettingsNotificationOptionVM(
-                "Credit deadline reminders",
-                "Warn when credit due dates are approaching.",
-                UserSettingNames.IsCreditDeadlineNotifEnabled,
-                SettingsShared.ParseBool(settingsByName, UserSettingNames.IsCreditDeadlineNotifEnabled, true)),
+                "Overdue saving goals",
+                "Warn when a saving goal is past target date.",
+                UserSettingNames.IsGoalOverdueNotifEnabled,
+                SettingsShared.ParseBool(settingsByName, UserSettingNames.IsGoalOverdueNotifEnabled, true)),
             new SettingsNotificationOptionVM(
-                "Goal deadline alerts",
-                "Warn when a savings goal is close to its saving end date.",
-                UserSettingNames.IsGoalDeadlineNotifEnabled,
-                SettingsShared.ParseBool(settingsByName, UserSettingNames.IsGoalDeadlineNotifEnabled, true)),
+                "Daily allowance alerts",
+                "Warn when today’s spending reaches allowance.",
+                UserSettingNames.IsDailyAllowanceNotifEnabled,
+                SettingsShared.ParseBool(settingsByName, UserSettingNames.IsDailyAllowanceNotifEnabled, true)),
             new SettingsNotificationOptionVM(
                 "Late payment alerts",
                 "Warn when Credit payments are past due.",

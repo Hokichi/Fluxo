@@ -3,10 +3,6 @@ namespace Fluxo.Core.Constants;
 public static class UserSettingNames
 {
     public const string IsFirstRun = nameof(IsFirstRun);
-    public const string DeadlineReminderDays = nameof(DeadlineReminderDays);
-    public const string IsRecurringTransactionsDeductionNotifEnabled = nameof(IsRecurringTransactionsDeductionNotifEnabled);
-    public const string IsCreditDeadlineNotifEnabled = nameof(IsCreditDeadlineNotifEnabled);
-    public const string IsGoalDeadlineNotifEnabled = nameof(IsGoalDeadlineNotifEnabled);
     public const string BudgetUsageWarningPercentage = nameof(BudgetUsageWarningPercentage);
     public const string CreditUsageWarningPercentage = nameof(CreditUsageWarningPercentage);
     public const string LowAccountBalancePercentage = nameof(LowAccountBalancePercentage);
