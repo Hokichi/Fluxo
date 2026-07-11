@@ -20,7 +20,6 @@ public static class UserSettingNames
     public const string IsAppAutoLocked = nameof(IsAppAutoLocked);
     public const string AppAutoLockedInterval = nameof(AppAutoLockedInterval);
     public const string UILockingPassword = nameof(UILockingPassword);
-    public const string NotificationsSnoozePeriod = nameof(NotificationsSnoozePeriod);
     public const string NotificationsSnoozeEndDate = nameof(NotificationsSnoozeEndDate);
     public const string IsRecurringOverdueNotifEnabled = nameof(IsRecurringOverdueNotifEnabled);
     public const string IsGoalOverdueNotifEnabled = nameof(IsGoalOverdueNotifEnabled);
