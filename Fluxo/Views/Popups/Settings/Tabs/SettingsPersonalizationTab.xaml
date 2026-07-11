@@ -211,40 +211,7 @@
 
                 <StackPanel Visibility="{Binding IsNotificationPageSelected, Converter={StaticResource BoolToVisibilityConverter}}">
                     <TextBlock
-                        FontFamily="{StaticResource Bold}"
-                        Foreground="{StaticResource Brush.Text.Primary}"
-                        Text="Snooze notifications for" />
-                    <customControls:SegmentedToggleGroup Margin="0,10,0,0" SelectedValue="{Binding SelectedNotificationsSnoozePreset, Mode=TwoWay}">
-                        <customControls:SegmentedToggleOption Content="None" Value="0" />
-                        <customControls:SegmentedToggleOption Content="6 hours" Value="6" />
-                        <customControls:SegmentedToggleOption Content="12 hours" Value="12" />
-                        <customControls:SegmentedToggleOption Content="1 day" Value="24" />
-                        <customControls:SegmentedToggleOption Content="2 days" Value="48" />
-                        <customControls:SegmentedToggleOption Content="7 days" Value="168" />
-                        <customControls:SegmentedToggleOption Content="Custom" Value="Custom" />
-                    </customControls:SegmentedToggleGroup>
-                    <StackPanel
-                        Margin="0,10,0,0"
-                        HorizontalAlignment="Right"
-                        Orientation="Horizontal"
-                        Visibility="{Binding IsCustomNotificationsSnoozePeriod, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <customControls:NumericUpDown
-                            Width="120"
-                            LowerLimit="1"
-                            Value="{Binding CustomNotificationsSnoozeValue, Mode=TwoWay}" />
-                        <ComboBox
-                            Width="96"
-                            Margin="8,0,0,0"
-                            SelectedValue="{Binding SelectedNotificationsSnoozeUnit, Mode=TwoWay}"
-                            SelectedValuePath="Content"
-                            Style="{StaticResource FluxoComboBoxStyle}">
-                            <ComboBoxItem Content="hour" />
-                            <ComboBoxItem Content="day" />
-                        </ComboBox>
-                    </StackPanel>
-
-                    <TextBlock
-                        Margin="0,24,0,8"
+                        Margin="0,0,0,8"
                         FontFamily="{StaticResource Bold}"
                         Foreground="{StaticResource Brush.Text.Primary}"
                         Text="Notifications" />

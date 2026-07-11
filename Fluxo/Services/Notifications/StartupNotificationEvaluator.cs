@@ -1,6 +1,7 @@
 using Fluxo.Core.Entities;
 using Fluxo.Core.Enums;
 using Fluxo.Core.Constants;
+using Fluxo.Core.Budgeting;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.ViewModels.Entities;
@@ -67,7 +68,7 @@ public sealed class StartupNotificationEvaluator(
                 notifications.AddRange(goals.Where(goal => overdueGoals.Contains(goal.Id)).Select(goal => Card(
                     $"GoalOverdue-{goal.Id}", $"Goal Overdue - {goal.Name}",
                     $"{goal.Name} is past its target date.", NotificationSeverity.Danger)));
-            var dailyAllowance = allocation is { AllocationLimit: > 0m } ? allocation.AllocationLimit / DateTime.DaysInMonth(today.Year, today.Month) : 0m;
+            var dailyAllowance = allocation is null ? 0m : BudgetAllocationCalculator.CalculateDailyAllowance(allocation, today);
             var todaySpending = transactions.Where(transaction => transaction.Type == TransactionType.Expense && transaction.OccurredOn.Date == today && !transaction.IsExcludedFromBudget).Sum(transaction => transaction.Amount);
             if (dailyAllowanceEnabled && dailyAllowance > 0m && todaySpending >= dailyAllowance)
                 notifications.Add(Card("DailyAllowance", "Daily Allowance Reached", "Today's spending reached the daily allowance.", NotificationSeverity.Warning));

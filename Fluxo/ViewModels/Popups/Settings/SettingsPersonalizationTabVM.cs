@@ -224,9 +224,6 @@ public partial class SettingsPersonalizationTabVM : ObservableObject
         await SettingsShared.UpdateUserSettingAsync(_appData, UserSettingNames.AppAutoLockedInterval,
             Math.Max(1, AppAutoLockedInterval).ToString(CultureInfo.InvariantCulture), actions);
 
-        await SettingsShared.UpdateUserSettingAsync(_appData, UserSettingNames.NotificationsSnoozePeriod,
-            Math.Max(0, NotificationsSnoozePeriod).ToString(CultureInfo.InvariantCulture), actions);
-
         var protectedPassword = _passwordProtector.Protect(UiLockingPassword);
         await SettingsShared.UpdateUserSettingAsync(_appData, UserSettingNames.UILockingPassword,
             string.IsNullOrWhiteSpace(protectedPassword) ? null : protectedPassword, actions);

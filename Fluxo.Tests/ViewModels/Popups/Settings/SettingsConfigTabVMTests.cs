@@ -444,22 +444,6 @@ public sealed class SettingsConfigTabVMTests
     }
 
     [Fact]
-    public async Task PersonalizationTab_BuildApplyChangesAsync_PersistsNoneNotificationsSnoozePeriodAsZero()
-    {
-        var unitOfWork = new TestSettingsUnitOfWork([]);
-        var vm = new SettingsPersonalizationTabVM(
-            new AppDataService(unitOfWork),
-            passwordProtector: new TestPasswordProtector());
-        await vm.LoadAsync();
-
-        vm.SelectedNotificationsSnoozePreset = "0";
-        var (result, _, _, _, _) = await vm.BuildApplyChangesAsync();
-
-        Assert.True(result.IsSuccess);
-        Assert.Equal("0", unitOfWork.GetValue(UserSettingNames.NotificationsSnoozePeriod));
-    }
-
-    [Fact]
     public async Task PersonalizationTab_CustomNotificationsSnoozePeriod_ConvertsDaysToHours()
     {
         var unitOfWork = new TestSettingsUnitOfWork([]);
