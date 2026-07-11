@@ -102,7 +102,21 @@ public partial class NotificationPanelVM : ObservableRecipient,
         return Task.CompletedTask;
     }
 
-    [RelayCommand] private Task OpenNotificationActionAsync(NotificationItemVM? card) => Task.CompletedTask;
+    [RelayCommand]
+    private Task OpenNotificationActionAsync(NotificationItemVM? card)
+    {
+        if (card is null || !card.HasActionCta)
+            return Task.CompletedTask;
+
+        var ids = card.Notifications
+            .Select(notification => notification.Type.Split('-').LastOrDefault())
+            .Select(token => int.TryParse(token, out var id) ? id : 0)
+            .Where(id => id > 0)
+            .ToList();
+        if (ids.Count > 0)
+            Messenger.Send(new NotificationProcessingRequestedMessage(card.Category.ToString(), ids));
+        return Task.CompletedTask;
+    }
     [RelayCommand] private void NavigatePrevious() => Navigate(-1, 1);
     [RelayCommand] private void NavigateNext() => Navigate(1, -1);
 

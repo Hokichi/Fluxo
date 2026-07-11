@@ -10,3 +10,6 @@ public sealed class StartupNotificationStateChangedMessage(StartupNotificationEv
 
 public sealed class NotificationEntityCreatedMessage(NotificationEntityKind kind, int entityId)
     : ValueChangedMessage<(NotificationEntityKind Kind, int EntityId)>((kind, entityId));
+
+public sealed class NotificationProcessingRequestedMessage(string category, IReadOnlyList<int> entityIds)
+    : ValueChangedMessage<(string Category, IReadOnlyList<int> EntityIds)>((category, entityIds));

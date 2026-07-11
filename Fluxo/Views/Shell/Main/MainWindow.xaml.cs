@@ -157,6 +157,8 @@ public partial class MainWindow : Window, IPopupHost
             static (recipient, message) => _ = recipient.NavigateToLedgerFromDashboardAsync());
         _messenger.Register<MainWindow, OpenHistoryDrawerMessage>(this,
             static (recipient, _) => recipient.OpenHistoryDrawer());
+        _messenger.Register<MainWindow, NotificationProcessingRequestedMessage>(this,
+            static (recipient, message) => _ = recipient.OpenNotificationProcessingAsync(message.Value.Category, message.Value.EntityIds));
 
         HeaderSearchResultsList.ItemsSource = _headerSearchResults;
         HistoryItemsControl.ItemsSource = _logMemoryManager.HistoryEntries;
@@ -1458,6 +1460,42 @@ public partial class MainWindow : Window, IPopupHost
         var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
         var targetTransaction = await TransactionDetailTargetResolver.ResolveAsync(transaction, appData);
         await ShowTransactionDetailPopupAsync(targetTransaction, appData, beginEditing: false);
+    }
+
+    private async Task OpenNotificationProcessingAsync(string category, IReadOnlyList<int> entityIds)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
+        var popup = new AddNewTransactionVM(_mainVM, appData);
+
+        if (category == nameof(NotificationGroupCategory.LatePayment))
+        {
+            var accounts = (await appData.GetAccountsAsync()).Where(account => entityIds.Contains(account.Id)).Select(account => new AccountVM
+            {
+                Id = account.Id, Name = account.Name, AccountType = account.AccountType, SpentAmount = account.SpentAmount,
+                DeductSource = account.DeductSource, IsEnabled = account.IsEnabled
+            }).ToList();
+            popup.InitializeRepaymentProcessing(accounts);
+        }
+        else if (category == nameof(NotificationGroupCategory.GoalOverdue))
+        {
+            var goals = (await appData.GetSavingGoalsAsync()).Where(goal => entityIds.Contains(goal.Id)).Select(goal => new SavingGoalVM
+            { Id = goal.Id, Name = goal.Name, CurrentAmount = goal.CurrentAmount, TargetAmount = goal.TargetAmount, SavingEndDate = goal.SavingEndDate }).ToList();
+            popup.InitializeGoalProcessing(goals);
+        }
+        else if (category == nameof(NotificationGroupCategory.RecurringTransactionOverdue))
+        {
+            var recurring = (await appData.GetRecurringTransactionsAsync()).Where(item => entityIds.Contains(item.Id)).Select(item => new RecurringTransactionVM
+            {
+                Id = item.Id, Name = item.Name, Amount = item.Amount, Type = item.Type, Category = item.Category,
+                Source = new AccountVM { Id = item.SourceId }, Tag = item.TagId is null ? null : new TagVM { Id = item.TagId.Value }
+            }).ToList();
+            popup.InitializeRecurringProcessing(recurring);
+        }
+        else return;
+
+        if (popup.IsProcessingSession)
+            _dialogService.ShowAddNewTransaction(popup, this);
     }
 
     public async void OpenLedgerTransactionDetailPopup(int transactionId)
