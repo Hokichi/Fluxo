@@ -156,6 +156,41 @@ public sealed class AppDatabaseMigrationTests
         }
     }
 
+    [Fact]
+    public async Task MigrateDatabaseAsync_RepairsMissingHistory_ForDatabaseWithoutNotificationsTable()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "fluxo-tests", Guid.NewGuid().ToString("N"));
+        var databasePath = Path.Combine(directory, "fluxo.db");
+        Directory.CreateDirectory(directory);
+
+        try
+        {
+            using var services = CreateServiceProvider(databasePath);
+            var runner = services.GetRequiredService<IDataOperationRunner>();
+            await App.MigrateDatabaseAsync(runner, () => databasePath);
+
+            await using (var connection = new SqliteConnection($"Data Source={databasePath}"))
+            {
+                await connection.OpenAsync();
+                await using var clearHistory = connection.CreateCommand();
+                clearHistory.CommandText = "DELETE FROM \"__EFMigrationsHistory\"";
+                await clearHistory.ExecuteNonQueryAsync();
+            }
+
+            await App.MigrateDatabaseAsync(runner, () => databasePath);
+
+            await using var verifiedConnection = new SqliteConnection($"Data Source={databasePath}");
+            await verifiedConnection.OpenAsync();
+            Assert.True(await ColumnExistsAsync(verifiedConnection, "Transactions", "RelatedRecurringTransactionId"));
+            Assert.False(await TableExistsAsync(verifiedConnection, "Notifications"));
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            Directory.Delete(directory, true);
+        }
+    }
+
     private static ServiceProvider CreateServiceProvider(string databasePath)
     {
         var services = new ServiceCollection();

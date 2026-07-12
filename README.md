@@ -44,7 +44,7 @@ With Fluxo, you can:
 - Split spending into Needs, Wants, and Savings/Invest categories.
 - Review spending by date range, account, tag, and category.
 - Watch saving goals progress toward a target amount and deadline.
-- Receive reminders for payment dates, budget thresholds, low balances, and goal deadlines.
+- Receive startup-evaluated cards for overdue payments, recurring work, goals, and budget pressure.
 - Keep your financial data local on your Windows device.
 
 ## Getting Started
@@ -136,24 +136,23 @@ A goal can include:
 - Deadline.
 - Active or hidden state.
 
-When you add a goal contribution, Fluxo records the transaction, updates the goal's current amount, and adjusts the selected account. If a goal deadline is approaching and the goal is not complete, Fluxo can show a reminder.
+When you add a goal contribution, Fluxo records the transaction, updates the goal's current amount, and adjusts the selected account. An incomplete goal past its deadline can appear as an overdue card at startup.
 
 ## Notifications and Reminders
 
-Fluxo evaluates your current data and settings to show financial reminders.
+Fluxo evaluates current data and settings during startup. Cards stay in memory for that app session; Clear All clears only current cards, while Snooze All suppresses cards for 24 hours.
 
 Notifications can include:
 
-- Upcoming credit payments.
-- Late payments.
-- Fixed expenses due soon.
+- Overdue credit payments.
+- Overdue recurring transactions.
+- Overdue saving goals.
 - Budget categories near or past their warning threshold.
-- Low cash, checking, or saving balances.
-- Low remaining credit availability.
-- Saving goal deadlines.
-- Fixed expenses processed on their scheduled date.
+- Low cash or checking balances.
+- High credit usage.
+- Daily allowance warnings.
 
-Some notifications include action popups. For example, payment-related reminders can help you mark items handled, and goal deadline reminders can help you decide what to do next.
+Overdue payment, goal, and recurring cards expose Process. Fluxo uses Add New Transaction to save each item and move to the next one.
 
 ## Analytics
 
@@ -186,7 +185,7 @@ Settings areas include:
 - **Saving goals**: targets, deadlines, hidden goals, and disabled goal reminders.
 - **Tags**: labels and colors for expense organization.
 - **Budget**: Needs, Wants, and Savings/Invest percentages.
-- **Notifications**: reminder types, thresholds, and deadline timing.
+- **Notifications**: reminder types and warning thresholds.
 - **About**: app version and update checks.
 
 ## Tray and Startup Behavior
@@ -199,7 +198,6 @@ Depending on your settings, Fluxo can:
 
 - Start with Windows.
 - Open directly to the tray.
-- Show a startup summary popup when there are reminders.
 - Minimize to the tray when closed.
 - Be reopened, restarted, or exited from the tray menu.
 
@@ -282,7 +280,7 @@ Initial Release
 ### v1.0.2:
 - Recurring transaction introduced for recurring planning and tracking.
 - Spending and saving expanded to support richer financial records.
-- Notification checklist now supports direct action flow for handling reminders from within the app.
+- Overdue cards process directly through Add New Transaction.
 
 ### v1.0.3:
 - Hotfix: Installer not running when .NET 10 is not installed
