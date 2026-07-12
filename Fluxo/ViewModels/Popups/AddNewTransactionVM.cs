@@ -1195,9 +1195,12 @@ public partial class AddNewTransactionVM : ObservableValidator
                         TransactionMemorySnapshot.Create(transaction))));
             }
 
+            if (IsProcessingSession)
+                invalidationScope &= ~DashboardDataInvalidationScope.Notifications;
+
             WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(invalidationScope));
 
-            await _mainViewModel.ReloadCurrentDataAsync();
+            await _mainViewModel.ReloadCurrentDataAsync(reloadNotifications: !IsProcessingSession);
 
             if (resetAfterSave)
             {

@@ -91,9 +91,11 @@ public partial class MainVM : ObservableRecipient
         OnPropertyChanged(nameof(IsInitialized));
     }
 
-    public async Task ReloadCurrentDataAsync()
+    public Task ReloadCurrentDataAsync() => ReloadCurrentDataAsync(reloadNotifications: true);
+
+    public async Task ReloadCurrentDataAsync(bool reloadNotifications)
     {
-        await Dashboard.ReloadCurrentDataAsync();
+        await Dashboard.ReloadCurrentDataAsync(reloadNotifications);
 
         if (Ledger is not null)
             await Ledger.LoadAsync();

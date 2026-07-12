@@ -9,7 +9,7 @@ namespace Fluxo.Tests.Services.Notifications;
 public sealed class NotificationGroupingServiceTests
 {
     [Fact]
-    public void Group_MapsRecurringTransactionDue_WithActionCta()
+    public void Group_MapsRecurringTransactionDue_WithoutActionCta()
     {
         var input = new[]
         {
@@ -22,12 +22,12 @@ public sealed class NotificationGroupingServiceTests
 
         var card = Assert.Single(cards);
         Assert.Equal(NotificationGroupCategory.RecurringTransactionDue, card.Category);
-        Assert.True(card.HasActionCta);
+        Assert.False(card.HasActionCta);
         Assert.Equal(1, card.Count);
     }
 
     [Fact]
-    public void Group_SetsActionability_ByCategory()
+    public void Group_LeavesLegacyDeadlineCardsNonActionable()
     {
         var input = new[]
         {
@@ -40,7 +40,7 @@ public sealed class NotificationGroupingServiceTests
         var cards = sut.Group(input);
 
         Assert.Equal(2, cards.Count);
-        Assert.True(cards.Single(card => card.Category == NotificationGroupCategory.GoalDeadline).HasActionCta);
+        Assert.False(cards.Single(card => card.Category == NotificationGroupCategory.GoalDeadline).HasActionCta);
         Assert.False(cards.Single(card => card.Category == NotificationGroupCategory.LowBalance).HasActionCta);
     }
 
@@ -143,7 +143,7 @@ public sealed class NotificationGroupingServiceTests
     }
 
     [Fact]
-    public void Group_AppUpdate_MapsCategory_IsActionable_AndPreservesHeaderAndMessage()
+    public void Group_AppUpdate_MapsCategory_WithoutActionCta_AndPreservesHeaderAndMessage()
     {
         const string persistedHeader = "Update Ready - Install Recommended";
         const string persistedMessage = "Version 9.9.9 is available for download";
@@ -164,7 +164,7 @@ public sealed class NotificationGroupingServiceTests
         var card = Assert.Single(sut.Group(input));
 
         Assert.Equal(NotificationGroupCategory.AppUpdate, card.Category);
-        Assert.True(card.HasActionCta);
+        Assert.False(card.HasActionCta);
         Assert.Equal(persistedHeader, card.Header);
         Assert.Equal(persistedMessage, card.Message);
     }

@@ -87,13 +87,9 @@ public sealed class NotificationGroupingService : INotificationGroupingService
 
     private static bool IsActionable(NotificationGroupCategory category)
     {
-        return category is NotificationGroupCategory.RecurringTransactionDue
-            or NotificationGroupCategory.UpcomingPayment
-            or NotificationGroupCategory.LatePayment
-            or NotificationGroupCategory.GoalDeadline
+        return category is NotificationGroupCategory.LatePayment
             or NotificationGroupCategory.RecurringTransactionOverdue
-            or NotificationGroupCategory.GoalOverdue
-            or NotificationGroupCategory.AppUpdate;
+            or NotificationGroupCategory.GoalOverdue;
     }
 
     private static NotificationSeverity ResolveSeverity(IEnumerable<NotificationSeverity> severities)
