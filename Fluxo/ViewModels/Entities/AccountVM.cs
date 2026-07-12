@@ -1,10 +1,20 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Enums;
+using Fluxo.Resources.Resources.Messages;
 
 namespace Fluxo.ViewModels.Entities;
 
-public partial class AccountVM : ObservableObject
+public partial class AccountVM : ObservableRecipient, IRecipient<StartupNotificationStateChangedMessage>
 {
+    public AccountVM() : base(WeakReferenceMessenger.Default)
+    {
+        IsActive = true;
+    }
+
+    public void Receive(StartupNotificationStateChangedMessage message) =>
+        IsOverdue = message.Value.OverdueAccountIds.Contains(Id);
+
     [ObservableProperty] private decimal _accountLimit;
     [ObservableProperty] private decimal _balance;
     [ObservableProperty] private int? _deductSource;

@@ -1,10 +1,20 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using System.Globalization;
+using Fluxo.Resources.Resources.Messages;
 
 namespace Fluxo.ViewModels.Entities;
 
-public partial class SavingGoalVM : ObservableObject
+public partial class SavingGoalVM : ObservableRecipient, IRecipient<StartupNotificationStateChangedMessage>
 {
+    public SavingGoalVM() : base(WeakReferenceMessenger.Default)
+    {
+        base.IsActive = true;
+    }
+
+    public void Receive(StartupNotificationStateChangedMessage message) =>
+        IsOverdue = message.Value.OverdueSavingGoalIds.Contains(Id);
+
     [ObservableProperty] private DateTime _createdOn;
     [ObservableProperty] private decimal _currentAmount;
     [ObservableProperty] private bool _isActive;

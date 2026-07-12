@@ -69,13 +69,13 @@ public partial class DashboardVM : ObservableObject
         await SpentAllowancePanel.LoadAsync();
         await betweenStagesAsync();
 
-        await NotificationPanel.LoadAsync();
-        await betweenStagesAsync();
-
         await SavingGoalsPanel.LoadAsync();
         await betweenStagesAsync();
 
         await UpcomingEventsPanel.LoadAsync();
+        await betweenStagesAsync();
+
+        await NotificationPanel.LoadAsync();
         await betweenStagesAsync();
 
         ViewModeToggle.SetSelectedMainContentViewCommand.Execute(
@@ -84,18 +84,20 @@ public partial class DashboardVM : ObservableObject
         OnPropertyChanged(nameof(IsInitialized));
     }
 
-    public async Task ReloadCurrentDataAsync()
+    public Task ReloadCurrentDataAsync() => ReloadCurrentDataAsync(reloadNotifications: true);
+
+    public async Task ReloadCurrentDataAsync(bool reloadNotifications)
     {
         await BudgetPanel.LoadAsync();
         if (AllocationData is not null)
             await AllocationData.LoadAsync();
         RefreshSpendingAmountGateStates();
 
-        await Task.WhenAll(
-            SpentAllowancePanel.LoadAsync(),
-            NotificationPanel.LoadAsync(),
-            SavingGoalsPanel.LoadAsync(),
-            UpcomingEventsPanel.LoadAsync());
+        await SpentAllowancePanel.LoadAsync();
+        await SavingGoalsPanel.LoadAsync();
+        await UpcomingEventsPanel.LoadAsync();
+        if (reloadNotifications)
+            await NotificationPanel.LoadAsync();
     }
 
     public static bool ShouldLockDashboardForSpendingAmount(

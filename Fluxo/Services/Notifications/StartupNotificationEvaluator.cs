@@ -5,6 +5,7 @@ using Fluxo.Core.Budgeting;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Resources.Resources.Messages;
 using Fluxo.ViewModels.Entities;
+using System.Globalization;
 
 namespace Fluxo.Services.Notifications;
 
@@ -34,7 +35,8 @@ public sealed class StartupNotificationEvaluator(
         dataOperationRunner.RunAsync(async (scope, ct) =>
         {
             var unitOfWork = scope.UnitOfWork;
-            var today = (clock?.Invoke() ?? DateTime.Today).Date;
+            var now = clock?.Invoke() ?? DateTime.Now;
+            var today = now.Date;
             var transactions = (await unitOfWork.Transactions.GetAllAsync(ct))
                 .Where(transaction => !transaction.IsForDeletion).ToList();
             var accounts = (await unitOfWork.Accounts.GetAllAsync(ct))
@@ -44,9 +46,19 @@ public sealed class StartupNotificationEvaluator(
             var goals = await unitOfWork.SavingGoals.GetAllAsync(ct);
             var settings = (await unitOfWork.UserSettings.GetAllAsync(ct)).ToDictionary(setting => setting.Name, setting => setting.Value);
             var allocation = await unitOfWork.BudgetAllocation.GetAsync(ct);
+            if (IsSnoozed(UserSettingNames.NotificationsSnoozeEndDate, now))
+                return new StartupNotificationEvaluation(new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), []);
+
+            var latePaymentEnabled = Enabled(UserSettingNames.IsLatePaymentNotifEnabled, true);
+            var budgetThresholdEnabled = Enabled(UserSettingNames.IsBudgetThresholdNotifEnabled, true);
+            var lowCreditEnabled = Enabled(UserSettingNames.IsLowCreditNotifEnabled, false);
+            var lowBalanceEnabled = Enabled(UserSettingNames.IsLowAccountBalanceNotifEnabled, lowCreditEnabled);
             var recurringEnabled = Enabled(UserSettingNames.IsRecurringOverdueNotifEnabled, true);
             var goalsEnabled = Enabled(UserSettingNames.IsGoalOverdueNotifEnabled, true);
             var dailyAllowanceEnabled = Enabled(UserSettingNames.IsDailyAllowanceNotifEnabled, true);
+            var budgetUsageWarningPercentage = Decimal(UserSettingNames.BudgetUsageWarningPercentage, 0.90m);
+            var creditUsageWarningPercentage = Decimal(UserSettingNames.CreditUsageWarningPercentage, 0.30m);
+            var lowAccountBalancePercentage = Decimal(UserSettingNames.LowAccountBalancePercentage, 0.20m);
 
             var overdueAccounts = accounts.Where(account => IsCreditOverdue(account, transactions, today))
                 .Select(account => account.Id).ToHashSet();
@@ -56,7 +68,7 @@ public sealed class StartupNotificationEvaluator(
                 .Select(goal => goal.Id).ToHashSet();
 
             var notifications = new List<NotificationVM>();
-            if (requestedKind is not NotificationEntityKind.RecurringTransaction)
+            if (latePaymentEnabled && requestedKind is not NotificationEntityKind.RecurringTransaction)
                 notifications.AddRange(accounts.Where(account => overdueAccounts.Contains(account.Id)).Select(account => Card(
                     $"LatePayment-{account.Id}", $"Late Payment - {account.Name}",
                     $"{account.Name} payment is overdue.", NotificationSeverity.Danger)));
@@ -68,9 +80,19 @@ public sealed class StartupNotificationEvaluator(
                 notifications.AddRange(goals.Where(goal => overdueGoals.Contains(goal.Id)).Select(goal => Card(
                     $"GoalOverdue-{goal.Id}", $"Goal Overdue - {goal.Name}",
                     $"{goal.Name} is past its target date.", NotificationSeverity.Danger)));
+            var budgetTransactions = SelectBudgetTransactions(transactions).ToList();
+            if (budgetThresholdEnabled && allocation is not null)
+                AddBudgetThresholdNotifications(notifications, allocation, budgetTransactions, accounts, today, budgetUsageWarningPercentage);
+
+            if (lowCreditEnabled)
+                AddLowCreditNotifications(notifications, accounts, creditUsageWarningPercentage);
+
+            if (lowBalanceEnabled)
+                AddLowBalanceNotifications(notifications, accounts, transactions, lowAccountBalancePercentage);
+
             var dailyAllowance = allocation is null ? 0m : BudgetAllocationCalculator.CalculateDailyAllowance(allocation, today);
-            var todaySpending = transactions.Where(transaction => transaction.Type == TransactionType.Expense && transaction.OccurredOn.Date == today && !transaction.IsExcludedFromBudget).Sum(transaction => transaction.Amount);
-            if (dailyAllowanceEnabled && dailyAllowance > 0m && todaySpending >= dailyAllowance)
+            var todaySpending = budgetTransactions.Where(transaction => transaction.Type == TransactionType.Expense && transaction.OccurredOn.Date == today).Sum(transaction => transaction.Amount);
+            if (dailyAllowanceEnabled && dailyAllowance > 0m && todaySpending >= dailyAllowance * budgetUsageWarningPercentage)
                 notifications.Add(Card("DailyAllowance", "Daily Allowance Reached", "Today's spending reached the daily allowance.", NotificationSeverity.Warning));
 
             if (requestedKind is not null && requestedId is not null)
@@ -79,7 +101,110 @@ public sealed class StartupNotificationEvaluator(
             return new StartupNotificationEvaluation(overdueAccounts, overdueRecurring, overdueGoals, notifications);
 
             bool Enabled(string name, bool fallback) => !settings.TryGetValue(name, out var value) || !bool.TryParse(value, out var enabled) ? fallback : enabled;
+            decimal Decimal(string name, decimal fallback) => !settings.TryGetValue(name, out var value) || !decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsed) ? fallback : parsed;
+            bool IsSnoozed(string name, DateTime current) => settings.TryGetValue(name, out var value) &&
+                DateTime.TryParseExact(value, "O", CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var endDate) && endDate > current;
         }, cancellationToken);
+
+    private static void AddBudgetThresholdNotifications(
+        List<NotificationVM> notifications,
+        BudgetAllocation allocation,
+        IReadOnlyList<Transaction> transactions,
+        IReadOnlyList<Account> accounts,
+        DateTime today,
+        decimal warningPercentage)
+    {
+        var currentPeriod = BudgetAllocationCalculator.ResolveCurrentPeriod(allocation.AllocationPeriod, today, allocation.PeriodStart);
+        var previousPeriod = BudgetAllocationCalculator.ResolvePreviousPeriod(allocation.AllocationPeriod, today, allocation.PeriodStart);
+        var snapshot = BudgetAllocationCalculator.CalculateSnapshot(
+            allocation,
+            SpentByCategory(transactions, currentPeriod.Start, currentPeriod.End),
+            SpentByCategory(transactions, previousPeriod.Start, previousPeriod.End),
+            today,
+            accounts.Sum(account => account.Balance));
+
+        AddBudgetThresholdNotification("Needs", ExpenseCategory.Needs, snapshot.Needs, NotificationSeverity.Danger);
+        AddBudgetThresholdNotification("Wants", ExpenseCategory.Wants, snapshot.Wants, NotificationSeverity.Warning);
+        AddBudgetThresholdNotification("Savings", ExpenseCategory.Savings, snapshot.Invest, NotificationSeverity.Warning);
+
+        void AddBudgetThresholdNotification(
+            string label,
+            ExpenseCategory category,
+            BudgetAllocationCategoryState state,
+            NotificationSeverity severity)
+        {
+            if (state.Available <= 0m || state.Spent / state.Available < warningPercentage)
+                return;
+
+            notifications.Add(Card(
+                $"BudgetThreshold{label}",
+                $"Budget Threshold - {label}",
+                $"{label} has reached {state.Percentage}% of its allocation.",
+                severity));
+        }
+    }
+
+    private static void AddLowCreditNotifications(
+        List<NotificationVM> notifications,
+        IReadOnlyList<Account> accounts,
+        decimal warningPercentage)
+    {
+        foreach (var account in accounts.Where(account => account.AccountType == AccountType.Credit && account.AccountLimit > 0m))
+        {
+            var usage = account.SpentAmount / account.AccountLimit;
+            if (usage < warningPercentage)
+                continue;
+
+            notifications.Add(Card(
+                $"LowCredit-{account.Id}",
+                $"Low Credit - {account.Name}",
+                $"{account.Name} is using {(int)Math.Round(usage * 100m, MidpointRounding.AwayFromZero)}% of its limit.",
+                NotificationSeverity.Warning));
+        }
+    }
+
+    private static void AddLowBalanceNotifications(
+        List<NotificationVM> notifications,
+        IReadOnlyList<Account> accounts,
+        IReadOnlyList<Transaction> transactions,
+        decimal warningPercentage)
+    {
+        foreach (var account in accounts.Where(account => account.AccountType is AccountType.Cash or AccountType.Checking))
+        {
+            var totalBeforeSpending = account.Balance + transactions
+                .Where(transaction => transaction.Type == TransactionType.Expense && transaction.SourceAccountId == account.Id)
+                .Sum(transaction => transaction.Amount);
+            if (totalBeforeSpending <= 0m)
+                continue;
+
+            var remaining = account.Balance / totalBeforeSpending;
+            if (remaining >= warningPercentage)
+                continue;
+
+            notifications.Add(Card(
+                $"LowBalance-{account.Id}",
+                $"Low Balance - {account.Name}",
+                $"{account.Name} is down to {(int)Math.Round(remaining * 100m, MidpointRounding.AwayFromZero)}% of its pre-spend total.",
+                NotificationSeverity.Danger));
+        }
+    }
+
+    private static IEnumerable<Transaction> SelectBudgetTransactions(IEnumerable<Transaction> transactions)
+    {
+        var included = transactions.Where(transaction => !transaction.IsForDeletion && !transaction.IsExcludedFromBudget).ToList();
+        var parentIds = included.Where(transaction => transaction.ParentTransactionId.HasValue)
+            .Select(transaction => transaction.ParentTransactionId!.Value).ToHashSet();
+        return included.Where(transaction => !parentIds.Contains(transaction.Id));
+    }
+
+    private static IReadOnlyDictionary<ExpenseCategory, decimal> SpentByCategory(
+        IEnumerable<Transaction> transactions,
+        DateTime from,
+        DateTime to) => transactions
+        .Where(transaction => transaction.Type == TransactionType.Expense && transaction.OccurredOn.Date >= from && transaction.OccurredOn.Date <= to)
+        .Where(transaction => transaction.ExpenseCategory.HasValue)
+        .GroupBy(transaction => transaction.ExpenseCategory!.Value)
+        .ToDictionary(group => group.Key, group => group.Sum(transaction => transaction.Amount));
 
     private static bool IsCreditOverdue(Account account, IReadOnlyList<Transaction> transactions, DateTime today)
     {

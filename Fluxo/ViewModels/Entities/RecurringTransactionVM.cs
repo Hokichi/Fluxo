@@ -1,10 +1,20 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using Fluxo.Core.Enums;
+using Fluxo.Resources.Resources.Messages;
 
 namespace Fluxo.ViewModels.Entities;
 
-public partial class RecurringTransactionVM : ObservableObject
+public partial class RecurringTransactionVM : ObservableRecipient, IRecipient<StartupNotificationStateChangedMessage>
 {
+    public RecurringTransactionVM() : base(WeakReferenceMessenger.Default)
+    {
+        IsActive = true;
+    }
+
+    public void Receive(StartupNotificationStateChangedMessage message) =>
+        IsOverdue = message.Value.OverdueRecurringTransactionIds.Contains(Id);
+
     [ObservableProperty] private int _id;
     [ObservableProperty] private string _name = string.Empty;
     [ObservableProperty] private decimal _amount;
