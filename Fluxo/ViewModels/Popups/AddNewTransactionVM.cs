@@ -2786,7 +2786,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             return string.Empty;
 
         var installmentAmount = CalculateInstallmentAmount(AmountText, count);
-        var amountText = MoneyFormatUtility.ToCompactText(installmentAmount, CultureInfo.CurrentCulture);
+        var amountText = MoneyFormatUtility.ToFullText(installmentAmount, CultureInfo.CurrentCulture);
         var recurrenceLabel = FormatRecurringScheduleLabel(SelectedRecurringPeriod, RecurringTimeText);
         var verb = IsExpense ? "paid" : "earned";
         return $"The installment will be {amountText}, {verb} every {recurrenceLabel}";
@@ -2818,7 +2818,7 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     private static decimal CalculateInstallmentAmount(decimal totalAmount, int count)
     {
-        return decimal.Round(totalAmount / count, 2, MidpointRounding.AwayFromZero);
+        return decimal.Round(totalAmount / count, 0, MidpointRounding.AwayFromZero);
     }
 
     private static string BuildInstallmentRecurringName(string name)
