@@ -9,6 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     CanContinue="True"
     CanDiscard="False"
+    CanSkip="{Binding CanSkipProcessing, Mode=OneWay}"
     IsSaveAndCreateNewButtonEnabled="{Binding CanSave}"
     IsSaveButtonEnabled="{Binding CanSave}"
     Mode="{Binding PopupMode, Mode=OneWay}"

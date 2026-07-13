@@ -34,6 +34,7 @@ public partial class AddNewTransaction : BasePopup
     private readonly DispatcherTimer _moreTagsHoverCloseTimer;
     private MoreTagsPopupLifecycleState _moreTagsPopupState = MoreTagsPopupLifecycleState.Closed;
     private bool _isSyncingNoteDocument;
+    private bool _isFinalizingProcessing;
 
     public AddNewTransaction(
         AddNewTransactionVM viewModel,
@@ -194,6 +195,42 @@ public partial class AddNewTransaction : BasePopup
     protected override async void OnNextButtonClick() => await SaveAndAdvanceAsync();
 
     protected override async void OnFinishButtonClick() => await SaveAndAdvanceAsync();
+
+    protected override void OnBackButtonClick()
+    {
+        _viewModel.NavigatePreviousProcessing();
+        SyncNoteDocumentFromViewModel();
+        FocusPrimaryInput();
+    }
+
+    protected override void OnSkipButtonClick()
+    {
+        if (!_viewModel.SkipCurrentProcessing())
+            Close();
+        else
+        {
+            SyncNoteDocumentFromViewModel();
+            FocusPrimaryInput();
+        }
+    }
+
+    protected override async void OnClosing(CancelEventArgs e)
+    {
+        base.OnClosing(e);
+
+        if (!_viewModel.IsProcessingSession || _isFinalizingProcessing)
+            return;
+
+        e.Cancel = true;
+        _isFinalizingProcessing = true;
+        var result = await _viewModel.PersistProcessedItemsAsync();
+        _isFinalizingProcessing = false;
+        if (!result.IsSuccess)
+        {
+            ShowValidationMessage(result.ErrorMessage);
+            return;
+        }
+    }
 
     private async Task SaveAndAdvanceAsync()
     {

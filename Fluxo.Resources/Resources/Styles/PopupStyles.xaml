@@ -186,6 +186,18 @@
                                         Style="{StaticResource HeaderButtonStyle}"
                                         SubText="Enter" />
                                     <c:BalloonButton
+                                        x:Name="PART_SkipButton"
+                                        Margin="8,0,0,0"
+                                        ButtonIcon="{StaticResource AngleDoubleRight}"
+                                        ButtonText="Skip"
+                                        DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                                        HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                                        ShouldShowText="True"
+                                        Style="{StaticResource HeaderButtonStyle}"
+                                        SubText="Ctrl+Enter"
+                                        Visibility="{TemplateBinding CanSkip,
+                                                                     Converter={StaticResource PopupBoolToVisibility}}" />
+                                    <c:BalloonButton
                                         x:Name="PART_FinishButton"
                                         ButtonIcon="{StaticResource Check}"
                                         ButtonText="Finish"

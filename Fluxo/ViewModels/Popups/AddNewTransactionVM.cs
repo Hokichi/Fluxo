@@ -52,6 +52,9 @@ public partial class AddNewTransactionVM : ObservableValidator
     private readonly List<AccountVM> _processingRepayments = [];
     private readonly List<SavingGoalVM> _processingGoals = [];
     private readonly List<RecurringTransactionVM> _processingRecurringTransactions = [];
+    private readonly Dictionary<object, ProcessingState> _processingStates = [];
+    private readonly Dictionary<object, FormState> _processingSnapshots = [];
+    private int _currentProcessingIndex;
     private int? _currentProcessingRecurringTransactionId;
 
     [ObservableProperty]
@@ -347,7 +350,8 @@ public partial class AddNewTransactionVM : ObservableValidator
     }
 
     public bool HasMoreTags => OverflowTags.Count > 0;
-    public bool IsProcessingSession => _processingRepayments.Count + _processingGoals.Count + _processingRecurringTransactions.Count > 0;
+    public bool IsProcessingSession => ProcessingTargets.Any();
+    public bool CanSkipProcessing => IsProcessingSession && CurrentProcessingTarget is not null;
     public PopupMode PopupMode => IsProcessingSession ? PopupMode.BackNext : PopupMode.SaveDiscard;
     public int CurrentProcessingStep { get; private set; } = 1;
     public int ProcessingStepCount { get; private set; }
@@ -355,35 +359,91 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     public void InitializeRepaymentProcessing(IReadOnlyList<AccountVM> accounts)
     {
-        _processingRepayments.Clear(); _processingRepayments.AddRange(accounts); ProcessingStepCount = accounts.Count; CurrentProcessingStep = 1;
-        if (accounts.Count > 0) InitializeRepayment(accounts[0]);
+        InitializeProcessing(accounts);
+        _processingRepayments.AddRange(accounts);
+        LoadProcessingCurrent();
         NotifyProcessingChanged();
     }
 
     public void InitializeGoalProcessing(IReadOnlyList<SavingGoalVM> goals)
     {
-        _processingGoals.Clear(); _processingGoals.AddRange(goals); ProcessingStepCount = goals.Count; CurrentProcessingStep = 1;
-        if (goals.Count > 0) { IsGoal = true; SelectedGoal = goals[0]; SyncGoalUpdateName(); }
+        InitializeProcessing(goals);
+        _processingGoals.AddRange(goals);
+        LoadProcessingCurrent();
         NotifyProcessingChanged();
     }
 
     public void InitializeRecurringProcessing(IReadOnlyList<RecurringTransactionVM> recurringTransactions)
     {
-        _processingRecurringTransactions.Clear(); _processingRecurringTransactions.AddRange(recurringTransactions); ProcessingStepCount = recurringTransactions.Count; CurrentProcessingStep = 1;
-        LoadRecurringProcessingCurrent();
+        InitializeProcessing(recurringTransactions);
+        _processingRecurringTransactions.AddRange(recurringTransactions);
+        LoadProcessingCurrent();
         NotifyProcessingChanged();
     }
 
     public async Task<AddNewTransactionSubmissionResult> SaveCurrentAndAdvanceAsync()
     {
-        var result = await SaveAsync(false);
-        if (!result.IsSuccess || !IsProcessingSession) return result;
-        if (_processingRepayments.Count > 0) { _processingRepayments.RemoveAt(0); if (_processingRepayments.Count > 0) InitializeRepayment(_processingRepayments[0]); }
-        else if (_processingGoals.Count > 0) { _processingGoals.RemoveAt(0); if (_processingGoals.Count > 0) { ResetForm(false); IsGoal = true; SelectedGoal = _processingGoals[0]; SyncGoalUpdateName(); } }
-        else if (_processingRecurringTransactions.Count > 0) { _processingRecurringTransactions.RemoveAt(0); LoadRecurringProcessingCurrent(); }
-        CurrentProcessingStep++;
+        if (!IsProcessingSession)
+            return await SaveAsync(false);
+
+        if (!TryBuildTransactionInput(out _, out var validationMessage))
+            return AddNewTransactionSubmissionResult.Failure(validationMessage);
+
+        var current = CurrentProcessingTarget!;
+        _processingSnapshots[current] = CaptureState();
+        _processingStates[current] = ProcessingState.Processed;
+        MoveToNextPending();
         NotifyProcessingChanged();
-        return result;
+        return AddNewTransactionSubmissionResult.Success();
+    }
+
+    public void NavigatePreviousProcessing()
+    {
+        if (!IsProcessingSession || CurrentProcessingTarget is null)
+            return;
+
+        _processingSnapshots[CurrentProcessingTarget] = CaptureState();
+        var previousIndex = Enumerable.Range(0, _currentProcessingIndex).LastOrDefault(index =>
+            _processingStates[ProcessingTargets.ElementAt(index)] == ProcessingState.Processed);
+        if (_currentProcessingIndex == 0 || _processingStates[ProcessingTargets.ElementAt(previousIndex)] != ProcessingState.Processed)
+            return;
+
+        var previous = ProcessingTargets.ElementAt(previousIndex);
+        _processingStates[previous] = ProcessingState.Pending;
+        _currentProcessingIndex = previousIndex;
+        LoadProcessingCurrent();
+        NotifyProcessingChanged();
+    }
+
+    public bool SkipCurrentProcessing()
+    {
+        if (!IsProcessingSession || CurrentProcessingTarget is null)
+            return false;
+
+        _processingStates[CurrentProcessingTarget] = ProcessingState.Skipped;
+        var hasNext = MoveToNextPending();
+        NotifyProcessingChanged();
+        return hasNext;
+    }
+
+    public async Task<AddNewTransactionSubmissionResult> PersistProcessedItemsAsync()
+    {
+        var processed = ProcessingTargets.Where(target => _processingStates[target] == ProcessingState.Processed).ToList();
+        foreach (var target in processed)
+        {
+            if (!_processingSnapshots.TryGetValue(target, out var snapshot))
+                continue;
+
+            _currentProcessingIndex = ProcessingTargets.ToList().IndexOf(target);
+            LoadProcessingTarget(target, snapshot);
+            var result = await SaveAsync(false);
+            if (!result.IsSuccess)
+                return result;
+        }
+
+        ClearProcessing();
+        await _mainViewModel.ReloadCurrentDataAsync(reloadNotifications: true);
+        return AddNewTransactionSubmissionResult.Success();
     }
 
     public void InitializeRepayment(AccountVM? target = null)
@@ -2027,6 +2087,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         return new FormState(
             IsExpense,
             IsGoal,
+            IsRepayment,
             IsRecurring,
             IsInstallments,
             IsPinned,
@@ -2043,7 +2104,8 @@ public partial class AddNewTransactionVM : ObservableValidator
             SelectedExpenseCategory,
             SelectedAccount?.Id ?? NoAccountId,
             SelectedTag?.Id ?? NoTagId,
-            SelectedGoal?.Id ?? NoSavingGoalId);
+            SelectedGoal?.Id ?? NoSavingGoalId,
+            SelectedRepaymentAccount?.Id ?? NoAccountId);
     }
 
     private void NotifyFormStateChanged()
@@ -2629,25 +2691,132 @@ public partial class AddNewTransactionVM : ObservableValidator
         int? RepaymentAccountId,
         int? RelatedRecurringTransactionId);
 
-    private void LoadRecurringProcessingCurrent()
+    private enum ProcessingState { Pending, Processed, Skipped }
+
+    private IEnumerable<object> ProcessingTargets => _processingRepayments.Cast<object>()
+        .Concat(_processingGoals).Concat(_processingRecurringTransactions);
+
+    private object? CurrentProcessingTarget => ProcessingTargets.ElementAtOrDefault(_currentProcessingIndex);
+
+    private void InitializeProcessing<T>(IReadOnlyList<T> targets) where T : class
     {
-        _currentProcessingRecurringTransactionId = _processingRecurringTransactions.FirstOrDefault()?.Id;
-        if (_processingRecurringTransactions.FirstOrDefault() is not { } recurring) return;
-        ResetForm(false); IsRecurring = false; IsExpense = recurring.Type != RecurringTransactionType.Income;
-        NameText = recurring.Name; AmountText = recurring.Amount; SelectedExpenseCategory = recurring.Category ?? ExpenseCategory.Needs;
-        SelectedAccount = Accounts.FirstOrDefault(account => account.Id == recurring.Source.Id);
-        SelectedTag = recurring.Tag; SelectedDate = DateTime.Today;
+        _processingRepayments.Clear();
+        _processingGoals.Clear();
+        _processingRecurringTransactions.Clear();
+        _processingStates.Clear();
+        _processingSnapshots.Clear();
+        _currentProcessingIndex = 0;
+        foreach (var target in targets)
+            _processingStates[target] = ProcessingState.Pending;
+        ProcessingStepCount = targets.Count;
+        CurrentProcessingStep = targets.Count == 0 ? 0 : 1;
+    }
+
+    private bool MoveToNextPending()
+    {
+        var targets = ProcessingTargets.ToList();
+        for (var index = _currentProcessingIndex + 1; index < targets.Count; index++)
+        {
+            if (_processingStates[targets[index]] != ProcessingState.Pending)
+                continue;
+
+            _currentProcessingIndex = index;
+            LoadProcessingCurrent();
+            return true;
+        }
+
+        return false;
+    }
+
+    private void LoadProcessingCurrent()
+    {
+        if (CurrentProcessingTarget is not { } target)
+            return;
+
+        _currentProcessingRecurringTransactionId = null;
+
+        if (_processingSnapshots.TryGetValue(target, out var snapshot))
+        {
+            LoadProcessingTarget(target, snapshot);
+            return;
+        }
+
+        if (target is AccountVM account)
+            InitializeRepayment(account);
+        else if (target is SavingGoalVM goal)
+        {
+            ResetForm(false);
+            IsGoal = true;
+            SelectedGoal = goal;
+            SyncGoalUpdateName();
+        }
+        else if (target is RecurringTransactionVM recurring)
+        {
+            _currentProcessingRecurringTransactionId = recurring.Id;
+            ResetForm(false); IsRecurring = false; IsExpense = recurring.Type != RecurringTransactionType.Income;
+            NameText = recurring.Name; AmountText = recurring.Amount; SelectedExpenseCategory = recurring.Category ?? ExpenseCategory.Needs;
+            SelectedAccount = Accounts.FirstOrDefault(account => account.Id == recurring.Source.Id);
+            SelectedTag = recurring.Tag; SelectedDate = DateTime.Today;
+        }
+    }
+
+    private void LoadProcessingTarget(object target, FormState snapshot)
+    {
+        _currentProcessingRecurringTransactionId = (target as RecurringTransactionVM)?.Id;
+        ResetForm(false);
+        IsExpense = snapshot.IsExpense;
+        IsGoal = snapshot.IsGoal;
+        IsRepayment = snapshot.IsRepayment;
+        IsRecurring = snapshot.IsRecurring;
+        IsInstallments = snapshot.IsInstallments;
+        IsPinned = snapshot.IsPinned;
+        IsIoU = snapshot.IsIoU;
+        ShouldAffectBalance = snapshot.ShouldAffectBalance;
+        IsExcludedFromBudget = snapshot.IsExcludedFromBudget;
+        SelectedRecurringPeriod = snapshot.SelectedRecurringPeriod;
+        NameText = snapshot.NameText;
+        AmountText = snapshot.AmountText;
+        RecurringTimeText = snapshot.RecurringTimeText;
+        NoteText = snapshot.NoteText;
+        SelectedDate = snapshot.SelectedDate;
+        InstallmentEndDate = snapshot.InstallmentEndDate;
+        SelectedExpenseCategory = snapshot.SelectedExpenseCategory;
+        SelectedAccount = Accounts.FirstOrDefault(account => account.Id == snapshot.SelectedAccountId);
+        SelectedTag = _orderedTags.FirstOrDefault(tag => tag.Id == snapshot.SelectedTagId);
+        SelectedGoal = Goals.FirstOrDefault(goal => goal.Id == snapshot.SelectedGoalId);
+        SelectedRepaymentAccount = RepaymentAccounts.FirstOrDefault(account => account.Id == snapshot.SelectedRepaymentAccountId);
+    }
+
+    private void ClearProcessing()
+    {
+        _processingRepayments.Clear();
+        _processingGoals.Clear();
+        _processingRecurringTransactions.Clear();
+        _processingStates.Clear();
+        _processingSnapshots.Clear();
+        _currentProcessingIndex = 0;
+        _currentProcessingRecurringTransactionId = null;
+        ProcessingStepCount = 0;
+        CurrentProcessingStep = 0;
+        NotifyProcessingChanged();
     }
 
     private void NotifyProcessingChanged()
     {
+        var navigableTargets = ProcessingTargets.Where(target => _processingStates[target] != ProcessingState.Skipped).ToList();
+        ProcessingStepCount = navigableTargets.Count;
+        CurrentProcessingStep = CurrentProcessingTarget is { } current
+            ? Math.Max(1, navigableTargets.IndexOf(current) + 1)
+            : 0;
         OnPropertyChanged(nameof(IsProcessingSession)); OnPropertyChanged(nameof(CurrentProcessingStep));
         OnPropertyChanged(nameof(ProcessingStepCount)); OnPropertyChanged(nameof(CurrentProcessingRecurringTransactionId)); OnPropertyChanged(nameof(PopupMode));
+        OnPropertyChanged(nameof(CanSkipProcessing));
     }
 
     private readonly record struct FormState(
         bool IsExpense,
         bool IsGoal,
+        bool IsRepayment,
         bool IsRecurring,
         bool IsInstallments,
         bool IsPinned,
@@ -2664,7 +2833,8 @@ public partial class AddNewTransactionVM : ObservableValidator
         ExpenseCategory SelectedExpenseCategory,
         int SelectedAccountId,
         int SelectedTagId,
-        int SelectedGoalId);
+        int SelectedGoalId,
+        int SelectedRepaymentAccountId);
 
     private readonly record struct PendingTransactionInputState(
         string NameText,

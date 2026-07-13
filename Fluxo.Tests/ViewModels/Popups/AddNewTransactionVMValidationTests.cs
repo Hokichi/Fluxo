@@ -2647,6 +2647,63 @@ public sealed class AddNewTransactionVMValidationTests
         };
     }
 
+    [Fact]
+    public void ProcessingNextAndBack_RestoresEditsWithoutPersisting()
+    {
+        RunInSta(() =>
+        {
+            var source = CreateCheckingSource(balance: 500m);
+            var appData = CreateAppData();
+            var vm = new AddNewTransactionVM(CreateMainViewModel([source]), appData);
+            var first = new RecurringTransactionVM
+            {
+                Id = 1, Name = "First", Amount = 10m, Type = RecurringTransactionType.Expense,
+                Category = ExpenseCategory.Needs, Source = source, Tag = new TagVM { Id = 1, Name = "General" }
+            };
+            var second = new RecurringTransactionVM
+            {
+                Id = 2, Name = "Second", Amount = 20m, Type = RecurringTransactionType.Expense,
+                Category = ExpenseCategory.Needs, Source = source, Tag = new TagVM { Id = 1, Name = "General" }
+            };
+            vm.InitializeRecurringProcessing([first, second]);
+            vm.NameText = "First edited";
+            vm.AmountText = 12m;
+
+            var result = vm.SaveCurrentAndAdvanceAsync().GetAwaiter().GetResult();
+            vm.NameText = "Second edited";
+            vm.NavigatePreviousProcessing();
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(first.Id, vm.CurrentProcessingRecurringTransactionId);
+            Assert.Equal("First edited", vm.NameText);
+            Assert.Equal(12m, vm.AmountText);
+            _ = appData.DidNotReceive().AddTransactionAsync(Arg.Any<Transaction>());
+        });
+    }
+
+    [Fact]
+    public void ProcessingSkip_IsNotPersisted()
+    {
+        RunInSta(() =>
+        {
+            var source = CreateCheckingSource(balance: 500m);
+            var appData = CreateAppData();
+            var vm = new AddNewTransactionVM(CreateMainViewModel([source]), appData);
+            var tag = new TagVM { Id = 1, Name = "General" };
+            vm.InitializeRecurringProcessing(
+            [
+                new RecurringTransactionVM { Id = 1, Name = "First", Amount = 10m, Type = RecurringTransactionType.Expense, Category = ExpenseCategory.Needs, Source = source, Tag = tag },
+                new RecurringTransactionVM { Id = 2, Name = "Second", Amount = 20m, Type = RecurringTransactionType.Expense, Category = ExpenseCategory.Needs, Source = source, Tag = tag }
+            ]);
+
+            Assert.True(vm.SaveCurrentAndAdvanceAsync().GetAwaiter().GetResult().IsSuccess);
+            Assert.False(vm.SkipCurrentProcessing());
+            Assert.True(vm.PersistProcessedItemsAsync().GetAwaiter().GetResult().IsSuccess);
+
+            _ = appData.Received(1).AddTransactionAsync(Arg.Any<Transaction>());
+        });
+    }
+
     private static void RunInSta(Action action)
     {
         Exception? failure = null;

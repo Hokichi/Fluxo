@@ -44,6 +44,10 @@ public class BasePopup : Window, IPopupHost
         DependencyProperty.Register(nameof(CanContinue), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(false));
 
+    public static readonly DependencyProperty CanSkipProperty =
+        DependencyProperty.Register(nameof(CanSkip), typeof(bool), typeof(BasePopup),
+            new PropertyMetadata(false));
+
     public static readonly DependencyProperty CanDiscardProperty =
         DependencyProperty.Register(nameof(CanDiscard), typeof(bool), typeof(BasePopup),
             new PropertyMetadata(true));
@@ -164,6 +168,12 @@ public class BasePopup : Window, IPopupHost
         set => SetValue(CanContinueProperty, value);
     }
 
+    public bool CanSkip
+    {
+        get => (bool)GetValue(CanSkipProperty);
+        set => SetValue(CanSkipProperty, value);
+    }
+
     public bool CanDiscard
     {
         get => (bool)GetValue(CanDiscardProperty);
@@ -247,6 +257,7 @@ public class BasePopup : Window, IPopupHost
         WireButton("PART_BackButton", _ => OnBackButtonClick());
         WireButton("PART_NextButton", _ => OnNextButtonClick());
         WireButton("PART_FinishButton", _ => OnFinishButtonClick());
+        WireButton("PART_SkipButton", _ => OnSkipButtonClick());
         WireButton("PART_EditButton", _ => OnEditButtonClick());
         WireButton("PART_DeleteButton", _ => OnDeleteButtonClick());
         WireButton("PART_CloneButton", _ => OnCloneButtonClick());
@@ -311,6 +322,8 @@ public class BasePopup : Window, IPopupHost
 
     protected virtual void OnFinishButtonClick() { }
 
+    protected virtual void OnSkipButtonClick() { }
+
     // Keyboard shortcuts
 
     protected override void OnPreviewKeyDown(KeyEventArgs e)
@@ -331,6 +344,15 @@ public class BasePopup : Window, IPopupHost
                 else
                     OnCloseButtonClick();
                 return true;
+
+            case Key.Enter when modifiers == ModifierKeys.Control:
+                if (Mode == PopupMode.BackNext && CanSkip)
+                {
+                    OnSkipButtonClick();
+                    return true;
+                }
+
+                return false;
 
             case Key.Enter when modifiers == ModifierKeys.Shift:
                 if (Mode == PopupMode.SaveDiscard && CanContinue && IsSaveAndCreateNewButtonEnabled)
