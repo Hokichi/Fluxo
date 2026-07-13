@@ -127,6 +127,7 @@ public sealed record BackupRecurringTransaction(
     int? TagBackupId,
     int? GoalBackupId,
     bool IsEnabled,
+    bool IsExcludedFromBudget = false,
     DateTime? EndDate = null);
 
 public sealed record BackupUserSetting(string Name, string Value);

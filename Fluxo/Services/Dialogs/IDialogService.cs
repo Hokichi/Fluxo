@@ -30,7 +30,7 @@ public interface IDialogService
 
     bool? ShowAddNewTransaction(AddNewTransactionVM viewModel, Window? owner = null);
 
-    bool? ShowTransactionDetail(TransactionDetailVM viewModel, Window? owner = null);
+    bool? ShowTransactionSplit(TransactionDetailVM viewModel, Window? owner = null);
 
     bool? ShowAccountDetail(AccountDetailVM viewModel, Window? owner = null);
 

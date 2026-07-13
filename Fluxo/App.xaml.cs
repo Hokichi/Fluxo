@@ -889,6 +889,9 @@ public partial class App : Application
         if (allMigrations.Count == 0)
             return null;
 
+        if (await ColumnExistsAsync(dbContext, "RecurringTransactions", "IsExcludedFromBudget", cancellationToken))
+            return "20260713093244_AddRecurringBudgetExclusionAndRepairTransactionTags";
+
         if (await ColumnExistsAsync(dbContext, "Transactions", "RelatedRecurringTransactionId", cancellationToken))
             return "20260710233033_RemoveNotificationsAndAddRelatedRecurringTransaction";
 

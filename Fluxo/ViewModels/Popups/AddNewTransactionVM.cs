@@ -158,15 +158,16 @@ public partial class AddNewTransactionVM : ObservableValidator
     public ObservableCollection<SavingGoalVM> Goals { get; } = [];
     public ObservableCollection<TagVM> VisibleTags { get; } = [];
     public ObservableCollection<TagVM> OverflowTags { get; } = [];
+    public ObservableCollection<TransactionDetailChildTransactionVM> ChildTransactions { get; } = [];
     public ObservableCollection<AddNewTransactionSuggestion> TransactionNameSuggestions { get; } = [];
     public AddNewTransactionHistoryListVM PinnedHistory { get; } = new();
     public AddNewTransactionHistoryListVM TransactionHistory { get; } = new();
     public bool IsNeedsCategory { get => SelectedExpenseCategory == ExpenseCategory.Needs; set { if (value) SelectedExpenseCategory = ExpenseCategory.Needs; } }
     public bool IsWantsCategory { get => SelectedExpenseCategory == ExpenseCategory.Wants; set { if (value) SelectedExpenseCategory = ExpenseCategory.Wants; } }
     public bool IsInvestCategory { get => SelectedExpenseCategory == ExpenseCategory.Savings; set { if (value) SelectedExpenseCategory = ExpenseCategory.Savings; } }
-    public bool ShowCategoryImpact => AmountText > 0m && !IsUnpostedIoUMode &&
+    public bool ShowCategoryImpact => !IsViewOnly && !IsRecurringTransactionMode && AmountText > 0m && !IsUnpostedIoUMode &&
                                       (IsRepayment || (IsExpense && !IsExcludedFromBudget));
-    public bool ShowAccountImpact => AmountText > 0m && !IsUnpostedIoUMode && SelectedAccount is not null;
+    public bool ShowAccountImpact => !IsViewOnly && !IsRecurringTransactionMode && AmountText > 0m && !IsUnpostedIoUMode && SelectedAccount is not null;
     public decimal CategoryCurrent => IsRepayment
         ? SelectedRepaymentAccount?.SpentAmount ?? 0m
         : ShowCategoryImpact ? GetCategoryCurrentAmount() : 0m;
@@ -257,10 +258,17 @@ public partial class AddNewTransactionVM : ObservableValidator
     public string InstallmentSummaryText => BuildInstallmentSummaryText();
     public bool CanToggleRecurring => !IsRecurringModeLocked && !IsRepayment;
     public bool CanUseHistory => true;
+    public bool ShowHistoryPanel => _popupPurpose == TransactionPopupPurpose.AddNewTransaction && IsHistoryOpen;
+    public bool ShowChildTransactionsPanel => IsViewOnly && ChildTransactions.Count > 0;
+    public bool ShowSidePanel => ShowHistoryPanel || ShowChildTransactionsPanel;
     public bool CanEditTransactionName => !IsGoal && !IsRepayment;
     public bool CanEditCategory => IsExpense && !IsRepayment;
     public bool CanEditTags => !IsGoal && !IsRepayment;
     public bool CanChangeTransactionType => !_isTransactionTypeLocked;
+    public bool CanEditViewedTransaction => IsViewOnly && ViewedTransaction?.Tag?.IsSystemTag != true;
+    public bool CanCloneViewedTransaction => CanEditViewedTransaction;
+    public bool CanSplitViewedTransaction => CanEditViewedTransaction;
+    public bool CanDeleteViewedTransaction => IsViewOnly;
     public bool CanPinTransaction => _popupPurpose == TransactionPopupPurpose.AddNewTransaction &&
                                      !IsRecurringTransactionMode &&
                                      !IsRepayment;
@@ -268,10 +276,19 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     public string PopupTitle => _popupPurpose switch
     {
+        TransactionPopupPurpose.Processing => "Payment Processing",
+        TransactionPopupPurpose.ViewTransaction => "Transaction Detail",
+        TransactionPopupPurpose.EditTransaction => "Modify Transaction",
         TransactionPopupPurpose.AddRecurringTransaction => "Add Recurring Transaction",
         TransactionPopupPurpose.EditRecurringTransaction => "Edit Recurring Transaction",
         _ => "Add New Transaction"
     };
+
+    public bool IsViewOnly => _popupPurpose == TransactionPopupPurpose.ViewTransaction;
+    public bool IsEditingViewedTransaction => _popupPurpose == TransactionPopupPurpose.EditTransaction;
+    public bool CanContinue => _popupPurpose is TransactionPopupPurpose.AddNewTransaction or TransactionPopupPurpose.AddRecurringTransaction;
+    public bool CanDiscard => _popupPurpose is TransactionPopupPurpose.EditRecurringTransaction or TransactionPopupPurpose.EditTransaction;
+    public TransactionVM? ViewedTransaction { get; private set; }
 
     public bool ShowNoteField => !IsGoal && !IsRepayment;
     public bool ShowGoalField => IsGoal;
@@ -323,6 +340,10 @@ public partial class AddNewTransactionVM : ObservableValidator
         SelectedTag = selectedTagId is null
             ? _orderedTags.FirstOrDefault()
             : _orderedTags.FirstOrDefault(tag => tag.Id == selectedTagId.Value) ?? _orderedTags.FirstOrDefault();
+
+        if (_popupPurpose is TransactionPopupPurpose.AddNewTransaction or TransactionPopupPurpose.EditTransaction &&
+            SelectedTag is { } selectedTag && _orderedTags.FirstOrDefault()?.Id != selectedTag.Id)
+            PromoteTagToVisibleStart(selectedTag);
     }
 
     public bool IsIncome
@@ -351,8 +372,11 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     public bool HasMoreTags => OverflowTags.Count > 0;
     public bool IsProcessingSession => ProcessingTargets.Any();
+    public bool IsProcessingComplete => IsProcessingSession && _processingStates.Values.All(state => state != ProcessingState.Pending);
     public bool CanSkipProcessing => IsProcessingSession && CurrentProcessingTarget is not null;
-    public PopupMode PopupMode => IsProcessingSession ? PopupMode.BackNext : PopupMode.SaveDiscard;
+    public PopupMode PopupMode => _popupPurpose == TransactionPopupPurpose.Processing
+        ? PopupMode.BackNext
+        : IsViewOnly ? PopupMode.Functional : PopupMode.SaveDiscard;
     public int CurrentProcessingStep { get; private set; } = 1;
     public int ProcessingStepCount { get; private set; }
     public int? CurrentProcessingRecurringTransactionId => _currentProcessingRecurringTransactionId;
@@ -362,6 +386,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         InitializeProcessing(accounts);
         _processingRepayments.AddRange(accounts);
         LoadProcessingCurrent();
+        SetPopupPurpose(TransactionPopupPurpose.Processing);
         NotifyProcessingChanged();
     }
 
@@ -370,6 +395,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         InitializeProcessing(goals);
         _processingGoals.AddRange(goals);
         LoadProcessingCurrent();
+        SetPopupPurpose(TransactionPopupPurpose.Processing);
         NotifyProcessingChanged();
     }
 
@@ -378,6 +404,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         InitializeProcessing(recurringTransactions);
         _processingRecurringTransactions.AddRange(recurringTransactions);
         LoadProcessingCurrent();
+        SetPopupPurpose(TransactionPopupPurpose.Processing);
         NotifyProcessingChanged();
     }
 
@@ -782,6 +809,104 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(CanChangeTransactionType));
     }
 
+    public void InitializeView(TransactionVM transaction)
+    {
+        ArgumentNullException.ThrowIfNull(transaction);
+
+        ReloadChoicesFromMainViewModel();
+        IsExpense = transaction.Type == TransactionType.Expense;
+        IsGoal = transaction.GoalId is not null;
+        IsRepayment = transaction.RepaymentAccountId is not null;
+        NameText = transaction.Name;
+        AmountText = transaction.Amount;
+        NoteText = transaction.Notes;
+        SelectedDate = transaction.OccurredOn.Date;
+        SelectedExpenseCategory = transaction.ExpenseCategory ?? ExpenseCategory.Needs;
+        IsPinned = transaction.IsPinned;
+        IsIoU = transaction.IsIoU;
+        ShouldAffectBalance = transaction.ShouldAffectBalance;
+        IsExcludedFromBudget = transaction.IsExcludedFromBudget;
+        SelectedAccount = Accounts.FirstOrDefault(account => account.Id == transaction.SourceAccountId) ?? transaction.Account;
+        SelectedTag = transaction.Tag;
+        ViewedTransaction = transaction;
+        _isTransactionTypeLocked = true;
+        SetPopupPurpose(TransactionPopupPurpose.ViewTransaction);
+        OnPropertyChanged(nameof(CanChangeTransactionType));
+        OnPropertyChanged(nameof(IsViewOnly));
+        OnPropertyChanged(nameof(CanContinue));
+        OnPropertyChanged(nameof(CanDiscard));
+        OnPropertyChanged(nameof(PopupMode));
+        OnPropertyChanged(nameof(CanEditViewedTransaction));
+        OnPropertyChanged(nameof(CanCloneViewedTransaction));
+        OnPropertyChanged(nameof(CanSplitViewedTransaction));
+    }
+
+    public void InitializeChildTransactions(IEnumerable<TransactionDetailChildTransactionVM> childTransactions)
+    {
+        ChildTransactions.Clear();
+        foreach (var childTransaction in childTransactions)
+            ChildTransactions.Add(childTransaction);
+
+        OnPropertyChanged(nameof(ShowChildTransactionsPanel));
+        OnPropertyChanged(nameof(ShowSidePanel));
+    }
+
+    public void BeginEditingViewedTransaction()
+    {
+        if (ViewedTransaction is null || !CanEditViewedTransaction)
+            return;
+
+        SetPopupPurpose(TransactionPopupPurpose.EditTransaction);
+        BeginChangeTracking();
+    }
+
+    public void DiscardEditingViewedTransaction()
+    {
+        if (ViewedTransaction is not { } transaction)
+            return;
+
+        InitializeView(transaction);
+        BeginChangeTracking();
+    }
+
+    public TransactionEditInput CreateTransactionEditInput()
+    {
+        if (ViewedTransaction is null || SelectedAccount is null || SelectedTag is null)
+            throw new InvalidOperationException("The transaction edit is incomplete.");
+
+        return new TransactionEditInput(
+            NameText,
+            AmountText,
+            IsPinned,
+            NoteText,
+            SelectedDate,
+            SelectedExpenseCategory,
+            SelectedAccount.Id,
+            SelectedTag.Id,
+            IsIoU,
+            ShouldAffectBalance,
+            IsExcludedFromBudget);
+    }
+
+    public AddNewTransactionDraft CreateViewedTransactionDraft()
+    {
+        var transaction = ViewedTransaction ?? throw new InvalidOperationException("No transaction is being viewed.");
+        return new AddNewTransactionDraft(
+            transaction.Type == TransactionType.Expense,
+            transaction.Name,
+            transaction.Amount,
+            transaction.SourceAccountId,
+            transaction.OccurredOn,
+            transaction.Notes,
+            transaction.ExpenseCategory,
+            transaction.Tag?.Id,
+            transaction.GoalId is not null,
+            transaction.GoalId,
+            transaction.IsIoU,
+            transaction.IsExcludedFromBudget,
+            ShouldAffectBalance: transaction.ShouldAffectBalance);
+    }
+
     partial void OnIsExpenseChanged(bool value)
     {
         var resetExclusion = value && (IsGoal || IsRepayment);
@@ -970,7 +1095,10 @@ public partial class AddNewTransactionVM : ObservableValidator
         if (_isUpdatingTagCollections || value is null)
             return;
 
-        if (OverflowTags.Any(tag => tag.Id == value.Id))
+        if ((ViewedTransaction is null && _popupPurpose == TransactionPopupPurpose.AddNewTransaction ||
+             _popupPurpose == TransactionPopupPurpose.EditTransaction ||
+             OverflowTags.Any(tag => tag.Id == value.Id)) &&
+            _orderedTags.FirstOrDefault()?.Id != value.Id)
             PromoteTagToVisibleStart(value);
 
         IsMoreTagsOpen = false;
@@ -1115,6 +1243,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                 recurring.SourceId = input.AccountId;
                 recurring.TagId = input.IsGoal ? null : input.TagId;
                 recurring.GoalId = input.IsGoal ? input.GoalId : null;
+                recurring.IsExcludedFromBudget = input.IsExcludedFromBudget;
                 recurring.IsEnabled = true;
                 recurring.EndDate = input.IsInstallments ? input.InstallmentEndDate : null;
 
@@ -2612,6 +2741,19 @@ public partial class AddNewTransactionVM : ObservableValidator
         int? TagId,
         DateTime? Date);
 
+    public readonly record struct TransactionEditInput(
+        string Name,
+        decimal Amount,
+        bool IsPinned,
+        string Note,
+        DateTime Date,
+        ExpenseCategory Category,
+        int AccountId,
+        int TagId,
+        bool IsIoU,
+        bool ShouldAffectBalance,
+        bool IsExcludedFromBudget);
+
     public readonly record struct AddNewTransactionSubmissionResult(bool IsSuccess, string? ErrorMessage)
     {
         public static AddNewTransactionSubmissionResult Success()
@@ -2734,7 +2876,6 @@ public partial class AddNewTransactionVM : ObservableValidator
             return;
 
         _currentProcessingRecurringTransactionId = null;
-
         if (_processingSnapshots.TryGetValue(target, out var snapshot))
         {
             LoadProcessingTarget(target, snapshot);
@@ -2757,7 +2898,10 @@ public partial class AddNewTransactionVM : ObservableValidator
             NameText = recurring.Name; AmountText = recurring.Amount; SelectedExpenseCategory = recurring.Category ?? ExpenseCategory.Needs;
             SelectedAccount = Accounts.FirstOrDefault(account => account.Id == recurring.Source.Id);
             SelectedTag = recurring.Tag; SelectedDate = DateTime.Today;
+            IsExcludedFromBudget = recurring.IsExcludedFromBudget;
         }
+
+        SetPopupPurpose(TransactionPopupPurpose.Processing);
     }
 
     private void LoadProcessingTarget(object target, FormState snapshot)
@@ -2785,6 +2929,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         SelectedTag = _orderedTags.FirstOrDefault(tag => tag.Id == snapshot.SelectedTagId);
         SelectedGoal = Goals.FirstOrDefault(goal => goal.Id == snapshot.SelectedGoalId);
         SelectedRepaymentAccount = RepaymentAccounts.FirstOrDefault(account => account.Id == snapshot.SelectedRepaymentAccountId);
+        SetPopupPurpose(TransactionPopupPurpose.Processing);
     }
 
     private void ClearProcessing()
@@ -2798,6 +2943,7 @@ public partial class AddNewTransactionVM : ObservableValidator
         _currentProcessingRecurringTransactionId = null;
         ProcessingStepCount = 0;
         CurrentProcessingStep = 0;
+        SetPopupPurpose(TransactionPopupPurpose.AddNewTransaction);
         NotifyProcessingChanged();
     }
 
@@ -2810,7 +2956,9 @@ public partial class AddNewTransactionVM : ObservableValidator
             : 0;
         OnPropertyChanged(nameof(IsProcessingSession)); OnPropertyChanged(nameof(CurrentProcessingStep));
         OnPropertyChanged(nameof(ProcessingStepCount)); OnPropertyChanged(nameof(CurrentProcessingRecurringTransactionId)); OnPropertyChanged(nameof(PopupMode));
-        OnPropertyChanged(nameof(CanSkipProcessing));
+        OnPropertyChanged(nameof(CanSkipProcessing)); OnPropertyChanged(nameof(IsProcessingComplete)); OnPropertyChanged(nameof(PopupTitle));
+        OnPropertyChanged(nameof(ShowHistoryPanel));
+        OnPropertyChanged(nameof(ShowSidePanel));
     }
 
     private readonly record struct FormState(
@@ -2875,6 +3023,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             ? string.Empty
             : recurring.RecurringTime.ToString(CultureInfo.InvariantCulture);
         SelectedAccount = Accounts.FirstOrDefault(source => source.Id == recurring.SourceId) ?? Accounts.FirstOrDefault();
+        IsExcludedFromBudget = recurring.IsExcludedFromBudget;
         SelectedTag = recurring.TagId is > 0 ? _orderedTags.FirstOrDefault(tag => tag.Id == recurring.TagId.Value) : _orderedTags.FirstOrDefault();
         SelectedGoal = recurring.GoalId is > 0 ? Goals.FirstOrDefault(goal => goal.Id == recurring.GoalId.Value) : Goals.FirstOrDefault();
         return true;
@@ -2988,7 +3137,7 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     private static decimal CalculateInstallmentAmount(decimal totalAmount, int count)
     {
-        return decimal.Round(totalAmount / count, 0, MidpointRounding.AwayFromZero);
+        return decimal.Round(totalAmount / count, 2, MidpointRounding.AwayFromZero);
     }
 
     private static string BuildInstallmentRecurringName(string name)
@@ -3126,7 +3275,10 @@ public partial class AddNewTransactionVM : ObservableValidator
     {
         AddNewTransaction,
         AddRecurringTransaction,
-        EditRecurringTransaction
+        EditRecurringTransaction,
+        ViewTransaction,
+        EditTransaction,
+        Processing
     }
 
     private void SetPopupPurpose(TransactionPopupPurpose purpose)
@@ -3140,6 +3292,13 @@ public partial class AddNewTransactionVM : ObservableValidator
 
         OnPropertyChanged(nameof(PopupTitle));
         OnPropertyChanged(nameof(CanPinTransaction));
+        OnPropertyChanged(nameof(IsViewOnly));
+        OnPropertyChanged(nameof(CanContinue));
+        OnPropertyChanged(nameof(CanDiscard));
+        OnPropertyChanged(nameof(PopupMode));
+        OnPropertyChanged(nameof(ShowHistoryPanel));
+        OnPropertyChanged(nameof(ShowChildTransactionsPanel));
+        OnPropertyChanged(nameof(ShowSidePanel));
     }
 
     private void SyncGoalUpdateName()

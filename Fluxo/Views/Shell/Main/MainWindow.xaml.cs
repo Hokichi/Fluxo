@@ -1459,7 +1459,13 @@ public partial class MainWindow : Window, IPopupHost
         using var scope = _serviceProvider.CreateScope();
         var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
         var targetTransaction = await TransactionDetailTargetResolver.ResolveAsync(transaction, appData);
-        await ShowTransactionDetailPopupAsync(targetTransaction, appData, beginEditing: false);
+        if (targetTransaction is null)
+            return;
+
+        var popupViewModel = new AddNewTransactionVM(_mainVM, appData);
+        popupViewModel.InitializeView(targetTransaction);
+        await InitializeTransactionChildrenAsync(popupViewModel, targetTransaction.Id, appData);
+        _dialogService.ShowAddNewTransaction(popupViewModel, this);
     }
 
     private async Task OpenNotificationProcessingAsync(string category, IReadOnlyList<int> entityIds)
@@ -1488,7 +1494,8 @@ public partial class MainWindow : Window, IPopupHost
             var recurring = (await appData.GetRecurringTransactionsAsync()).Where(item => entityIds.Contains(item.Id)).Select(item => new RecurringTransactionVM
             {
                 Id = item.Id, Name = item.Name, Amount = item.Amount, Type = item.Type, Category = item.Category,
-                Source = new AccountVM { Id = item.SourceId }, Tag = item.TagId is null ? null : new TagVM { Id = item.TagId.Value }
+                Source = new AccountVM { Id = item.SourceId }, Tag = item.TagId is null ? null : new TagVM { Id = item.TagId.Value },
+                IsExcludedFromBudget = item.IsExcludedFromBudget
             }).ToList();
             popup.InitializeRecurringProcessing(recurring);
         }
@@ -1506,19 +1513,10 @@ public partial class MainWindow : Window, IPopupHost
         if (targetTransaction is null)
             return;
 
-        await ShowTransactionDetailPopupAsync(targetTransaction, appData, beginEditing: false);
-    }
-
-    private async Task ShowTransactionDetailPopupAsync(
-        TransactionVM transaction,
-        IAppDataService appData,
-        bool beginEditing)
-    {
-        var popupViewModel = new TransactionDetailVM(_mainVM, transaction, appData);
-        if (beginEditing)
-            await popupViewModel.BeginEditingAsync();
-
-        _dialogService.ShowTransactionDetail(popupViewModel, this);
+        var popupViewModel = new AddNewTransactionVM(_mainVM, appData);
+        popupViewModel.InitializeView(targetTransaction);
+        await InitializeTransactionChildrenAsync(popupViewModel, targetTransaction.Id, appData);
+        _dialogService.ShowAddNewTransaction(popupViewModel, this);
     }
 
     public void OpenAccountsListPopup()
@@ -1957,7 +1955,86 @@ public partial class MainWindow : Window, IPopupHost
         using var scope = _serviceProvider.CreateScope();
         var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
         var targetTransaction = await TransactionDetailTargetResolver.ResolveAsync(transaction, appData);
-        await ShowTransactionDetailPopupAsync(targetTransaction, appData, beginEditing: true);
+        if (targetTransaction is null)
+            return;
+
+        var popupViewModel = new AddNewTransactionVM(_mainVM, appData);
+        popupViewModel.InitializeView(targetTransaction);
+        popupViewModel.BeginEditingViewedTransaction();
+        _dialogService.ShowAddNewTransaction(popupViewModel, this);
+    }
+
+    public async void OpenTransactionSplitPopup(TransactionVM transaction, Window owner)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
+        var targetTransaction = await TransactionDetailTargetResolver.ResolveAsync(transaction, appData);
+        if (targetTransaction is null)
+            return;
+
+        var popupViewModel = new TransactionDetailVM(_mainVM, targetTransaction, appData);
+        await popupViewModel.BeginSplitModeAsync();
+        _dialogService.ShowTransactionSplit(popupViewModel, owner);
+    }
+
+    private static async Task InitializeTransactionChildrenAsync(
+        AddNewTransactionVM popupViewModel,
+        int parentTransactionId,
+        IAppDataService appData)
+    {
+        var children = (await appData.GetTransactionsAsync())
+            .Where(transaction => transaction.ParentTransactionId == parentTransactionId && !transaction.IsForDeletion)
+            .Select(transaction => new TransactionDetailChildTransactionVM
+            {
+                Id = transaction.Id,
+                Name = transaction.Name,
+                Amount = transaction.Amount,
+                OccurredOn = transaction.OccurredOn,
+                Category = transaction.ExpenseCategory ?? ExpenseCategory.Needs,
+                AccountName = transaction.Account?.Name ?? string.Empty,
+                TagName = transaction.Tag?.Name ?? string.Empty,
+                TagHexCode = transaction.Tag?.HexCode ?? string.Empty,
+                Notes = transaction.Notes,
+                IsIoU = transaction.IsIoU
+            });
+        popupViewModel.InitializeChildTransactions(children);
+    }
+
+    public async Task<TransactionDetailVM.TransactionDetailSaveResult> DeleteTransactionAsync(TransactionVM transaction)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
+        var targetTransaction = await TransactionDetailTargetResolver.ResolveAsync(transaction, appData);
+        if (targetTransaction is null)
+            return TransactionDetailVM.TransactionDetailSaveResult.Failure("Unable to load this transaction.");
+
+        return await new TransactionDetailVM(_mainVM, targetTransaction, appData).DeleteAsync();
+    }
+
+    public async Task<TransactionDetailVM.TransactionDetailSaveResult> SaveTransactionEditAsync(
+        TransactionVM transaction,
+        AddNewTransactionVM.TransactionEditInput input)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
+        var targetTransaction = await TransactionDetailTargetResolver.ResolveAsync(transaction, appData);
+        if (targetTransaction is null)
+            return TransactionDetailVM.TransactionDetailSaveResult.Failure("Unable to load this transaction.");
+
+        var editor = new TransactionDetailVM(_mainVM, targetTransaction, appData);
+        await editor.BeginEditingAsync();
+        editor.NameText = input.Name;
+        editor.AmountText = input.Amount;
+        editor.IsPinned = input.IsPinned;
+        editor.NoteText = input.Note;
+        editor.SelectedDate = input.Date;
+        editor.SelectedExpenseCategory = input.Category;
+        editor.SelectedAccount = editor.Accounts.FirstOrDefault(account => account.Id == input.AccountId);
+        editor.SelectedTag = editor.VisibleTags.Concat(editor.OverflowTags).FirstOrDefault(tag => tag.Id == input.TagId);
+        editor.IsIoU = input.IsIoU;
+        editor.ShouldAffectBalance = input.ShouldAffectBalance;
+        editor.IsExcludedFromBudget = input.IsExcludedFromBudget;
+        return await editor.SaveAsync();
     }
 
     private void PublishDashboardViewMode()

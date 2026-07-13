@@ -19,7 +19,7 @@ using Fluxo.Views.Shell.Main;
 
 namespace Fluxo.Views.Popups;
 
-public partial class TransactionDetailPopup : BasePopup
+public partial class TransactionSplitPopup : BasePopup
 {
     private enum MoreTagsPopupLifecycleState
     {
@@ -40,7 +40,7 @@ public partial class TransactionDetailPopup : BasePopup
     private bool _isSyncingNoteDocument;
     private readonly PropertyChangedEventHandler _viewModelPropertyChangedHandler;
 
-    public TransactionDetailPopup(
+    public TransactionSplitPopup(
         TransactionDetailVM viewModel,
         IDialogService dialogService,
         SettingsTagsTabVM settingsTagsTabViewModel)
@@ -60,9 +60,6 @@ public partial class TransactionDetailPopup : BasePopup
 
         _viewModelPropertyChangedHandler = (_, e) =>
         {
-            if (e.PropertyName == nameof(TransactionDetailVM.PopupTitle))
-                PopupTitle = _viewModel.PopupTitle;
-
             if (e.PropertyName is nameof(TransactionDetailVM.IsEditing) or nameof(TransactionDetailVM.IsSplitMode))
             {
                 UpdateButtonStates();
@@ -128,7 +125,7 @@ public partial class TransactionDetailPopup : BasePopup
         var confirmation = FluxoMessageBox.Show(
             this,
             _viewModel.DeleteConfirmationMessage,
-            "Transaction Detail",
+            "Transaction Split",
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning);
 
@@ -153,14 +150,6 @@ public partial class TransactionDetailPopup : BasePopup
 
         UpdateButtonStates();
         SyncMoreTagsPopupState();
-    }
-
-    protected override void OnDiscardButtonClick()
-    {
-        _viewModel.CancelEditing();
-        SyncNoteDocumentFromViewModel();
-        SyncMoreTagsPopupState();
-        UpdateButtonStates();
     }
 
     protected override void OnPreviewKeyDown(KeyEventArgs e)
@@ -200,7 +189,7 @@ public partial class TransactionDetailPopup : BasePopup
                 var closeWithoutSaving = FluxoMessageBox.Show(
                     this,
                     "Close and discard unsaved changes?",
-                    "Transaction Detail",
+                    "Transaction Split",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question);
 
@@ -229,7 +218,7 @@ public partial class TransactionDetailPopup : BasePopup
             var confirmation = FluxoMessageBox.Show(
                 this,
                 "Save your changes before closing?",
-                "Transaction Detail",
+                "Transaction Split",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
 
@@ -277,6 +266,7 @@ public partial class TransactionDetailPopup : BasePopup
         var isEditing = _viewModel.IsEditing || _viewModel.IsSplitMode;
         Mode = isEditing ? PopupMode.SaveDiscard : PopupMode.Functional;
         CanContinue = false;
+        CanDiscard = false;
         CanEdit = !isEditing;
         CanDelete = !isEditing;
         CanClone = !isEditing;
@@ -574,7 +564,7 @@ public partial class TransactionDetailPopup : BasePopup
 
         var saveAnyway = _dialogService.ShowWarning(
             result.ErrorMessage ?? "This expense exceeds the destination account's maximum spending limit. Save anyway?",
-            "Transaction Detail",
+            "Transaction Split",
             this,
             MessageBoxButton.YesNo) == MessageBoxResult.Yes;
         if (!saveAnyway)

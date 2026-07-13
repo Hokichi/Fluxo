@@ -66,8 +66,10 @@ public sealed class RepaymentTransactionSupportTests
         Assert.True(pair.Expense.IsExcludedFromBudget);
         Assert.Equal(TransactionType.Income, pair.Income.Type);
         Assert.Equal("Repayment from Checking", pair.Income.Name);
+        Assert.Equal(3, pair.Income.TagId);
         Assert.Equal(2, pair.Income.SourceAccountId);
         Assert.Equal(2, pair.Income.RepaymentAccountId);
+        Assert.Equal(new DateTime(2026, 6, 28), pair.Income.OccurredOn);
         Assert.True(pair.Income.IsExcludedFromBudget);
     }
 

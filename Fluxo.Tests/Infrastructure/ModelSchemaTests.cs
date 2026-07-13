@@ -61,6 +61,7 @@ public sealed class ModelSchemaTests
         Assert.False(recurringTransaction.FindProperty("RecurringPeriod")!.IsNullable);
         Assert.False(recurringTransaction.FindProperty("RecurringTime")!.IsNullable);
         Assert.True(recurringTransaction.FindProperty(nameof(RecurringTransaction.Category))!.IsNullable);
+        Assert.Equal(false, recurringTransaction.FindProperty("IsExcludedFromBudget")!.GetDefaultValue());
         Assert.Null(recurringTransaction.FindProperty("RecurringDate"));
 
         var budgetAllocation = model.FindEntityType(typeof(BudgetAllocation))!;

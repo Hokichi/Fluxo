@@ -100,6 +100,7 @@ public sealed class FluxoDbContext(DbContextOptions<FluxoDbContext> options) : D
         entity.Property(transaction => transaction.RecurringTime);
         entity.Property(transaction => transaction.Type);
         entity.Property(transaction => transaction.Category);
+        entity.Property(transaction => transaction.IsExcludedFromBudget).HasDefaultValue(false);
         entity.Property(transaction => transaction.IsEnabled);
         entity.Property(transaction => transaction.EndDate);
 

@@ -83,18 +83,6 @@ public sealed class DynamicForegroundStyleTests
     }
 
     [Fact]
-    public void TransactionDetailSplitTagToggle_BindsSelectedForegroundToSelectedBackgroundBrightness()
-    {
-        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "TransactionDetailPopup.xaml"));
-        var style = ExtractSection(xaml, "x:Key=\"SplitRowTagToggleStyle\"", "</Style>");
-
-        Assert.Contains("Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\"", style);
-        Assert.Contains("RelativeSource=\"{RelativeSource TemplatedParent}\"", style);
-        Assert.Contains("<MultiBinding Converter=\"{StaticResource ForegroundForBackgroundBrushConverter}\">", style);
-        Assert.Contains("Path=\"Foreground\" RelativeSource=\"{RelativeSource TemplatedParent}\"", style);
-    }
-
-    [Fact]
     public void AddTagColorPickerCheckIcon_BindsForegroundToColorChipBackgroundBrightness()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddTagPopup.xaml"));

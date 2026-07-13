@@ -101,6 +101,8 @@ public partial class TransactionDetailVM : ObservableObject
 
     public bool AreFieldsReadOnly => !IsEditing;
     public bool CanEditFields => IsEditing;
+    public bool IsSystemTagged => _transaction.Tag?.IsSystemTag == true;
+    public bool ShowTagSelection => ShowNormalTransactionFields && !HasChildTransactions;
 
     public bool IsRegularMode
     {
@@ -358,6 +360,7 @@ public partial class TransactionDetailVM : ObservableObject
 
         OnPropertyChanged(nameof(HasChildTransactions));
         OnPropertyChanged(nameof(ShowChildTransactions));
+        OnPropertyChanged(nameof(ShowTagSelection));
     }
 
     private async Task LoadChildTransactionsIntoSplitRowsAsync(CancellationToken cancellationToken)
@@ -573,8 +576,8 @@ public partial class TransactionDetailVM : ObservableObject
             transaction.Name = resolvedName;
             transaction.Amount = input.Amount;
             transaction.ExpenseCategory = transaction.Type == TransactionType.Expense ? input.Category : null;
-            transaction.Tag = tag;
-            transaction.TagId = tag.Id;
+            transaction.Tag = HasChildTransactions ? null : tag;
+            transaction.TagId = HasChildTransactions ? null : tag.Id;
             transaction.IsPinned = input.IsPinned;
             transaction.OccurredOn = input.Date;
             transaction.Notes = input.Note;
@@ -880,6 +883,9 @@ public partial class TransactionDetailVM : ObservableObject
 
             _ = keepParentExpenseWhenRemainder;
             originalLog.ParentTransactionId = null;
+            originalLog.Tag = null;
+            originalLog.TagId = null;
+            _appData.UpdateTransaction(originalLog);
             var existingChildren = (await LoadChildTransactionEntitiesAsync(CancellationToken.None))
                 .ToDictionary(log => log.Id);
 

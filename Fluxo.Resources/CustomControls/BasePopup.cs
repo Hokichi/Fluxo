@@ -108,10 +108,12 @@ public class BasePopup : Window, IPopupHost
     private FrameworkElement? _contentRoot;
     private UIElement? _popupOverlay;
     private readonly PopupOverlayHandoffState _popupOverlayHandoffState = new();
+
     private readonly DispatcherTimer _popupOverlayDeferredHideTimer = new()
     {
         Interval = TimeSpan.FromMilliseconds(OverlayAnimDuration)
     };
+
     private EventHandler? _popupOverlayDeferredHideTickHandler;
     private bool _isAnimatingClose;
     private bool _isClosingForPopupHandoff;
@@ -316,13 +318,21 @@ public class BasePopup : Window, IPopupHost
 
     protected virtual void OnDiscardButtonClick() => OnCloseButtonClick();
 
-    protected virtual void OnBackButtonClick() { }
+    protected virtual void OnBackButtonClick()
+    {
+    }
 
-    protected virtual void OnNextButtonClick() { }
+    protected virtual void OnNextButtonClick()
+    {
+    }
 
-    protected virtual void OnFinishButtonClick() { }
+    protected virtual void OnFinishButtonClick()
+    {
+    }
 
-    protected virtual void OnSkipButtonClick() { }
+    protected virtual void OnSkipButtonClick()
+    {
+    }
 
     // Keyboard shortcuts
 

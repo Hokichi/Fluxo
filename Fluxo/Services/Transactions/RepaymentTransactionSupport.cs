@@ -75,6 +75,7 @@ public static class RepaymentTransactionSupport
             Notes = string.Empty,
             SourceAccountId = target.Id,
             RepaymentAccountId = target.Id,
+            TagId = balanceUpdateTag.Id,
             IsExcludedFromBudget = true
         };
 

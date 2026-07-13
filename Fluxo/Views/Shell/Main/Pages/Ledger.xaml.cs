@@ -100,7 +100,8 @@ public partial class Ledger : UserControl
                 continue;
             }
 
-            if (source is TextBox or ButtonBase or CheckBox or ComboBox or ListBox or Popup)
+            if (source is TextBox or ButtonBase or CheckBox or ComboBox or ListBox or Popup ||
+                source is Border { Name: "LedgerTransactionTagBadge" or "LedgerTransactionAccountBadge" })
                 return true;
 
             source = DependencyObjectTree.GetParent(source);

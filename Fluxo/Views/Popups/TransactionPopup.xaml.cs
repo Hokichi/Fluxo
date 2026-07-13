@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using Fluxo.Resources.Infrastructure;
 using Fluxo.Services.Dialogs;
@@ -14,10 +15,11 @@ using Fluxo.Services.Notifications;
 using Fluxo.ViewModels.Entities;
 using Fluxo.ViewModels.Popups;
 using Fluxo.ViewModels.Popups.Settings;
+using Fluxo.Views.Shell.Main;
 
 namespace Fluxo.Views.Popups;
 
-public partial class AddNewTransaction : BasePopup
+public partial class TransactionPopup : BasePopup
 {
     private enum MoreTagsPopupLifecycleState
     {
@@ -36,7 +38,7 @@ public partial class AddNewTransaction : BasePopup
     private bool _isSyncingNoteDocument;
     private bool _isFinalizingProcessing;
 
-    public AddNewTransaction(
+    public TransactionPopup(
         AddNewTransactionVM viewModel,
         IDialogService dialogService,
         SettingsTagsTabVM settingsTagsTabViewModel)
@@ -75,10 +77,83 @@ public partial class AddNewTransaction : BasePopup
 
     protected override async void OnSaveButtonClick()
     {
+        if (_viewModel.IsEditingViewedTransaction)
+        {
+            if (_viewModel.ViewedTransaction is not { } transaction || Owner is not MainWindow owner)
+                return;
+
+            var editResult = await owner.SaveTransactionEditAsync(transaction, _viewModel.CreateTransactionEditInput());
+            if (!editResult.IsSuccess)
+            {
+                ShowValidationMessage(editResult.ErrorMessage);
+                return;
+            }
+
+            Close();
+            return;
+        }
+
         if (!await ShouldSaveCurrentTransactionAsync())
             return;
 
         var result = await _viewModel.SaveAsync(false);
+        if (!result.IsSuccess)
+        {
+            ShowValidationMessage(result.ErrorMessage);
+            return;
+        }
+
+        Close();
+    }
+
+    protected override void OnEditButtonClick()
+    {
+        _viewModel.BeginEditingViewedTransaction();
+        FocusPrimaryInput();
+    }
+
+    protected override void OnDiscardButtonClick()
+    {
+        if (!_viewModel.IsEditingViewedTransaction)
+        {
+            base.OnDiscardButtonClick();
+            return;
+        }
+
+        if (_viewModel.HasChanges && FluxoMessageBox.Show(this, "Discard your changes?", "Transaction Detail",
+                MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            return;
+
+        _viewModel.DiscardEditingViewedTransaction();
+        ConfigureViewModeFocus();
+    }
+
+    protected override void OnCloneButtonClick()
+    {
+        if (_viewModel.ViewedTransaction is null || Owner is not MainWindow owner)
+            return;
+
+        var draft = _viewModel.CreateViewedTransactionDraft();
+        CloseForPopupHandoff();
+        owner.Dispatcher.BeginInvoke(new Action(() => owner.OpenAddNewTransactionPopup(draft)));
+    }
+
+    protected override void OnSplitButtonClick()
+    {
+        if (_viewModel.ViewedTransaction is not { } transaction || Owner is not MainWindow owner)
+            return;
+
+        owner.OpenTransactionSplitPopup(transaction, this);
+    }
+
+    protected override async void OnDeleteButtonClick()
+    {
+        if (_viewModel.ViewedTransaction is not { } transaction || Owner is not MainWindow owner ||
+            FluxoMessageBox.Show(this, "Delete this transaction?", "Transaction Detail", MessageBoxButton.YesNo,
+                MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            return;
+
+        var result = await owner.DeleteTransactionAsync(transaction);
         if (!result.IsSuccess)
         {
             ShowValidationMessage(result.ErrorMessage);
@@ -177,6 +252,12 @@ public partial class AddNewTransaction : BasePopup
 
     private void FocusPrimaryInput()
     {
+        if (_viewModel.IsViewOnly)
+        {
+            ConfigureViewModeFocus();
+            return;
+        }
+
         if (_viewModel.IsGoal)
         {
             ExpenseAmountTextBox.Focus();
@@ -190,6 +271,33 @@ public partial class AddNewTransaction : BasePopup
         }
 
         ExpenseNameTextBox.Focus();
+    }
+
+    private void ConfigureViewModeFocus()
+    {
+        Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() =>
+        {
+            foreach (var control in GetDescendantControls(this))
+            {
+                control.Focusable = false;
+                KeyboardNavigation.SetIsTabStop(control, false);
+            }
+
+            Focus();
+        }));
+    }
+
+    private static IEnumerable<Control> GetDescendantControls(DependencyObject root)
+    {
+        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(root); index++)
+        {
+            var child = VisualTreeHelper.GetChild(root, index);
+            if (child is Control control)
+                yield return control;
+
+            foreach (var descendant in GetDescendantControls(child))
+                yield return descendant;
+        }
     }
 
     protected override async void OnNextButtonClick() => await SaveAndAdvanceAsync();
@@ -210,7 +318,10 @@ public partial class AddNewTransaction : BasePopup
         else
         {
             SyncNoteDocumentFromViewModel();
-            FocusPrimaryInput();
+            if (_viewModel.IsViewOnly)
+                ConfigureViewModeFocus();
+            else
+                FocusPrimaryInput();
         }
     }
 
@@ -244,7 +355,7 @@ public partial class AddNewTransaction : BasePopup
             return;
         }
 
-        if (!_viewModel.IsProcessingSession)
+        if (!_viewModel.IsProcessingSession || _viewModel.IsProcessingComplete)
             Close();
     }
 

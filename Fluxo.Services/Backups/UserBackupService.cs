@@ -801,6 +801,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 TagId = tagId,
                 GoalId = goalId,
                 IsEnabled = backupRecurring.IsEnabled,
+                IsExcludedFromBudget = backupRecurring.IsExcludedFromBudget,
                 EndDate = backupRecurring.EndDate
             }, cancellationToken);
         }
@@ -1087,6 +1088,7 @@ public sealed class UserBackupService(IAppDataService appData) : IUserBackupServ
                 tagBackupId,
                 goalBackupId,
                 transaction.IsEnabled,
+                transaction.IsExcludedFromBudget,
                 transaction.EndDate));
         }
     }

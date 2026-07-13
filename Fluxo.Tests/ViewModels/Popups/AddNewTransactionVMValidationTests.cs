@@ -51,6 +51,7 @@ public sealed class AddNewTransactionVMValidationTests
             Assert.Equal("Add New Transaction", vm.PopupTitle);
             Assert.True(vm.CanChangeTransactionType);
             Assert.True(vm.CanPinTransaction);
+            Assert.True(vm.ShowHistoryPanel);
         });
     }
 
@@ -2666,6 +2667,9 @@ public sealed class AddNewTransactionVMValidationTests
                 Category = ExpenseCategory.Needs, Source = source, Tag = new TagVM { Id = 1, Name = "General" }
             };
             vm.InitializeRecurringProcessing([first, second]);
+
+            Assert.Equal(PopupMode.BackNext, vm.PopupMode);
+            Assert.Equal("Payment Processing", vm.PopupTitle);
             vm.NameText = "First edited";
             vm.AmountText = 12m;
 
@@ -2701,6 +2705,83 @@ public sealed class AddNewTransactionVMValidationTests
             Assert.True(vm.PersistProcessedItemsAsync().GetAwaiter().GetResult().IsSuccess);
 
             _ = appData.Received(1).AddTransactionAsync(Arg.Any<Transaction>());
+        });
+    }
+
+    [Fact]
+    public void InitializeView_UsesFunctionalReadOnlyMode()
+    {
+        RunInSta(() =>
+        {
+            var source = CreateCheckingSource(balance: 500m);
+            var vm = new AddNewTransactionVM(CreateMainViewModel([source]), CreateAppData());
+
+            vm.InitializeView(new TransactionVM
+            {
+                Id = 12,
+                Type = TransactionType.Income,
+                SourceAccountId = source.Id,
+                Account = source,
+                Name = "Salary",
+                Amount = 100m,
+                OccurredOn = new DateTime(2026, 7, 13)
+            });
+
+            Assert.True(vm.IsViewOnly);
+            Assert.Equal(PopupMode.Functional, vm.PopupMode);
+            Assert.False(vm.CanContinue);
+            Assert.False(vm.CanDiscard);
+            Assert.Equal("Transaction Detail", vm.PopupTitle);
+            Assert.True(vm.CanEditViewedTransaction);
+            Assert.True(vm.CanCloneViewedTransaction);
+            Assert.True(vm.CanSplitViewedTransaction);
+            Assert.Equal("Salary", vm.NameText);
+        });
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void EnsureTagsLoadedAsync_AddAndEditModes_LoadAllTagsAndPromoteSelectedTag(bool editMode)
+    {
+        RunInSta(() =>
+        {
+            var source = CreateCheckingSource(balance: 500m);
+            var tags = new[]
+            {
+                new Tag { Id = 1, Name = "Alpha", HexCode = "#111111" },
+                new Tag { Id = 2, Name = "Bravo", HexCode = "#222222" },
+                new Tag { Id = 3, Name = "Charlie", HexCode = "#333333" },
+                new Tag { Id = 4, Name = "Delta", HexCode = "#444444" },
+                new Tag { Id = 5, Name = "Echo", HexCode = "#555555" }
+            };
+            var appData = CreateAppData();
+            appData.GetTagsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IReadOnlyList<Tag>>(tags));
+            var vm = new AddNewTransactionVM(CreateMainViewModel([source]), appData);
+            var selectedTag = new TagVM { Id = 5, Name = "Echo", HexCode = "#555555" };
+
+            if (editMode)
+            {
+                vm.InitializeView(new TransactionVM
+                {
+                    Id = 15,
+                    Type = TransactionType.Expense,
+                    SourceAccountId = source.Id,
+                    Account = source,
+                    Tag = selectedTag
+                });
+                vm.BeginEditingViewedTransaction();
+                Assert.Equal("Modify Transaction", vm.PopupTitle);
+            }
+            else
+            {
+                vm.SelectedTag = selectedTag;
+            }
+
+            vm.EnsureTagsLoadedAsync().GetAwaiter().GetResult();
+
+            Assert.Equal([5, 1, 2, 3, 4], vm.VisibleTags.Concat(vm.OverflowTags).Select(tag => tag.Id));
+            Assert.Equal(5, vm.SelectedTag?.Id);
         });
     }
 

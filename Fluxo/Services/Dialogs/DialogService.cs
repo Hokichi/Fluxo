@@ -89,14 +89,14 @@ public sealed class DialogService : IDialogService
     public bool? ShowAddNewTransaction(AddNewTransactionVM viewModel, Window? owner = null)
     {
         using var scope = _serviceProvider.CreateScope();
-        var popup = ActivatorUtilities.CreateInstance<AddNewTransaction>(scope.ServiceProvider, viewModel);
+        var popup = ActivatorUtilities.CreateInstance<TransactionPopup>(scope.ServiceProvider, viewModel);
         return ShowDialog(popup, owner);
     }
 
-    public bool? ShowTransactionDetail(TransactionDetailVM viewModel, Window? owner = null)
+    public bool? ShowTransactionSplit(TransactionDetailVM viewModel, Window? owner = null)
     {
         using var scope = _serviceProvider.CreateScope();
-        var popup = ActivatorUtilities.CreateInstance<TransactionDetailPopup>(scope.ServiceProvider, viewModel);
+        var popup = ActivatorUtilities.CreateInstance<TransactionSplitPopup>(scope.ServiceProvider, viewModel);
         return ShowDialog(popup, owner);
     }
 

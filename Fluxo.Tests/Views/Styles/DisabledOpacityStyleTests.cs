@@ -32,7 +32,7 @@ public sealed class DisabledOpacityStyleTests
     }
 
     [Theory]
-    [InlineData(@"Fluxo\Views\Popups\AddNewTransaction.xaml", 197)]
+    [InlineData(@"Fluxo\Views\Popups\TransactionPopup.xaml", 197)]
     public void InlineDisabledControls_DimToFortyPercent(string relativePath, int controlLine)
     {
         var path = Path.Combine(RepositoryPaths.Root, relativePath);

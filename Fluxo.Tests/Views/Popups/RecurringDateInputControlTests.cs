@@ -9,7 +9,7 @@ public sealed class RecurringDateInputControlTests
     [Fact]
     public void AddNewTransaction_RecurringTimeInputsSwitchByPeriod()
     {
-        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "AddNewTransaction.xaml"));
+        var xaml = File.ReadAllText(RepositoryPaths.File("Fluxo", "Views", "Popups", "TransactionPopup.xaml"));
 
         Assert.Equal(3, CountNumericUpDownsBoundTo(xaml, "RecurringTimeText", "1", "28"));
         Assert.Equal(3, Regex.Matches(xaml, "ItemsSource=\"\\{Binding RecurringPeriods\\}\"").Count);
