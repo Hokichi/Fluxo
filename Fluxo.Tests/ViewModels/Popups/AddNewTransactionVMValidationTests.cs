@@ -56,6 +56,22 @@ public sealed class AddNewTransactionVMValidationTests
     }
 
     [Fact]
+    public void PostedIoU_ForcesBudgetExclusion()
+    {
+        RunInSta(() =>
+        {
+            var vm = new AddNewTransactionVM(
+                CreateMainViewModel([CreateCheckingSource(balance: 500m)]),
+                CreateAppData());
+
+            vm.IsPostedIoUMode = true;
+
+            Assert.True(vm.IsBudgetExcluded);
+            Assert.False(vm.CanToggleBudgetExclusion);
+        });
+    }
+
+    [Fact]
     public void Constructor_WithCreditAccount_LeavesNameEmpty()
     {
         RunInSta(() =>
@@ -2736,6 +2752,52 @@ public sealed class AddNewTransactionVMValidationTests
             Assert.True(vm.CanCloneViewedTransaction);
             Assert.True(vm.CanSplitViewedTransaction);
             Assert.Equal("Salary", vm.NameText);
+        });
+    }
+
+    [Fact]
+    public void SaveAsync_RecurringIncome_PersistsBudgetExclusion()
+    {
+        RunInSta(() =>
+        {
+            var appData = CreateAppData();
+            var vm = CreateVm(
+                TransactionKind.Income,
+                CreateCheckingSource(balance: 0m),
+                isRecurring: true,
+                amount: 25m,
+                appData: appData);
+
+            var result = vm.SaveAsync(false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess, result.ErrorMessage);
+            appData.Received(1).AddRecurringTransactionAsync(
+                Arg.Is<RecurringTransaction>(transaction =>
+                    transaction.Type == RecurringTransactionType.Income && transaction.IsExcludedFromBudget),
+                Arg.Any<CancellationToken>());
+        });
+    }
+
+    [Fact]
+    public void SaveAsync_Income_PersistsBudgetExclusion()
+    {
+        RunInSta(() =>
+        {
+            var appData = CreateAppData();
+            var vm = CreateVm(
+                TransactionKind.Income,
+                CreateCheckingSource(balance: 0m),
+                isRecurring: false,
+                amount: 25m,
+                appData: appData);
+
+            var result = vm.SaveAsync(false).GetAwaiter().GetResult();
+
+            Assert.True(result.IsSuccess, result.ErrorMessage);
+            appData.Received(1).AddTransactionAsync(
+                Arg.Is<Transaction>(transaction =>
+                    transaction.Type == TransactionType.Income && transaction.IsExcludedFromBudget),
+                Arg.Any<CancellationToken>());
         });
     }
 

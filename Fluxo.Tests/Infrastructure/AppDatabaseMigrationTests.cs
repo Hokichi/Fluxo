@@ -246,6 +246,68 @@ public sealed class AppDatabaseMigrationTests
         }
     }
 
+    [Fact]
+    public async Task ExcludeIoUAndIncomeFromBudgetMigration_BackfillsAllRows()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "fluxo-tests", Guid.NewGuid().ToString("N"));
+        var databasePath = Path.Combine(directory, "fluxo.db");
+        Directory.CreateDirectory(directory);
+
+        try
+        {
+            using var services = CreateServiceProvider(databasePath);
+            await App.MigrateDatabaseAsync(
+                services.GetRequiredService<IDataOperationRunner>(),
+                () => databasePath);
+
+            await using (var scope = services.CreateAsyncScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<FluxoDbContext>();
+                var migrator = context.GetService<IMigrator>();
+                await migrator.MigrateAsync("20260713144114_ClearParentTransactionCategories");
+                await context.Database.ExecuteSqlRawAsync("""
+                    INSERT INTO Accounts
+                        (Id, Name, AccountType, Balance, IsDefault, IsEnabled, IsForDeletion,
+                         MaximumSpending, PinnedOnUI, SpentAmount, AccountLimit)
+                    VALUES (7, 'Checking', 0, 100, 0, 1, 0, 0, 0, 0, 0);
+
+                    INSERT INTO Transactions
+                        (Id, Type, SourceAccountId, Name, Amount, OccurredOn, LoggedOn, Notes,
+                         IsPinned, IsForDeletion, IsIoU, ShouldAffectBalance, IsExcludedFromBudget)
+                    VALUES
+                        (41, 0, 7, 'Expense', 10, '2026-07-01', '2026-07-01 12:00:00', '', 0, 0, 0, 0, 0),
+                        (42, 0, 7, 'Posted IoU', 10, '2026-07-01', '2026-07-01 12:00:00', '', 0, 0, 1, 1, 0),
+                        (43, 1, 7, 'Income', 10, '2026-07-01', '2026-07-01 12:00:00', '', 0, 0, 0, 0, 0),
+                        (44, 1, 7, 'Deleted income', 10, '2026-07-01', '2026-07-01 12:00:00', '', 0, 1, 0, 0, 0);
+                    """);
+                await migrator.MigrateAsync();
+            }
+
+            await using var connection = new SqliteConnection($"Data Source={databasePath}");
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = "SELECT Id, IsExcludedFromBudget FROM Transactions ORDER BY Id";
+            await using var reader = await command.ExecuteReaderAsync();
+            Assert.True(await reader.ReadAsync());
+            Assert.Equal(41, reader.GetInt32(0));
+            Assert.False(reader.GetBoolean(1));
+            Assert.True(await reader.ReadAsync());
+            Assert.Equal(42, reader.GetInt32(0));
+            Assert.True(reader.GetBoolean(1));
+            Assert.True(await reader.ReadAsync());
+            Assert.Equal(43, reader.GetInt32(0));
+            Assert.True(reader.GetBoolean(1));
+            Assert.True(await reader.ReadAsync());
+            Assert.Equal(44, reader.GetInt32(0));
+            Assert.True(reader.GetBoolean(1));
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            Directory.Delete(directory, true);
+        }
+    }
+
     private static ServiceProvider CreateServiceProvider(string databasePath)
     {
         var services = new ServiceCollection();

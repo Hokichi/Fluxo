@@ -232,6 +232,7 @@ public partial class AddNewTransactionVM : ObservableValidator
             ClearTransactionModes();
             IsIoU = true;
             ShouldAffectBalance = true;
+            IsExcludedFromBudget = true;
         }
     }
     public string TransactionModeDescription =>
@@ -248,10 +249,10 @@ public partial class AddNewTransactionVM : ObservableValidator
     public bool ShowInstallmentEndDate => IsInstallments;
     public bool CanUseInstallments => !IsGoal && CanToggleRecurring;
     public bool CanUseIoU => !IsGoal && CanToggleRecurring;
-    public bool CanToggleBudgetExclusion => !IsGoal && !IsRepayment && !IsUnpostedIoUMode;
+    public bool CanToggleBudgetExclusion => !IsGoal && !IsRepayment && !IsIoU && !IsIncome;
     public bool IsBudgetExcluded
     {
-        get => IsGoal || IsRepayment || IsExcludedFromBudget;
+        get => IsGoal || IsRepayment || IsIoU || IsIncome || IsExcludedFromBudget;
         set { if (CanToggleBudgetExclusion) IsExcludedFromBudget = value; }
     }
     public string DateOrRecurrenceLabel => IsRecurringTransactionMode ? "Recurrence" : "Date";
@@ -1256,7 +1257,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                 recurring.SourceId = input.AccountId;
                 recurring.TagId = input.IsGoal ? null : input.TagId;
                 recurring.GoalId = input.IsGoal ? input.GoalId : null;
-                recurring.IsExcludedFromBudget = input.IsExcludedFromBudget;
+                recurring.IsExcludedFromBudget = input.IsEffectivelyExcludedFromBudget;
                 recurring.IsEnabled = true;
                 recurring.EndDate = input.IsInstallments ? input.InstallmentEndDate : null;
 
@@ -1281,7 +1282,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                 if (goal is null)
                     return AddNewTransactionSubmissionResult.Failure("Please select a valid goal.");
 
-                if (!input.IsExcludedFromBudget)
+                if (!input.IsEffectivelyExcludedFromBudget)
                 {
                     var budgetPolicyResult = await ApplyExpenseBudgetPolicyAsync(
                         ExpenseCategory.Savings,
@@ -1304,7 +1305,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                     GoalId = goal.Id,
                     TagId = goalUpdateTag.Id,
                     IsPinned = false,
-                    IsExcludedFromBudget = input.IsExcludedFromBudget
+                    IsExcludedFromBudget = input.IsEffectivelyExcludedFromBudget
                     ,RelatedRecurringTransactionId = input.RelatedRecurringTransactionId
                 };
 
@@ -1329,7 +1330,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                 if (tag is null)
                     return AddNewTransactionSubmissionResult.Failure("Please select a valid tag.");
 
-                if (!input.IsExcludedFromBudget)
+                if (!input.IsEffectivelyExcludedFromBudget)
                 {
                     var budgetPolicyResult = await ApplyExpenseBudgetPolicyAsync(input.Category!.Value, input.Amount, input.Date);
                     if (!budgetPolicyResult.IsSuccess)
@@ -1349,7 +1350,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                     IsPinned = input.IsPinned,
                     IsIoU = input.IsIoU,
                     ShouldAffectBalance = input.ShouldAffectBalance,
-                    IsExcludedFromBudget = input.IsExcludedFromBudget
+                    IsExcludedFromBudget = input.IsEffectivelyExcludedFromBudget
                     ,RelatedRecurringTransactionId = input.RelatedRecurringTransactionId
                 };
 
@@ -1380,7 +1381,7 @@ public partial class AddNewTransactionVM : ObservableValidator
                     IsPinned = input.IsPinned,
                     IsIoU = input.IsIoU,
                     ShouldAffectBalance = input.ShouldAffectBalance,
-                    IsExcludedFromBudget = input.IsExcludedFromBudget
+                    IsExcludedFromBudget = input.IsEffectivelyExcludedFromBudget
                 };
 
                 await _appData.AddTransactionAsync(transaction);
@@ -2872,7 +2873,11 @@ public partial class AddNewTransactionVM : ObservableValidator
         int? TagId,
         int? GoalId,
         int? RepaymentAccountId,
-        int? RelatedRecurringTransactionId);
+        int? RelatedRecurringTransactionId)
+    {
+        public bool IsEffectivelyExcludedFromBudget =>
+            IsExcludedFromBudget || IsIoU || (!IsExpense && !IsGoal && !IsRepayment);
+    }
 
     private enum ProcessingState { Pending, Processed, Skipped }
 
