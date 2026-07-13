@@ -62,13 +62,25 @@ public partial class AccountReconciliationVM : ObservableObject
 
     public bool CanSave => !IsSaving && AmountText > 0m && SelectedAccount is not null;
 
+    public string NewAmountLabel => SelectedAccount?.IsCredit == true
+        ? "New Spent Credits"
+        : "New Balance";
+
+    public string CurrentAmountLabel => SelectedAccount?.IsCredit == true
+        ? "Current Spent Credits"
+        : "Current Balance";
+
+    public decimal CurrentAmount => SelectedAccount?.PrimaryAmount ?? 0m;
+
     public static bool CanReconcile(AccountVM source)
     {
         ArgumentNullException.ThrowIfNull(source);
         return source.AccountType != AccountType.Saving;
     }
 
-    public async Task<AccountReconciliationSaveResult> SaveAsync(CancellationToken cancellationToken = default)
+    public async Task<AccountReconciliationSaveResult> SaveAsync(
+        bool shouldLogTransaction,
+        CancellationToken cancellationToken = default)
     {
         if (IsSaving)
             return AccountReconciliationSaveResult.Failure("This reconciliation is already being saved.");
@@ -86,31 +98,51 @@ public partial class AccountReconciliationVM : ObservableObject
             if (account is null)
                 return AccountReconciliationSaveResult.Failure("Please choose a valid account.");
 
-            var reconciliationTag = await EnsureBudgetReconciliationTagAsync(cancellationToken);
-            var expenseName = $"{account.Name} - {SystemTags.BudgetReconciliationName}";
-            var transaction = new Transaction
-            {
-                Type = TransactionType.Expense,
-                Name = expenseName,
-                Amount = input.Amount,
-                OccurredOn = DateTime.Today,
-                Notes = string.Empty,
-                ExpenseCategory = ExpenseCategory.Needs,
-                SourceAccountId = account.Id,
-                TagId = reconciliationTag.Id
-            };
-            if (reconciliationTag.Id <= 0)
-                transaction.Tag = reconciliationTag;
+            var currentAmount = account.AccountType == AccountType.Credit
+                ? account.SpentAmount
+                : account.Balance;
+            var difference = input.Amount - currentAmount;
 
-            await _appData.AddTransactionAsync(transaction, cancellationToken);
-            ApplyExpenseToAccount(account, input.Amount);
+            if (account.AccountType == AccountType.Credit)
+                account.SpentAmount = input.Amount;
+            else
+                account.Balance = input.Amount;
+
+            Transaction? transaction = null;
+            Tag? reconciliationTag = null;
+            if (shouldLogTransaction && difference != 0m)
+            {
+                reconciliationTag = await EnsureBudgetReconciliationTagAsync(cancellationToken);
+                var transactionType = difference > 0m ? TransactionType.Income : TransactionType.Expense;
+                transaction = new Transaction
+                {
+                    Type = transactionType,
+                    Name = $"{account.Name} - {SystemTags.BudgetReconciliationName}",
+                    Amount = decimal.Abs(difference),
+                    OccurredOn = DateTime.Today,
+                    Notes = string.Empty,
+                    ExpenseCategory = transactionType == TransactionType.Expense ? ExpenseCategory.Needs : null,
+                    SourceAccountId = account.Id,
+                    TagId = reconciliationTag.Id
+                };
+                if (reconciliationTag.Id <= 0)
+                    transaction.Tag = reconciliationTag;
+
+                await _appData.AddTransactionAsync(transaction, cancellationToken);
+            }
+
             _appData.UpdateAccount(account);
 
             await _appData.SaveChangesAsync(cancellationToken);
 
-            var createdTransaction = CreateTransactionViewModel(transaction, account, reconciliationTag);
-            WeakReferenceMessenger.Default.Send(new RecordLogMemoryMessage(
-                new AddTransactionMemoryAction(TransactionMemorySnapshot.Create(transaction))));
+            TransactionVM? createdTransaction = null;
+            if (transaction is not null && reconciliationTag is not null)
+            {
+                createdTransaction = CreateTransactionViewModel(transaction, account, reconciliationTag);
+                WeakReferenceMessenger.Default.Send(new RecordLogMemoryMessage(
+                    new AddTransactionMemoryAction(TransactionMemorySnapshot.Create(transaction))));
+            }
+
             WeakReferenceMessenger.Default.Send(new DashboardDataInvalidatedMessage(
                 DashboardDataInvalidationScope.Budget | DashboardDataInvalidationScope.Notifications));
             await _reloadCurrentDataAsync();
@@ -221,17 +253,6 @@ public partial class AccountReconciliationVM : ObservableObject
         };
     }
 
-    private static void ApplyExpenseToAccount(Account account, decimal amount)
-    {
-        if (account.AccountType == AccountType.Credit)
-        {
-            account.SpentAmount += amount;
-            return;
-        }
-
-        account.Balance -= amount;
-    }
-
     partial void OnAmountTextChanged(decimal value)
     {
         OnPropertyChanged(nameof(CanSave));
@@ -245,6 +266,9 @@ public partial class AccountReconciliationVM : ObservableObject
     partial void OnSelectedAccountChanged(AccountVM? value)
     {
         OnPropertyChanged(nameof(CanSave));
+        OnPropertyChanged(nameof(NewAmountLabel));
+        OnPropertyChanged(nameof(CurrentAmountLabel));
+        OnPropertyChanged(nameof(CurrentAmount));
     }
 
     public readonly record struct AccountReconciliationSaveResult(
@@ -252,7 +276,7 @@ public partial class AccountReconciliationVM : ObservableObject
         string? ErrorMessage,
         TransactionVM? CreatedTransaction)
     {
-        public static AccountReconciliationSaveResult Success(TransactionVM createdTransaction)
+        public static AccountReconciliationSaveResult Success(TransactionVM? createdTransaction)
         {
             return new AccountReconciliationSaveResult(true, null, createdTransaction);
         }

@@ -26,7 +26,33 @@ public sealed class AccountReconciliationVMTests
     }
 
     [Fact]
-    public async Task SaveAsync_CreatesNeedExpenseWithBudgetReconciliationTag()
+    public void SelectedAccount_ExposesTargetAndCurrentLabels()
+    {
+        var sources = CreateSourceViewModels();
+        sources[0].SpentAmount = 80m;
+        sources[2].Balance = 500m;
+        sources[3].Balance = 75m;
+        var vm = new AccountReconciliationVM(sources, sources[2], Substitute.For<IAppDataService>(), () => Task.CompletedTask);
+
+        Assert.Equal("New Balance", vm.NewAmountLabel);
+        Assert.Equal("Current Balance", vm.CurrentAmountLabel);
+        Assert.Equal(500m, vm.CurrentAmount);
+
+        vm.SelectedAccount = sources[0];
+
+        Assert.Equal("New Spent Credits", vm.NewAmountLabel);
+        Assert.Equal("Current Spent Credits", vm.CurrentAmountLabel);
+        Assert.Equal(80m, vm.CurrentAmount);
+
+        vm.SelectedAccount = sources[3];
+
+        Assert.Equal("New Balance", vm.NewAmountLabel);
+        Assert.Equal("Current Balance", vm.CurrentAmountLabel);
+        Assert.Equal(75m, vm.CurrentAmount);
+    }
+
+    [Fact]
+    public async Task SaveAsync_WhenTargetDecreases_CreatesNeedExpenseWithBudgetReconciliationTag()
     {
         var sources = CreateSourceViewModels();
         var appData = Substitute.For<IAppDataService>();
@@ -63,10 +89,10 @@ public sealed class AccountReconciliationVMTests
             return Task.CompletedTask;
         })
         {
-            AmountText = 42.50m
+            AmountText = 457.50m
         };
 
-        var result = await vm.SaveAsync();
+        var result = await vm.SaveAsync(shouldLogTransaction: true);
 
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.CreatedTransaction);
@@ -83,6 +109,159 @@ public sealed class AccountReconciliationVMTests
         Assert.Equal(1, reloadCount);
         appData.Received(1).UpdateAccount(persistedSource);
         await appData.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SaveAsync_WhenTargetIncreases_CreatesIncome()
+    {
+        var sources = CreateSourceViewModels();
+        var appData = Substitute.For<IAppDataService>();
+        var persistedSource = new Account
+        {
+            Id = 3,
+            Name = "Checking",
+            AccountType = AccountType.Checking,
+            Balance = 500m
+        };
+        var reconciliationTag = new Tag
+        {
+            Id = 9,
+            Name = SystemTags.BudgetReconciliationName,
+            HexCode = SystemTags.BudgetReconciliationHexCode,
+            IsSystemTag = true
+        };
+        Transaction? savedTransaction = null;
+
+        appData.GetAccountByIdAsync(3, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Account?>(persistedSource));
+        appData.GetTagsAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Tag>>([reconciliationTag]));
+        appData.AddTransactionAsync(Arg.Do<Transaction>(transaction => savedTransaction = transaction), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+        appData.SaveChangesAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var vm = new AccountReconciliationVM(sources, sources[2], appData, () => Task.CompletedTask)
+        {
+            AmountText = 525m
+        };
+
+        var result = await vm.SaveAsync(shouldLogTransaction: true);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(savedTransaction);
+        Assert.Equal(TransactionType.Income, savedTransaction.Type);
+        Assert.Equal(25m, savedTransaction.Amount);
+        Assert.Null(savedTransaction.ExpenseCategory);
+        Assert.Equal(525m, persistedSource.Balance);
+    }
+
+    [Fact]
+    public async Task SaveAsync_WhenCreditTargetDecreases_CreatesExpense()
+    {
+        var sources = CreateSourceViewModels();
+        var appData = Substitute.For<IAppDataService>();
+        var persistedSource = new Account
+        {
+            Id = 1,
+            Name = "Credit",
+            AccountType = AccountType.Credit,
+            SpentAmount = 80m
+        };
+        var reconciliationTag = new Tag
+        {
+            Id = 9,
+            Name = SystemTags.BudgetReconciliationName,
+            HexCode = SystemTags.BudgetReconciliationHexCode,
+            IsSystemTag = true
+        };
+        Transaction? savedTransaction = null;
+
+        appData.GetAccountByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Account?>(persistedSource));
+        appData.GetTagsAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Tag>>([reconciliationTag]));
+        appData.AddTransactionAsync(Arg.Do<Transaction>(transaction => savedTransaction = transaction), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+        appData.SaveChangesAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var vm = new AccountReconciliationVM(sources, sources[0], appData, () => Task.CompletedTask)
+        {
+            AmountText = 50m
+        };
+
+        var result = await vm.SaveAsync(shouldLogTransaction: true);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(savedTransaction);
+        Assert.Equal(TransactionType.Expense, savedTransaction.Type);
+        Assert.Equal(30m, savedTransaction.Amount);
+        Assert.Equal(50m, persistedSource.SpentAmount);
+    }
+
+    [Fact]
+    public async Task SaveAsync_WhenLoggingDeclined_UpdatesTargetWithoutTransaction()
+    {
+        var sources = CreateSourceViewModels();
+        var appData = Substitute.For<IAppDataService>();
+        var persistedSource = new Account
+        {
+            Id = 3,
+            Name = "Checking",
+            AccountType = AccountType.Checking,
+            Balance = 500m
+        };
+
+        appData.GetAccountByIdAsync(3, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Account?>(persistedSource));
+        appData.SaveChangesAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var vm = new AccountReconciliationVM(sources, sources[2], appData, () => Task.CompletedTask)
+        {
+            AmountText = 525m
+        };
+
+        var result = await vm.SaveAsync(shouldLogTransaction: false);
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.CreatedTransaction);
+        Assert.Equal(525m, persistedSource.Balance);
+        await appData.DidNotReceive().AddTransactionAsync(Arg.Any<Transaction>(), Arg.Any<CancellationToken>());
+        await appData.DidNotReceive().AddTagAsync(Arg.Any<Tag>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SaveAsync_WhenDifferenceIsZero_DoesNotCreateTransaction()
+    {
+        var sources = CreateSourceViewModels();
+        var appData = Substitute.For<IAppDataService>();
+        var persistedSource = new Account
+        {
+            Id = 3,
+            Name = "Checking",
+            AccountType = AccountType.Checking,
+            Balance = 500m
+        };
+
+        appData.GetAccountByIdAsync(3, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Account?>(persistedSource));
+        appData.SaveChangesAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var vm = new AccountReconciliationVM(sources, sources[2], appData, () => Task.CompletedTask)
+        {
+            AmountText = 500m
+        };
+
+        var result = await vm.SaveAsync(shouldLogTransaction: true);
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.CreatedTransaction);
+        Assert.Equal(500m, persistedSource.Balance);
+        await appData.DidNotReceive().AddTransactionAsync(Arg.Any<Transaction>(), Arg.Any<CancellationToken>());
+        await appData.DidNotReceive().AddTagAsync(Arg.Any<Tag>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -117,7 +296,7 @@ public sealed class AccountReconciliationVMTests
             AmountText = 12m
         };
 
-        var result = await vm.SaveAsync();
+        var result = await vm.SaveAsync(shouldLogTransaction: true);
 
         Assert.True(result.IsSuccess);
         Assert.NotNull(addedTag);
