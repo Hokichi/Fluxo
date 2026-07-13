@@ -29,7 +29,9 @@ public sealed partial class LedgerTransactionItemVM : ObservableObject
     public bool IsGoal { get; init; }
     public bool IsRecurring { get; init; }
     public ObservableCollection<LedgerTransactionItemVM> ChildTransactions { get; } = [];
+    public ObservableCollection<LedgerTransactionItemVM> VisibleChildTransactions { get; } = [];
     public bool HasChildTransactions => ChildTransactions.Count > 0;
+    public int VisibleChildCount => VisibleChildTransactions.Count;
 
     public decimal SignedAmount => Kind == LedgerTransactionKind.Income ? Amount : -Amount;
     public string TypeLabel => Kind == LedgerTransactionKind.Income ? "Incomes" : "Expenses";
@@ -61,5 +63,14 @@ public sealed partial class LedgerTransactionItemVM : ObservableObject
     public void RefreshChildTransactionState()
     {
         OnPropertyChanged(nameof(HasChildTransactions));
+    }
+
+    public void SetVisibleChildTransactions(IEnumerable<LedgerTransactionItemVM> children)
+    {
+        VisibleChildTransactions.Clear();
+        foreach (var child in children)
+            VisibleChildTransactions.Add(child);
+
+        OnPropertyChanged(nameof(VisibleChildCount));
     }
 }

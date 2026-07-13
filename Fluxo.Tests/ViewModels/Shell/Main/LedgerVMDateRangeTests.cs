@@ -6,6 +6,8 @@ using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Mappings;
 using Fluxo.Resources.Resources.Messages;
+using Fluxo.Services.Dialogs;
+using Fluxo.Services.Ui;
 using Fluxo.ViewModels.Shell.Main;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
@@ -143,6 +145,147 @@ public sealed class LedgerVMDateRangeTests
         Assert.Equal(["Today"], vm.TransactionsView.Cast<LedgerTransactionItemVM>().Select(item => item.Name));
     }
 
+    [Fact]
+    public async Task ApplyFilters_ParentShowsOnlyMatchingChildrenAndVisibleCount()
+    {
+        var vm = CreateVm(CreateParentWithChildren(), tags:
+        [
+            new TagDto { Id = 1, Name = "Food", HexCode = "#111111" },
+            new TagDto { Id = 2, Name = "Travel", HexCode = "#222222" }
+        ]);
+        await vm.LoadAsync();
+
+        vm.TagFilters.Single(option => option.IsAll).IsChecked = false;
+        vm.TagFilters.Single(option => option.Label == "Food").IsChecked = true;
+        vm.ApplyFilters();
+
+        var parent = vm.TransactionsView.Cast<LedgerTransactionItemVM>().Single();
+        Assert.Equal(1, parent.VisibleChildCount);
+        Assert.Equal(["Food child"], parent.VisibleChildTransactions.Select(child => child.Name));
+    }
+
+    [Fact]
+    public async Task ApplyFilters_HidesParentWhenNoChildMatches()
+    {
+        var vm = CreateVm(CreateParentWithChildren());
+        await vm.LoadAsync();
+
+        vm.SearchText = "Parent";
+        vm.ApplyFilters();
+
+        Assert.Empty(vm.TransactionsView.Cast<LedgerTransactionItemVM>());
+
+        vm.ClearFilters();
+
+        Assert.Single(vm.TransactionsView.Cast<LedgerTransactionItemVM>());
+    }
+
+    [Fact]
+    public async Task FiltersAndBulkEdit_TrackDistinctSelectionStates()
+    {
+        var vm = CreateVm(CreateParentWithChildren());
+        await vm.LoadAsync();
+
+        Assert.False(vm.HasActiveFilters);
+        vm.SearchText = "Food";
+        Assert.True(vm.HasActiveFilters);
+
+        vm.ToggleSelectionModeCommand.Execute(null);
+        Assert.True(vm.IsSelectionModeEnabled);
+        Assert.False(vm.IsBulkEditEnabled);
+
+        vm.IsBulkEditEnabled = true;
+        Assert.True(vm.IsBulkEditEnabled);
+
+        vm.ToggleSelectionModeCommand.Execute(null);
+        Assert.False(vm.IsBulkEditEnabled);
+    }
+
+    [Fact]
+    public async Task ReloadPeriod_PreservesAppliedTagFilter()
+    {
+        var vm = CreateVm(CreateParentWithChildren(), tags:
+        [
+            new TagDto { Id = 1, Name = "Food", HexCode = "#111111" },
+            new TagDto { Id = 2, Name = "Travel", HexCode = "#222222" }
+        ]);
+        await vm.LoadAsync();
+
+        vm.TagFilters.Single(option => option.IsAll).IsChecked = false;
+        vm.TagFilters.Single(option => option.Label == "Food").IsChecked = true;
+        vm.ApplyFilters();
+
+        vm.StartDate = DateTime.Today.AddDays(-1);
+        await vm.LoadAsync();
+
+        Assert.True(vm.TagFilters.Single(option => option.Label == "Food").IsChecked);
+        Assert.False(vm.TagFilters.Single(option => option.IsAll).IsChecked);
+    }
+
+    [Fact]
+    public async Task SelectionMode_SelectedVisibleLeavesExposeSignedTotal()
+    {
+        var vm = CreateVm(
+        [
+            new TransactionDto { Id = 1, Type = TransactionType.Expense, Name = "Parent", Amount = 40m, OccurredOn = DateTime.Today, LoggedOn = DateTime.Today },
+            new TransactionDto { Id = 2, Type = TransactionType.Expense, ParentTransactionId = 1, Name = "Child", Amount = 40m, OccurredOn = DateTime.Today, LoggedOn = DateTime.Today },
+            new TransactionDto { Id = 3, Type = TransactionType.Income, Name = "Income", Amount = 65m, OccurredOn = DateTime.Today, LoggedOn = DateTime.Today }
+        ]);
+        await vm.LoadAsync();
+
+        vm.ToggleSelectionModeCommand.Execute(null);
+
+        Assert.Equal(25m, vm.SelectedVisibleTotal);
+    }
+
+    [Fact]
+    public async Task GroupedByType_OrdersItemsByLoggedOnWithoutForcingGroupOrder()
+    {
+        var vm = CreateVm(
+        [
+            new TransactionDto { Id = 1, Type = TransactionType.Expense, Name = "Older expense", OccurredOn = DateTime.Today, LoggedOn = DateTime.Today.AddHours(8) },
+            new TransactionDto { Id = 2, Type = TransactionType.Income, Name = "Newer income", OccurredOn = DateTime.Today, LoggedOn = DateTime.Today.AddHours(9) }
+        ]);
+        await vm.LoadAsync();
+
+        vm.SelectedGroupingMode = LedgerGroupingMode.Types;
+
+        Assert.Equal(["Newer income", "Older expense"], vm.TransactionsView.Cast<LedgerTransactionItemVM>().Select(item => item.Name));
+    }
+
+    [Fact]
+    public async Task GroupedByCategory_OrdersItemsByLoggedOnWithoutForcingGroupOrder()
+    {
+        var vm = CreateVm(
+        [
+            new TransactionDto { Id = 1, Type = TransactionType.Expense, Name = "Older needs", ExpenseCategory = ExpenseCategory.Needs, OccurredOn = DateTime.Today, LoggedOn = DateTime.Today.AddHours(8) },
+            new TransactionDto { Id = 2, Type = TransactionType.Expense, Name = "Newer wants", ExpenseCategory = ExpenseCategory.Wants, OccurredOn = DateTime.Today, LoggedOn = DateTime.Today.AddHours(9) }
+        ]);
+        await vm.LoadAsync();
+
+        vm.SelectedGroupingMode = LedgerGroupingMode.Category;
+
+        Assert.Equal(["Newer wants", "Older needs"], vm.TransactionsView.Cast<LedgerTransactionItemVM>().Select(item => item.Name));
+    }
+
+    [Fact]
+    public async Task LoadAllTransactionsAsync_ShowsLoadingToastUntilReloadSettles()
+    {
+        var dialogService = Substitute.For<IDialogService>();
+        var uiSettleAwaiter = Substitute.For<IUiSettleAwaiter>();
+        dialogService.ShowToastWhileAsync("Loading data", Arg.Any<Func<Task>>())
+            .Returns(call => call.Arg<Func<Task>>().Invoke());
+        var vm = CreateVm(
+        [
+            new TransactionDto { Id = 1, Type = TransactionType.Expense, Name = "Transaction", OccurredOn = DateTime.Today, LoggedOn = DateTime.Today }
+        ], dialogService: dialogService, uiSettleAwaiter: uiSettleAwaiter);
+
+        await vm.LoadAllTransactionsAsync();
+
+        await dialogService.Received(1).ShowToastWhileAsync("Loading data", Arg.Any<Func<Task>>());
+        await uiSettleAwaiter.Received(1).WaitForUiReadyAsync();
+    }
+
     private static IReadOnlyList<TransactionDto> CreateCategoryFilterTransactions() =>
     [
         new TransactionDto { Id = 1, Type = TransactionType.Expense, Name = "Needs expense", ExpenseCategory = ExpenseCategory.Needs, OccurredOn = DateTime.Today, LoggedOn = DateTime.Today },
@@ -151,14 +294,26 @@ public sealed class LedgerVMDateRangeTests
         new TransactionDto { Id = 4, Type = TransactionType.Income, Name = "Included income", OccurredOn = DateTime.Today, LoggedOn = DateTime.Today }
     ];
 
-    private static LedgerVM CreateVm(IReadOnlyList<TransactionDto> transactions, IMessenger? messenger = null)
+    private static IReadOnlyList<TransactionDto> CreateParentWithChildren() =>
+    [
+        new TransactionDto { Id = 1, Type = TransactionType.Expense, Name = "Parent", Amount = 50m, OccurredOn = DateTime.Today, LoggedOn = DateTime.Today },
+        new TransactionDto { Id = 2, Type = TransactionType.Expense, ParentTransactionId = 1, Name = "Food child", Amount = 20m, OccurredOn = DateTime.Today, LoggedOn = DateTime.Today.AddHours(2), Tag = new TagDto { Id = 1, Name = "Food", HexCode = "#111111" } },
+        new TransactionDto { Id = 3, Type = TransactionType.Expense, ParentTransactionId = 1, Name = "Travel child", Amount = 30m, OccurredOn = DateTime.Today, LoggedOn = DateTime.Today.AddHours(1), Tag = new TagDto { Id = 2, Name = "Travel", HexCode = "#222222" } }
+    ];
+
+    private static LedgerVM CreateVm(
+        IReadOnlyList<TransactionDto> transactions,
+        IMessenger? messenger = null,
+        IReadOnlyList<TagDto>? tags = null,
+        IDialogService? dialogService = null,
+        IUiSettleAwaiter? uiSettleAwaiter = null)
     {
         var transactionService = Substitute.For<ITransactionService>();
         transactionService.GetAllAsync(Arg.Any<CancellationToken>()).Returns(transactions);
         var accountService = Substitute.For<IAccountService>();
         accountService.GetAllAsync(Arg.Any<CancellationToken>()).Returns([]);
         var tagService = Substitute.For<ITagService>();
-        tagService.GetAllAsync(Arg.Any<CancellationToken>()).Returns([]);
+        tagService.GetAllAsync(Arg.Any<CancellationToken>()).Returns(tags ?? []);
         var mapper = new MapperConfiguration(
             configuration => configuration.AddProfile<DtoViewModelProfile>(),
             NullLoggerFactory.Instance).CreateMapper();
@@ -169,6 +324,8 @@ public sealed class LedgerVMDateRangeTests
             tagService,
             Substitute.For<IDataOperationRunner>(),
             mapper,
-            messenger);
+            messenger,
+            dialogService,
+            uiSettleAwaiter);
     }
 }

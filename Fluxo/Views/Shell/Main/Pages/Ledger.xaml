@@ -674,7 +674,7 @@
                                     FontFamily="{StaticResource Black}"
                                     FontSize="12"
                                     Foreground="{StaticResource Brush.Text.Primary.Dark}"
-                                    Text="{Binding ChildTransactions.Count}" />
+                                    Text="{Binding VisibleChildCount, Mode=OneWay}" />
                             </Border>
                             <Border
                                 Margin="8,4,0,0"
@@ -959,7 +959,7 @@
                     <ItemsControl
                         Grid.Column="1"
                         ItemTemplate="{StaticResource LedgerChildRowTemplate}"
-                        ItemsSource="{Binding ChildTransactions}" />
+                        ItemsSource="{Binding VisibleChildTransactions, Mode=OneWay}" />
                 </Grid>
             </StackPanel>
         </DataTemplate>
@@ -1127,6 +1127,21 @@
                 <customControls:BalloonCheckBox
                     Margin="8,0,0,0"
                     HorizontalAlignment="Left"
+                    CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                    CheckedIcon="{StaticResource Pen}"
+                    CheckedText="Bulk Edit"
+                    CornerRadius="8"
+                    DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                    HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                    IconSize="12"
+                    IsChecked="{Binding IsBulkEditEnabled, Mode=TwoWay}"
+                    ShouldExpand="True"
+                    UncheckedIcon="{StaticResource Pen}"
+                    UncheckedText="Bulk Edit"
+                    Visibility="{Binding IsSelectionModeEnabled, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                <customControls:BalloonCheckBox
+                    Margin="8,0,0,0"
+                    HorizontalAlignment="Left"
                     CheckedBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
                     CheckedIcon="{StaticResource Delete}"
                     CheckedText="Delete All"
@@ -1277,7 +1292,7 @@
                 <ComboBox
                     Grid.Column="0"
                     DropDownClosed="OnFilterDropDownClosed"
-                    IsEnabled="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolNegationConverter}}"
+                    IsEnabled="{Binding IsBulkEditEnabled, Converter={StaticResource BoolNegationConverter}}"
                     ItemTemplate="{StaticResource LedgerFilterOptionTemplate}"
                     ItemsSource="{Binding TypeFilters}"
                     Style="{StaticResource LedgerFilterComboStyle}"
@@ -1290,7 +1305,7 @@
                     ItemsSource="{Binding AccountFilters}"
                     Style="{StaticResource LedgerFilterComboStyle}"
                     Tag="{Binding AccountFilterPresentation}"
-                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                    Visibility="{Binding IsBulkEditEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                 <ComboBox
                     Grid.Column="1"
                     Margin="8,0,0,0"
@@ -1300,12 +1315,12 @@
                     SelectedValuePath="Value"
                     Style="{StaticResource LedgerGroupingComboStyle}"
                     Tag="{Binding BatchAccountSelectionText}"
-                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    Visibility="{Binding IsBulkEditEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
                 <ComboBox
                     Grid.Column="2"
                     Margin="8,0,0,0"
                     DropDownClosed="OnFilterDropDownClosed"
-                    IsEnabled="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolNegationConverter}}"
+                    IsEnabled="{Binding IsBulkEditEnabled, Converter={StaticResource BoolNegationConverter}}"
                     ItemTemplate="{StaticResource LedgerFilterOptionTemplate}"
                     ItemsSource="{Binding CategoryFilters}"
                     Style="{StaticResource LedgerFilterComboStyle}"
@@ -1318,7 +1333,7 @@
                     ItemsSource="{Binding TagFilters}"
                     Style="{StaticResource LedgerFilterComboStyle}"
                     Tag="{Binding TagFilterPresentation}"
-                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                    Visibility="{Binding IsBulkEditEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                 <ComboBox
                     Grid.Column="3"
                     Margin="8,0,0,0"
@@ -1328,7 +1343,7 @@
                     SelectedValuePath="Value"
                     Style="{StaticResource LedgerGroupingComboStyle}"
                     Tag="{Binding BatchTagSelectionText}"
-                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    Visibility="{Binding IsBulkEditEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
                 <customControls:BalloonButton
                     Grid.Column="5"
                     ButtonIcon="{StaticResource Ban}"
@@ -1337,8 +1352,9 @@
                     DefaultBackground="{StaticResource Brush.BalloonButton.Background.Caution}"
                     HoveredBackground="{StaticResource Brush.BalloonButton.Background.Caution.Hovered}"
                     IconSize="14"
+                    IsEnabled="{Binding HasActiveFilters, Mode=OneWay}"
                     Style="{StaticResource HeaderButtonStyle}"
-                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
+                    Visibility="{Binding IsBulkEditEnabled, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
                 <customControls:BalloonButton
                     Grid.Column="5"
                     ButtonIcon="{StaticResource Check}"
@@ -1348,7 +1364,7 @@
                     HoveredBackground="{StaticResource Brush.BalloonButton.Background.ConfirmSave.Hovered}"
                     IconSize="14"
                     Style="{StaticResource HeaderButtonStyle}"
-                    Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    Visibility="{Binding IsBulkEditEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
                 <Border
                     Grid.Column="6"
                     Width="1"
@@ -1402,6 +1418,16 @@
                         <StaticResource ResourceKey="LedgerGroupStyle" />
                     </ListView.GroupStyle>
                 </ListView>
+
+                <TextBlock
+                    Margin="0,0,12,12"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    FontFamily="{StaticResource Bold}"
+                    FontSize="12"
+                    Foreground="{StaticResource Brush.Text.Muted}"
+                    Text="{Binding SelectedVisibleTotal, Mode=OneWay, StringFormat={}Total: {0:+#,##0;-#,##0;$0}}"
+                    Visibility="{Binding IsSelectionModeEnabled, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
 
                 <TextBlock
                     HorizontalAlignment="Center"

@@ -415,7 +415,6 @@ public sealed class MainWindowPageRegressionTests
         Assert.Contains("Loaded=\"OnLedgerRowLoaded\"", rowTemplateSection);
         Assert.Contains("PreviewMouseLeftButtonDownEvent", ledgerCodeBehind);
         Assert.Contains("handledEventsToo: true", ledgerCodeBehind);
-        Assert.Contains("ItemsSource=\"{Binding ChildTransactions}\"", rowTemplateSection);
         Assert.Contains("Visibility=\"{Binding IsChildrenExpanded, Converter={StaticResource BoolToVisibilityConverter}}\"", rowTemplateSection);
         Assert.Contains("LedgerChildRowTemplate", rowTemplateSection);
         Assert.Contains("e.Handled = true;", ledgerCodeBehind);

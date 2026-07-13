@@ -166,6 +166,7 @@ public partial class Ledger : UserControl
     {
         if (sender is not FrameworkElement { DataContext: LedgerTransactionItemVM transaction } ||
             DataContext is not LedgerVM viewModel ||
+            viewModel.IsSelectionModeEnabled ||
             transaction.TagId <= 0)
             return;
 
@@ -177,6 +178,7 @@ public partial class Ledger : UserControl
     {
         if (sender is not FrameworkElement { DataContext: LedgerTransactionItemVM transaction } ||
             DataContext is not LedgerVM viewModel ||
+            viewModel.IsSelectionModeEnabled ||
             transaction.AccountId <= 0)
             return;
 

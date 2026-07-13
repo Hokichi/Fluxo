@@ -14,7 +14,9 @@ using Fluxo.Core.Interfaces;
 using Fluxo.Core.Interfaces.Operations;
 using Fluxo.Core.Interfaces.Services;
 using Fluxo.Resources.Resources.Messages;
+using Fluxo.Services.Dialogs;
 using Fluxo.Services.History;
+using Fluxo.Services.Ui;
 using Fluxo.ViewModels.Entities;
 
 namespace Fluxo.ViewModels.Shell.Main;
@@ -29,6 +31,8 @@ public partial class LedgerVM : ObservableRecipient,
     private readonly IMapper _mapper;
     private readonly IAccountService _accountService;
     private readonly ITagService _tagService;
+    private readonly IDialogService? _dialogService;
+    private readonly IUiSettleAwaiter? _uiSettleAwaiter;
     private readonly ObservableCollection<LedgerTransactionItemVM> _transactions = [];
     private readonly Dictionary<(LedgerTransactionKind Kind, int Id), BatchPreviewSnapshot> _batchPreviewSnapshots = [];
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
@@ -53,6 +57,7 @@ public partial class LedgerVM : ObservableRecipient,
     [ObservableProperty] private bool _isSelectionModeEnabled;
     [ObservableProperty] private bool _hasSelectedVisibleTransactions;
     [ObservableProperty] private bool _areAllVisibleTransactionsSelected;
+    [ObservableProperty] private bool _isBulkEditEnabled;
     [ObservableProperty] private int? _selectedBatchAccountId;
     [ObservableProperty] private int? _selectedBatchTagId;
 
@@ -62,7 +67,9 @@ public partial class LedgerVM : ObservableRecipient,
         ITagService tagService,
         IDataOperationRunner dataOperationRunner,
         IMapper mapper,
-        IMessenger? messenger = null)
+        IMessenger? messenger = null,
+        IDialogService? dialogService = null,
+        IUiSettleAwaiter? uiSettleAwaiter = null)
         : base(messenger ?? WeakReferenceMessenger.Default)
     {
         _transactionService = transactionService;
@@ -70,6 +77,8 @@ public partial class LedgerVM : ObservableRecipient,
         _tagService = tagService;
         _dataOperationRunner = dataOperationRunner;
         _mapper = mapper;
+        _dialogService = dialogService;
+        _uiSettleAwaiter = uiSettleAwaiter;
         TypeFilterPresentation = new LedgerFilterSelectionPresentation(
             "Type",
             () => TypeFilterSelectionCount,
@@ -106,6 +115,12 @@ public partial class LedgerVM : ObservableRecipient,
     public IReadOnlyList<LedgerFilterOption<int>> BatchTagOptions =>
         TagFilters.Where(option => !option.IsAll).ToList();
     public bool HasPendingFilterChanges => CaptureFilterSelectionSnapshot() != _appliedFilterSelection;
+    public bool HasActiveFilters =>
+        !string.IsNullOrWhiteSpace(SearchText) ||
+        TypeFilterSelectionCount > 0 ||
+        AccountFilterSelectionCount > 0 ||
+        CategoryFilterSelectionCount > 0 ||
+        TagFilterSelectionCount > 0;
     public LedgerFilterSelectionPresentation TypeFilterPresentation { get; }
     public LedgerFilterSelectionPresentation AccountFilterPresentation { get; }
     public LedgerFilterSelectionPresentation CategoryFilterPresentation { get; }
@@ -121,6 +136,12 @@ public partial class LedgerVM : ObservableRecipient,
     public string SelectionModeButtonText => IsSelectionModeEnabled ? "Disable Selection" : "Enable Selection";
     public string CheckAllButtonText => AreAllVisibleTransactionsSelected ? "Uncheck All" : "Check All";
     public string DeleteSelectedButtonText => AreAllVisibleTransactionsSelected ? "Delete All" : "Delete Selected";
+    public decimal SelectedVisibleTotal => GetVisibleTransactions()
+        .SelectMany(transaction => transaction.HasChildTransactions
+            ? transaction.VisibleChildTransactions
+            : [transaction])
+        .Where(transaction => transaction.IsSelectedForBatch)
+        .Sum(transaction => transaction.SignedAmount);
     public string BatchAccountSelectionText => SelectedBatchAccountId is { } sourceId
         ? BatchAccountOptions.FirstOrDefault(option => option.Value == sourceId)?.Label ?? string.Empty
         : string.Empty;
@@ -180,16 +201,8 @@ public partial class LedgerVM : ObservableRecipient,
     [RelayCommand]
     public async Task LoadAllTransactionsAsync(CancellationToken cancellationToken = default)
     {
-        await _reloadGate.WaitAsync(cancellationToken);
-        try
-        {
-            _loadAllTransactionsOnNextLoad = false;
-            await ReloadAllTransactionsAsync(cancellationToken);
-        }
-        finally
-        {
-            _reloadGate.Release();
-        }
+        _loadAllTransactionsOnNextLoad = true;
+        await LoadWithFeedbackAsync(cancellationToken);
     }
 
     public void Receive(LedgerSearchTextChangedMessage message)
@@ -236,7 +249,10 @@ public partial class LedgerVM : ObservableRecipient,
     {
         var shouldEnable = !IsSelectionModeEnabled;
         if (!shouldEnable)
+        {
             RestoreAllBatchPreviewSnapshots();
+            IsBulkEditEnabled = false;
+        }
 
         IsSelectionModeEnabled = shouldEnable;
         SelectedBatchAccountId = null;
@@ -266,7 +282,9 @@ public partial class LedgerVM : ObservableRecipient,
     partial void OnSearchTextChanged(string value)
     {
         TransactionsView.Refresh();
+        RefreshVisibleChildTransactions();
         RefreshVisibleTransactionState();
+        OnPropertyChanged(nameof(HasActiveFilters));
     }
 
     partial void OnStartDateChanged(DateTime value)
@@ -275,7 +293,7 @@ public partial class LedgerVM : ObservableRecipient,
             return;
 
         SetSelectedRange(value, EndDate, updateSelectors: true);
-        _ = LoadAsync();
+        _ = LoadWithFeedbackAsync();
     }
 
     partial void OnEndDateChanged(DateTime value)
@@ -284,7 +302,7 @@ public partial class LedgerVM : ObservableRecipient,
             return;
 
         SetSelectedRange(StartDate, value, updateSelectors: true);
-        _ = LoadAsync();
+        _ = LoadWithFeedbackAsync();
     }
 
     partial void OnSelectedGroupingModeChanged(LedgerGroupingMode value)
@@ -324,6 +342,23 @@ public partial class LedgerVM : ObservableRecipient,
             DateTime.Today);
         SetSelectedRange(range.From, range.To, updateSelectors: true);
         await ReloadPeriodAsync(cancellationToken, source);
+    }
+
+    private async Task LoadWithFeedbackAsync(CancellationToken cancellationToken = default)
+    {
+        if (_dialogService is null || _uiSettleAwaiter is null)
+        {
+            await LoadAsync(cancellationToken);
+            return;
+        }
+
+        await _dialogService.ShowToastWhileAsync(
+            "Loading data",
+            async () =>
+            {
+                await LoadAsync(cancellationToken);
+                await _uiSettleAwaiter.WaitForUiReadyAsync(cancellationToken: cancellationToken);
+            });
     }
 
     private async Task ReloadPeriodAsync(
@@ -390,6 +425,7 @@ public partial class LedgerVM : ObservableRecipient,
         HasTransactions = _transactions.Count > 0;
         RefreshSummaries();
         TransactionsView.Refresh();
+        RefreshVisibleChildTransactions();
         RefreshVisibleTransactionState();
     }
 
@@ -433,6 +469,7 @@ public partial class LedgerVM : ObservableRecipient,
 
     private void RebuildFilters(IReadOnlyList<AccountVM> accounts, IReadOnlyList<TagVM> tags)
     {
+        var preservedSelection = CaptureFilterSelectionSnapshot();
         ReplaceEditableTags(tags);
 
         RebuildFilter(TypeFilters,
@@ -440,14 +477,14 @@ public partial class LedgerVM : ObservableRecipient,
             new LedgerFilterOption<LedgerTransactionKind>("All", default, isAll: true, isChecked: true),
             new LedgerFilterOption<LedgerTransactionKind>("Expenses", LedgerTransactionKind.Expense),
             new LedgerFilterOption<LedgerTransactionKind>("Incomes", LedgerTransactionKind.Income)
-        ]);
+        ], preservedSelection.Type);
 
         RebuildFilter(AccountFilters,
             new[] { new LedgerFilterOption<int>("All", default, isAll: true, isChecked: true) }
                 .Concat(accounts
                     .OrderBy(source => source.Name, StringComparer.OrdinalIgnoreCase)
                     .Select(source => new LedgerFilterOption<int>(source.Name, source.Id)))
-                .ToList());
+                .ToList(), preservedSelection.Account);
 
         RebuildFilter(CategoryFilters,
         [
@@ -456,16 +493,17 @@ public partial class LedgerVM : ObservableRecipient,
             new LedgerFilterOption<LedgerCategoryFilter>("Wants", LedgerCategoryFilter.Wants),
             new LedgerFilterOption<LedgerCategoryFilter>("Invest", LedgerCategoryFilter.Invest),
             new LedgerFilterOption<LedgerCategoryFilter>("Excluded", LedgerCategoryFilter.Excluded)
-        ]);
+        ], preservedSelection.Category);
 
         RebuildFilter(TagFilters,
             new[] { new LedgerFilterOption<int>("All", default, isAll: true, isChecked: true) }
                 .Concat(tags
                     .OrderBy(tag => tag.Name, StringComparer.OrdinalIgnoreCase)
                     .Select(tag => new LedgerFilterOption<int>(tag.Name, tag.Id)))
-                .ToList());
+                .ToList(), preservedSelection.Tag);
 
         _appliedFilterSelection = CaptureFilterSelectionSnapshot();
+        OnPropertyChanged(nameof(HasActiveFilters));
         OnPropertyChanged(nameof(BatchAccountOptions));
         OnPropertyChanged(nameof(BatchTagOptions));
         OnPropertyChanged(nameof(BatchAccountSelectionText));
@@ -486,14 +524,20 @@ public partial class LedgerVM : ObservableRecipient,
 
     private void RebuildFilter<T>(
         ObservableCollection<LedgerFilterOption<T>> target,
-        IReadOnlyList<LedgerFilterOption<T>> options)
+        IReadOnlyList<LedgerFilterOption<T>> options,
+        string preservedSelection)
     {
+        var selectedValues = string.IsNullOrWhiteSpace(preservedSelection)
+            ? new HashSet<string>(["all"])
+            : preservedSelection.Split('|').ToHashSet(StringComparer.Ordinal);
+
         foreach (var option in target)
             option.PropertyChanged -= OnFilterOptionPropertyChanged;
 
         target.Clear();
         foreach (var option in options)
         {
+            option.IsChecked = selectedValues.Contains(option.IsAll ? "all" : option.Value?.ToString() ?? string.Empty);
             option.PropertyChanged += OnFilterOptionPropertyChanged;
             target.Add(option);
         }
@@ -521,6 +565,7 @@ public partial class LedgerVM : ObservableRecipient,
         }
 
         OnPropertyChanged(nameof(HasPendingFilterChanges));
+        OnPropertyChanged(nameof(HasActiveFilters));
         RefreshFilterSelectionPresentation(sender);
     }
 
@@ -528,6 +573,7 @@ public partial class LedgerVM : ObservableRecipient,
     {
         _appliedFilterSelection = CaptureFilterSelectionSnapshot();
         TransactionsView.Refresh();
+        RefreshVisibleChildTransactions();
         RefreshVisibleTransactionState();
         OnPropertyChanged(nameof(HasPendingFilterChanges));
         RefreshAllFilterSelectionPresentations();
@@ -558,6 +604,7 @@ public partial class LedgerVM : ObservableRecipient,
                                             visibleTransactions.All(transaction => transaction.IsSelectedForBatch);
         OnPropertyChanged(nameof(CheckAllButtonText));
         OnPropertyChanged(nameof(DeleteSelectedButtonText));
+        OnPropertyChanged(nameof(SelectedVisibleTotal));
         ApplyBatchPreview();
     }
 
@@ -722,6 +769,7 @@ public partial class LedgerVM : ObservableRecipient,
         }
 
         OnPropertyChanged(nameof(HasPendingFilterChanges));
+        OnPropertyChanged(nameof(HasActiveFilters));
         RefreshFilterSelectionPresentation(options);
     }
 
@@ -848,6 +896,13 @@ public partial class LedgerVM : ObservableRecipient,
         if (item is not LedgerTransactionItemVM transaction)
             return false;
 
+        return !transaction.HasChildTransactions
+            ? MatchesTransactionFilters(transaction)
+            : !HasActiveFilters || transaction.ChildTransactions.Any(MatchesTransactionFilters);
+    }
+
+    private bool MatchesTransactionFilters(LedgerTransactionItemVM transaction)
+    {
         if (!string.IsNullOrWhiteSpace(SearchText) &&
             transaction.Name.Contains(SearchText.Trim(), StringComparison.OrdinalIgnoreCase) is false)
             return false;
@@ -866,6 +921,12 @@ public partial class LedgerVM : ObservableRecipient,
             return false;
 
         return true;
+    }
+
+    private void RefreshVisibleChildTransactions()
+    {
+        foreach (var transaction in _transactions.Where(transaction => transaction.HasChildTransactions))
+            transaction.SetVisibleChildTransactions(transaction.ChildTransactions.Where(MatchesTransactionFilters));
     }
 
     private static bool MatchesFilter<T>(IEnumerable<LedgerFilterOption<T>> options, T value)
@@ -1232,8 +1293,8 @@ public partial class LedgerVM : ObservableRecipient,
                 LedgerGroupingMode.Date => right.OccurredOn.Date.CompareTo(left.OccurredOn.Date),
                 LedgerGroupingMode.Tags => string.Compare(left.TagGroupKey, right.TagGroupKey, StringComparison.OrdinalIgnoreCase),
                 LedgerGroupingMode.Accounts => string.Compare(left.AccountGroupKey, right.AccountGroupKey, StringComparison.OrdinalIgnoreCase),
-                LedgerGroupingMode.Types => string.Compare(left.TypeGroupKey, right.TypeGroupKey, StringComparison.OrdinalIgnoreCase),
-                LedgerGroupingMode.Category => string.Compare(left.CategoryGroupKey, right.CategoryGroupKey, StringComparison.OrdinalIgnoreCase),
+                LedgerGroupingMode.Types => 0,
+                LedgerGroupingMode.Category => 0,
                 _ => 0
             };
         }

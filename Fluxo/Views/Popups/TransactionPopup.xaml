@@ -1362,7 +1362,7 @@
 
             <Border
                 Grid.RowSpan="10"
-                Grid.ColumnSpan="3"
+                Grid.ColumnSpan="2"
                 Panel.ZIndex="10"
                 Background="Transparent"
                 Visibility="{Binding IsViewOnly, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
