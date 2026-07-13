@@ -1,4 +1,5 @@
 using Fluxo.Core.Entities;
+using Fluxo.Core.Enums;
 using Fluxo.ViewModels.Popups;
 using Xunit;
 
@@ -6,6 +7,16 @@ namespace Fluxo.Tests.ViewModels.Popups;
 
 public sealed class TransactionDetailBudgetExclusionTests
 {
+    [Fact]
+    public void ClearParentTransactionCategory_ClearsExistingCategory()
+    {
+        var parent = new Transaction { ExpenseCategory = ExpenseCategory.Needs };
+
+        TransactionDetailVM.ClearParentTransactionCategory(parent);
+
+        Assert.Null(parent.ExpenseCategory);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

@@ -883,6 +883,7 @@ public partial class TransactionDetailVM : ObservableObject
 
             _ = keepParentExpenseWhenRemainder;
             originalLog.ParentTransactionId = null;
+            ClearParentTransactionCategory(originalLog);
             originalLog.Tag = null;
             originalLog.TagId = null;
             _appData.UpdateTransaction(originalLog);
@@ -976,6 +977,12 @@ public partial class TransactionDetailVM : ObservableObject
                 .ToDictionary(transaction => transaction.Id);
             foreach (var (parentRow, parentTransaction) in parentTransactions)
             {
+                if (parentRow.ChildRows.Any(row => row.AmountText > 0m))
+                {
+                    ClearParentTransactionCategory(parentTransaction);
+                    _appData.UpdateTransaction(parentTransaction);
+                }
+
                 foreach (var childRow in parentRow.ChildRows.Where(row => row.AmountText > 0m))
                 {
                     var tag = await _appData.GetTagByIdAsync(childRow.SelectedTag!.Id);
@@ -1273,6 +1280,9 @@ public partial class TransactionDetailVM : ObservableObject
             childTransaction.IsExcludedFromBudget = isExcludedFromBudget;
         }
     }
+
+    internal static void ClearParentTransactionCategory(Transaction transaction) =>
+        transaction.ExpenseCategory = null;
 
     private async Task CascadeParentStateToChildTransactionsAsync(
         Account account,

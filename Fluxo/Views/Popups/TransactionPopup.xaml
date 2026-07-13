@@ -1352,6 +1352,7 @@
                 Grid.RowSpan="4"
                 Grid.Column="2"
                 Width="400"
+                MaxHeight="480"
                 HeaderText="Sub-transactions"
                 Visibility="{Binding ShowChildTransactionsPanel, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                 <customControls:FadingScrollViewer VerticalScrollBarVisibility="Auto">

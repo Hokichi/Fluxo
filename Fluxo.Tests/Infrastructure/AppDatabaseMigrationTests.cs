@@ -191,6 +191,61 @@ public sealed class AppDatabaseMigrationTests
         }
     }
 
+    [Fact]
+    public async Task ClearParentTransactionCategoriesMigration_ClearsParentsButPreservesChildren()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "fluxo-tests", Guid.NewGuid().ToString("N"));
+        var databasePath = Path.Combine(directory, "fluxo.db");
+        Directory.CreateDirectory(directory);
+
+        try
+        {
+            using var services = CreateServiceProvider(databasePath);
+            await App.MigrateDatabaseAsync(
+                services.GetRequiredService<IDataOperationRunner>(),
+                () => databasePath);
+
+            await using (var scope = services.CreateAsyncScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<FluxoDbContext>();
+                var migrator = context.GetService<IMigrator>();
+                await migrator.MigrateAsync("20260713093244_AddRecurringBudgetExclusionAndRepairTransactionTags");
+                await context.Database.ExecuteSqlRawAsync("""
+                    INSERT INTO Accounts
+                        (Id, Name, AccountType, Balance, IsDefault, IsEnabled, IsForDeletion,
+                         MaximumSpending, PinnedOnUI, SpentAmount, AccountLimit)
+                    VALUES (7, 'Checking', 0, 100, 0, 1, 0, 0, 0, 0, 0);
+
+                    INSERT INTO Transactions
+                        (Id, Type, SourceAccountId, Name, Amount, OccurredOn, LoggedOn, Notes,
+                         ExpenseCategory, IsPinned, IsForDeletion, IsIoU, ShouldAffectBalance,
+                         IsExcludedFromBudget, ParentTransactionId)
+                    VALUES
+                        (41, 0, 7, 'Parent', 10, '2026-07-01', '2026-07-01 12:00:00', '', 0, 0, 0, 0, 0, 0, NULL),
+                        (42, 0, 7, 'Child', 10, '2026-07-01', '2026-07-01 12:00:00', '', 1, 0, 0, 0, 0, 0, 41);
+                    """);
+                await migrator.MigrateAsync();
+            }
+
+            await using var connection = new SqliteConnection($"Data Source={databasePath}");
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = "SELECT Id, ExpenseCategory FROM Transactions ORDER BY Id";
+            await using var reader = await command.ExecuteReaderAsync();
+            Assert.True(await reader.ReadAsync());
+            Assert.Equal(41, reader.GetInt32(0));
+            Assert.True(reader.IsDBNull(1));
+            Assert.True(await reader.ReadAsync());
+            Assert.Equal(42, reader.GetInt32(0));
+            Assert.Equal(1, reader.GetInt32(1));
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            Directory.Delete(directory, true);
+        }
+    }
+
     private static ServiceProvider CreateServiceProvider(string databasePath)
     {
         var services = new ServiceCollection();
