@@ -315,16 +315,16 @@
                         Text="{Binding NameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                     <customControls:BalloonCheckBox
                         Grid.Column="2"
+                        ButtonIcon="{StaticResource CreditCardOff}"
                         ButtonSize="38"
+                        ButtonText="Exclude"
                         CornerRadius="12"
                         DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                         HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                         IconSize="14"
                         IsChecked="{Binding IsExcludedFromBudget, Mode=TwoWay}"
                         IsEnabled="{Binding CanEditFields}"
-                        ToolTip="Exclude from budget"
-                        UncheckedIcon="{StaticResource CreditCardOff}"
-                        UncheckedText="Exclude" />
+                        ToolTip="Exclude from budget" />
                     <customControls:BalloonCheckBox
                         x:Name="TransactionPinButton"
                         Grid.Column="4"

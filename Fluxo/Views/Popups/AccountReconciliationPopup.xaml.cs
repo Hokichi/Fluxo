@@ -19,7 +19,14 @@ public partial class AccountReconciliationPopup : BasePopup
 
     protected override async void OnSaveButtonClick()
     {
-        var result = await _viewModel.SaveAsync();
+        var shouldLogTransaction = FluxoMessageBox.Show(
+            this,
+            "Would you like to log a transaction?",
+            "Account Reconciliation",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question) == MessageBoxResult.Yes;
+
+        var result = await _viewModel.SaveAsync(shouldLogTransaction);
         if (!result.IsSuccess)
         {
             FloatingNotificationPublisher.SaveFailed(
@@ -28,14 +35,20 @@ public partial class AccountReconciliationPopup : BasePopup
             return;
         }
 
+        if (!shouldLogTransaction || result.CreatedTransaction is null)
+        {
+            Close();
+            return;
+        }
+
         var shouldModify = FluxoMessageBox.Show(
             this,
-            "Would you like to modify this expense?",
+            "Would you like to modify this transaction?",
             "Account Reconciliation",
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
 
-        if (shouldModify != MessageBoxResult.Yes || result.CreatedTransaction is null)
+        if (shouldModify != MessageBoxResult.Yes)
         {
             Close();
             return;
