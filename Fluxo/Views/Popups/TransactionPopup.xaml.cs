@@ -106,9 +106,9 @@ public partial class TransactionPopup : BasePopup
         Close();
     }
 
-    protected override void OnEditButtonClick()
+    protected override async void OnEditButtonClick()
     {
-        _viewModel.BeginEditingViewedTransaction();
+        await _viewModel.BeginEditingViewedTransactionAsync();
         FocusPrimaryInput();
     }
 

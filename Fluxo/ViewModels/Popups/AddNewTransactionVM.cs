@@ -831,6 +831,8 @@ public partial class AddNewTransactionVM : ObservableValidator
         ViewedTransaction = transaction;
         _isTransactionTypeLocked = true;
         SetPopupPurpose(TransactionPopupPurpose.ViewTransaction);
+        RefreshTagCollections();
+        ClearViewModeFeedback();
         OnPropertyChanged(nameof(CanChangeTransactionType));
         OnPropertyChanged(nameof(IsViewOnly));
         OnPropertyChanged(nameof(CanContinue));
@@ -851,12 +853,17 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(ShowSidePanel));
     }
 
-    public void BeginEditingViewedTransaction()
+    public async Task BeginEditingViewedTransactionAsync()
     {
         if (ViewedTransaction is null || !CanEditViewedTransaction)
             return;
 
         SetPopupPurpose(TransactionPopupPurpose.EditTransaction);
+        await EnsureTagsLoadedAsync();
+        if (SelectedTag is { } selectedTag && _orderedTags.FirstOrDefault()?.Id != selectedTag.Id)
+            PromoteTagToVisibleStart(selectedTag);
+        else
+            RefreshTagCollections();
         BeginChangeTracking();
     }
 
@@ -1089,6 +1096,12 @@ public partial class AddNewTransactionVM : ObservableValidator
 
     partial void OnSelectedTagChanged(TagVM? value)
     {
+        if (value is null && IsViewOnly && ViewedTransaction?.Tag is { } viewedTag)
+        {
+            SelectedTag = viewedTag;
+            return;
+        }
+
         RefreshActiveValidation(nameof(AmountText));
         NotifyFormStateChanged();
 
@@ -1786,6 +1799,15 @@ public partial class AddNewTransactionVM : ObservableValidator
 
         try
         {
+            if (IsViewOnly)
+            {
+                ReplaceCollection(VisibleTags, SelectedTag is null ? [] : [SelectedTag]);
+                ReplaceCollection(OverflowTags, []);
+                OnPropertyChanged(nameof(HasMoreTags));
+                IsMoreTagsOpen = false;
+                return;
+            }
+
             ReplaceCollection(VisibleTags, _orderedTags.Take(_visibleTagSlots));
             ReplaceCollection(OverflowTags, _orderedTags.Skip(_visibleTagSlots));
 
@@ -2450,6 +2472,25 @@ public partial class AddNewTransactionVM : ObservableValidator
         ClearErrors(nameof(NameText));
         OnPropertyChanged(nameof(NameValidationHint));
         OnPropertyChanged(nameof(CanSave));
+    }
+
+    private void ClearViewModeFeedback()
+    {
+        _isNameValidationActive = false;
+        _isAmountValidationActive = false;
+        ClearErrors(nameof(NameText));
+        ClearErrors(nameof(AmountText));
+        ClearErrors(nameof(SelectedAccount));
+        ClearErrors(nameof(SelectedTag));
+        ClearErrors(nameof(SelectedGoal));
+        ClearErrors(nameof(RecurringTimeText));
+        _amountWarningHint = string.Empty;
+        OnPropertyChanged(nameof(NameValidationHint));
+        OnPropertyChanged(nameof(AmountValidationHint));
+        OnPropertyChanged(nameof(AmountWarningHint));
+        OnPropertyChanged(nameof(CanSave));
+        OnPropertyChanged(nameof(TransactionWarnings));
+        NotifyAmountPresentationChanged();
     }
 
     private string GetValidationHint(string propertyName)

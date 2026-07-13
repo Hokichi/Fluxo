@@ -1960,7 +1960,7 @@ public partial class MainWindow : Window, IPopupHost
 
         var popupViewModel = new AddNewTransactionVM(_mainVM, appData);
         popupViewModel.InitializeView(targetTransaction);
-        popupViewModel.BeginEditingViewedTransaction();
+        await popupViewModel.BeginEditingViewedTransactionAsync();
         _dialogService.ShowAddNewTransaction(popupViewModel, this);
     }
 

@@ -2739,6 +2739,89 @@ public sealed class AddNewTransactionVMValidationTests
         });
     }
 
+    [Fact]
+    public void ViewedTransactionTags_SwitchBetweenSelectedOnlyAndEditableTagList()
+    {
+        RunInSta(() =>
+        {
+            var source = CreateCheckingSource(balance: 500m);
+            var tags = new[]
+            {
+                new Tag { Id = 1, Name = "Alpha", HexCode = "#111111" },
+                new Tag { Id = 2, Name = "Bravo", HexCode = "#222222" },
+                new Tag { Id = 3, Name = "Charlie", HexCode = "#333333" },
+                new Tag { Id = 4, Name = "Delta", HexCode = "#444444" },
+                new Tag { Id = 5, Name = "Echo", HexCode = "#555555" }
+            };
+            var appData = CreateAppData();
+            appData.GetTagsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IReadOnlyList<Tag>>(tags));
+            var vm = new AddNewTransactionVM(CreateMainViewModel([source]), appData);
+
+            vm.InitializeView(new TransactionVM
+            {
+                Id = 15,
+                Type = TransactionType.Expense,
+                SourceAccountId = source.Id,
+                Account = source,
+                Tag = new TagVM { Id = 5, Name = "Echo", HexCode = "#555555" }
+            });
+            vm.EnsureTagsLoadedAsync().GetAwaiter().GetResult();
+
+            Assert.Equal([5], vm.VisibleTags.Select(tag => tag.Id));
+            Assert.Empty(vm.OverflowTags);
+
+            vm.BeginEditingViewedTransactionAsync().GetAwaiter().GetResult();
+
+            Assert.Equal([5, 1, 2, 3, 4], vm.VisibleTags.Concat(vm.OverflowTags).Select(tag => tag.Id));
+
+            vm.DiscardEditingViewedTransaction();
+
+            Assert.Equal([5], vm.VisibleTags.Select(tag => tag.Id));
+            Assert.Empty(vm.OverflowTags);
+
+            vm.BeginEditingViewedTransactionAsync().GetAwaiter().GetResult();
+
+            Assert.Equal([5, 1, 2, 3, 4], vm.VisibleTags.Concat(vm.OverflowTags).Select(tag => tag.Id));
+        });
+    }
+
+    [Fact]
+    public void ViewMode_ClearsFeedbackAndRestoresTheSavedTagSelection()
+    {
+        RunInSta(() =>
+        {
+            var source = CreateCheckingSource(balance: 500m);
+            var vm = new AddNewTransactionVM(CreateMainViewModel([source]), CreateAppData());
+            var transaction = new TransactionVM
+            {
+                Id = 15,
+                Type = TransactionType.Expense,
+                SourceAccountId = source.Id,
+                Account = source,
+                Name = "Groceries",
+                Amount = 25m,
+                Tag = new TagVM { Id = 5, Name = "Food", HexCode = "#555555" }
+            };
+
+            vm.NameText = string.Empty;
+            vm.AmountText = 0m;
+            vm.ValidateNameField();
+            vm.ValidateAmountField();
+
+            vm.InitializeView(transaction);
+
+            Assert.Equal(string.Empty, vm.NameValidationHint);
+            Assert.Equal(string.Empty, vm.AmountValidationHint);
+            Assert.Equal(string.Empty, vm.AmountWarningHint);
+            Assert.Equal(string.Empty, vm.AmountFieldHint);
+
+            vm.SelectedTag = null;
+
+            Assert.Equal(transaction.Tag!.Id, vm.SelectedTag!.Id);
+            Assert.Equal([transaction.Tag.Id], vm.VisibleTags.Select(tag => tag.Id));
+        });
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -2770,7 +2853,7 @@ public sealed class AddNewTransactionVMValidationTests
                     Account = source,
                     Tag = selectedTag
                 });
-                vm.BeginEditingViewedTransaction();
+                vm.BeginEditingViewedTransactionAsync().GetAwaiter().GetResult();
                 Assert.Equal("Modify Transaction", vm.PopupTitle);
             }
             else
