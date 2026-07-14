@@ -83,7 +83,7 @@
                                         </TextBlock>
                                         <TextBlock
                                             x:Name="PART_SubText"
-                                            Margin="8,1,0,0"
+                                            Margin="8,2,0,0"
                                             VerticalAlignment="Center"
                                             FontFamily="{StaticResource Light}"
                                             FontSize="10"
@@ -416,7 +416,7 @@
                                     Color="{StaticResource Brush.Background.Surface}" />
                             </Grid>
                             <TextBlock
-                                        Margin="24,0,0,0"
+                                Margin="24,0,0,0"
                                 FontFamily="{StaticResource Bold}"
                                 Foreground="{StaticResource Brush.Text.Primary}"
                                 Text="{Binding Name}" />

@@ -27,6 +27,7 @@ public partial class TransactionDetailVM : ObservableObject
     private readonly MainVM _mainViewModel;
     private readonly List<TagVM> _orderedTags = [];
     private readonly List<TransactionSplitRowVM> _removedSplitRows = [];
+    private readonly List<TransactionSplitRowVM> _savedSplitRows = [];
     private readonly IAppDataService _appData;
 
     [ObservableProperty] private decimal _amountText;
@@ -149,13 +150,14 @@ public partial class TransactionDetailVM : ObservableObject
     public bool ShowSplitButton => !IsEditing;
 
     public bool HasPendingSplitChanges =>
-        _areSplitRowsLoaded && (HasSplitRowsWithAmounts || _removedSplitRows.Count > 0);
+        _areSplitRowsLoaded && HasEffectiveSplitChanges(AllSplitRows(), _savedSplitRows, _removedSplitRows);
 
     public bool ShowNormalTransactionFields => !IsSplitMode;
     public IEnumerable<TagVM> AllSplitTags => _orderedTags.Where(tag => !tag.IsSystemTag);
     public bool HasSplitParentRemainder => IsSplitMode && AmountText > 0m;
-    public bool CanCloseSplitModeWithoutSaving => IsSplitMode && !HasSplitRows;
-    public bool RequiresEmptySplitConfirmationOnClose => _areSplitRowsLoaded && HasSplitRowsWithoutAmounts;
+    public bool CanSplitEqually => CanUseEqualSplit(AmountText, _savedState.Amount);
+    public bool CanCloseSplitModeWithoutSaving => IsSplitMode && !HasPendingSplitChanges;
+    public bool RequiresEmptySplitConfirmationOnClose => false;
 
     partial void OnIsExcludedFromBudgetChanged(bool value)
     {
@@ -187,6 +189,7 @@ public partial class TransactionDetailVM : ObservableObject
     partial void OnAmountTextChanged(decimal value)
     {
         OnPropertyChanged(nameof(HasSplitParentRemainder));
+        OnPropertyChanged(nameof(CanSplitEqually));
 
         if (!IsSplitMode || _isApplyingSplitRemainder)
             return;
@@ -400,6 +403,10 @@ public partial class TransactionDetailVM : ObservableObject
 
             AddSplitRow(row);
         }
+
+        _savedSplitRows.Clear();
+        _savedSplitRows.AddRange(AllSplitRows().Select(CloneSplitRow));
+        NotifySplitRowStateChanged();
     }
 
     private async Task<IReadOnlyList<Transaction>> LoadChildTransactionEntitiesAsync(CancellationToken cancellationToken)
@@ -420,6 +427,7 @@ public partial class TransactionDetailVM : ObservableObject
 
         SplitRows.Clear();
         _removedSplitRows.Clear();
+        _savedSplitRows.Clear();
         _areSplitRowsLoaded = false;
         IsSplitMode = false;
         IsSplitEquallyEnabled = false;
@@ -1465,10 +1473,10 @@ public partial class TransactionDetailVM : ObservableObject
         if (sender is not TransactionSplitRowVM row)
             return;
 
+        NotifySplitRowStateChanged();
+
         if (e.PropertyName != nameof(TransactionSplitRowVM.AmountText))
             return;
-
-        NotifySplitRowStateChanged();
         var parent = SplitRows.FirstOrDefault(candidate => candidate.ChildRows.Contains(row));
         if (parent is not null)
         {
@@ -1488,6 +1496,51 @@ public partial class TransactionDetailVM : ObservableObject
 
     private IEnumerable<TransactionSplitRowVM> AllSplitRows() =>
         SplitRows.Concat(SplitRows.SelectMany(row => row.ChildRows));
+
+    internal static bool CanUseEqualSplit(decimal amount, decimal originalAmount) => amount >= originalAmount;
+
+    internal static bool HasEffectiveSplitChanges(
+        IEnumerable<TransactionSplitRowVM> rows,
+        IEnumerable<TransactionSplitRowVM> savedRows,
+        IEnumerable<TransactionSplitRowVM> removedRows)
+    {
+        var savedById = savedRows
+            .Where(row => row.TransactionId is not null)
+            .ToDictionary(row => row.TransactionId!.Value);
+
+        foreach (var row in rows)
+        {
+            if (row.TransactionId is null)
+            {
+                if (row.AmountText > 0m)
+                    return true;
+
+                continue;
+            }
+
+            if (!savedById.Remove(row.TransactionId.Value, out var savedRow) || !RowsMatch(row, savedRow))
+                return true;
+        }
+
+        return savedById.Count > 0 || removedRows.Any(row => row.TransactionId is not null);
+    }
+
+    private static TransactionSplitRowVM CloneSplitRow(TransactionSplitRowVM row) => new()
+    {
+        TransactionId = row.TransactionId,
+        AmountText = row.AmountText,
+        NameText = row.NameText,
+        SelectedExpenseCategory = row.SelectedExpenseCategory,
+        SelectedTag = row.SelectedTag,
+        IsIoU = row.IsIoU
+    };
+
+    private static bool RowsMatch(TransactionSplitRowVM row, TransactionSplitRowVM savedRow) =>
+        row.AmountText == savedRow.AmountText &&
+        string.Equals(row.NameText.Trim(), savedRow.NameText.Trim(), StringComparison.Ordinal) &&
+        row.SelectedExpenseCategory == savedRow.SelectedExpenseCategory &&
+        row.SelectedTag?.Id == savedRow.SelectedTag?.Id &&
+        row.IsIoU == savedRow.IsIoU;
 
     private void SubscribeSplitRow(TransactionSplitRowVM row) =>
         row.PropertyChanged += OnSplitRowPropertyChanged;

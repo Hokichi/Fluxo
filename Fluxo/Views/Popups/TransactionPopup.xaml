@@ -763,7 +763,7 @@
                                 Grid.Row="1"
                                 Grid.Column="0"
                                 Visibility="{Binding ShowCategoryOrRepaymentField, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
-                                <StackPanel Visibility="{Binding ShowCategoryField, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <StackPanel Margin="-2,8,0,0" Visibility="{Binding ShowCategoryField, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <StackPanel Orientation="Horizontal">
                                         <customControls:BalloonRadioButton
                                             ButtonIcon="{StaticResource Home}"
@@ -1183,8 +1183,8 @@
                 Grid.Row="2"
                 Grid.Column="0"
                 Margin="0,16,0,0"
-                IsEnabled="{Binding CanEditTags}"
-                Visibility="{Binding CanEditTags, Converter={StaticResource BoolToVisibilityConverter}}">
+                IsEnabled="{Binding CanEditTags, Mode=OneWay}"
+                Visibility="{Binding CanEditTags, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                 <TextBlock Style="{StaticResource SectionLabelStyle}" Text="Tags" />
                 <DockPanel x:Name="TagsDockPanel" LastChildFill="False">
                     <Button

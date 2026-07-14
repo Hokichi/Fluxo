@@ -104,7 +104,8 @@ public partial class TransactionSplitPopup : BasePopup
             return;
         }
 
-        SyncNoteDocumentFromViewModel();
+        _allowClose = true;
+        Close();
     }
 
     protected override void OnCloneButtonClick()
@@ -173,41 +174,7 @@ public partial class TransactionSplitPopup : BasePopup
 
     private async void OnPopupClosing(object? sender, CancelEventArgs e)
     {
-        if (_allowClose || _isHandlingCloseRequest)
-            return;
-
-        if (_viewModel.CanCloseSplitModeWithoutSaving)
-            return;
-
-        if (_viewModel.RequiresEmptySplitConfirmationOnClose)
-        {
-            e.Cancel = true;
-            _isHandlingCloseRequest = true;
-
-            try
-            {
-                var closeWithoutSaving = FluxoMessageBox.Show(
-                    this,
-                    "Close and discard unsaved changes?",
-                    "Transaction Split",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
-
-                if (closeWithoutSaving != MessageBoxResult.Yes)
-                    return;
-
-                _allowClose = true;
-                _ = Dispatcher.BeginInvoke(new Action(Close));
-            }
-            finally
-            {
-                _isHandlingCloseRequest = false;
-            }
-
-            return;
-        }
-
-        if (!_viewModel.HasValidChangesToPersistOnClose())
+        if (_allowClose || _isHandlingCloseRequest || !_viewModel.HasPendingSplitChanges)
             return;
 
         e.Cancel = true;
@@ -217,24 +184,26 @@ public partial class TransactionSplitPopup : BasePopup
         {
             var confirmation = FluxoMessageBox.Show(
                 this,
-                "Save your changes before closing?",
+                "Discard all changes and return?",
                 "Transaction Split",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
 
             if (confirmation == MessageBoxResult.Yes)
             {
-                var result = await TrySaveWithSplitRemainderConfirmationAsync();
-                if (result is null)
-                    return;
+                _allowClose = true;
+                _ = Dispatcher.BeginInvoke(new Action(Close));
+                return;
+            }
 
-                if (!result.Value.IsSuccess)
-                {
-                    ShowValidationMessage(result.Value.ErrorMessage);
-                    return;
-                }
+            var result = await TrySaveWithSplitRemainderConfirmationAsync();
+            if (result is null)
+                return;
 
-                SyncNoteDocumentFromViewModel();
+            if (!result.Value.IsSuccess)
+            {
+                ShowValidationMessage(result.Value.ErrorMessage);
+                return;
             }
 
             _allowClose = true;

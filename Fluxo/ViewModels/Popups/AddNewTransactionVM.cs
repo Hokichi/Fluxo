@@ -165,9 +165,9 @@ public partial class AddNewTransactionVM : ObservableValidator
     public bool IsNeedsCategory { get => SelectedExpenseCategory == ExpenseCategory.Needs; set { if (value) SelectedExpenseCategory = ExpenseCategory.Needs; } }
     public bool IsWantsCategory { get => SelectedExpenseCategory == ExpenseCategory.Wants; set { if (value) SelectedExpenseCategory = ExpenseCategory.Wants; } }
     public bool IsInvestCategory { get => SelectedExpenseCategory == ExpenseCategory.Savings; set { if (value) SelectedExpenseCategory = ExpenseCategory.Savings; } }
-    public bool ShowCategoryImpact => !IsViewOnly && !IsRecurringTransactionMode && AmountText > 0m && !IsUnpostedIoUMode &&
+    public bool ShowCategoryImpact => !HasChildTransactions && !IsViewOnly && !IsRecurringTransactionMode && AmountText > 0m && !IsUnpostedIoUMode &&
                                       (IsRepayment || (IsExpense && !IsExcludedFromBudget));
-    public bool ShowAccountImpact => !IsViewOnly && !IsRecurringTransactionMode && AmountText > 0m && !IsUnpostedIoUMode && SelectedAccount is not null;
+    public bool ShowAccountImpact => !HasChildTransactions && !IsViewOnly && !IsRecurringTransactionMode && AmountText > 0m && !IsUnpostedIoUMode && SelectedAccount is not null;
     public decimal CategoryCurrent => IsRepayment
         ? SelectedRepaymentAccount?.SpentAmount ?? 0m
         : ShowCategoryImpact ? GetCategoryCurrentAmount() : 0m;
@@ -260,11 +260,12 @@ public partial class AddNewTransactionVM : ObservableValidator
     public bool CanToggleRecurring => !IsRecurringModeLocked && !IsRepayment;
     public bool CanUseHistory => true;
     public bool ShowHistoryPanel => _popupPurpose == TransactionPopupPurpose.AddNewTransaction && IsHistoryOpen;
-    public bool ShowChildTransactionsPanel => IsViewOnly && ChildTransactions.Count > 0;
+    public bool HasChildTransactions => ChildTransactions.Count > 0;
+    public bool ShowChildTransactionsPanel => (IsViewOnly || IsEditingViewedTransaction) && HasChildTransactions;
     public bool ShowSidePanel => ShowHistoryPanel || ShowChildTransactionsPanel;
     public bool CanEditTransactionName => !IsGoal && !IsRepayment;
     public bool CanEditCategory => IsExpense && !IsRepayment;
-    public bool CanEditTags => !IsGoal && !IsRepayment;
+    public bool CanEditTags => !IsGoal && !IsRepayment && !HasChildTransactions;
     public bool CanChangeTransactionType => !_isTransactionTypeLocked;
     public bool CanEditViewedTransaction => IsViewOnly && ViewedTransaction?.Tag?.IsSystemTag != true;
     public bool CanCloneViewedTransaction => CanEditViewedTransaction;
@@ -850,8 +851,12 @@ public partial class AddNewTransactionVM : ObservableValidator
         foreach (var childTransaction in childTransactions)
             ChildTransactions.Add(childTransaction);
 
+        OnPropertyChanged(nameof(HasChildTransactions));
         OnPropertyChanged(nameof(ShowChildTransactionsPanel));
         OnPropertyChanged(nameof(ShowSidePanel));
+        OnPropertyChanged(nameof(CanEditTags));
+        OnPropertyChanged(nameof(ShowCategoryImpact));
+        OnPropertyChanged(nameof(ShowAccountImpact));
     }
 
     public async Task BeginEditingViewedTransactionAsync()
@@ -3343,8 +3348,12 @@ public partial class AddNewTransactionVM : ObservableValidator
         OnPropertyChanged(nameof(CanDiscard));
         OnPropertyChanged(nameof(PopupMode));
         OnPropertyChanged(nameof(ShowHistoryPanel));
+        OnPropertyChanged(nameof(HasChildTransactions));
         OnPropertyChanged(nameof(ShowChildTransactionsPanel));
         OnPropertyChanged(nameof(ShowSidePanel));
+        OnPropertyChanged(nameof(CanEditTags));
+        OnPropertyChanged(nameof(ShowCategoryImpact));
+        OnPropertyChanged(nameof(ShowAccountImpact));
     }
 
     private void SyncGoalUpdateName()

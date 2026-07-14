@@ -107,6 +107,20 @@ public sealed class TransactionDetailVMBalloonToggleTests
     }
 
     [Fact]
+    public void SplitRow_CheckingOneRowDoesNotSplitAnother()
+    {
+        var splitRow = new TransactionSplitRowVM();
+        var regularRow = new TransactionSplitRowVM();
+
+        splitRow.IsSplit = true;
+
+        Assert.True(splitRow.IsSplit);
+        Assert.Single(splitRow.ChildRows);
+        Assert.False(regularRow.IsSplit);
+        Assert.Empty(regularRow.ChildRows);
+    }
+
+    [Fact]
     public void SplitRow_ChildAmountsOverParentMarkChangedChildInvalid()
     {
         var row = new TransactionSplitRowVM { AmountText = 10m, IsSplit = true };
@@ -169,5 +183,30 @@ public sealed class TransactionDetailVMBalloonToggleTests
         Assert.True(row.IsIoU);
         Assert.Equal(ExpenseCategory.Wants, row.SelectedExpenseCategory);
         Assert.Same(tag, row.SelectedTag);
+    }
+
+    [Fact]
+    public void SplitChangeCheck_IgnoresEmptyNewRows()
+    {
+        var row = new TransactionSplitRowVM();
+
+        Assert.False(TransactionDetailVM.HasEffectiveSplitChanges([row], [], []));
+    }
+
+    [Fact]
+    public void SplitChangeCheck_DetectsChangedPersistedRow()
+    {
+        var saved = new TransactionSplitRowVM { TransactionId = 7, AmountText = 25m, NameText = "Lunch" };
+        var changed = new TransactionSplitRowVM { TransactionId = 7, AmountText = 30m, NameText = "Lunch" };
+
+        Assert.True(TransactionDetailVM.HasEffectiveSplitChanges([changed], [saved], []));
+    }
+
+    [Theory]
+    [InlineData(100, 100, true)]
+    [InlineData(99, 100, false)]
+    public void CanUseEqualSplit_RequiresAmountAtLeastOriginal(decimal amount, decimal original, bool expected)
+    {
+        Assert.Equal(expected, TransactionDetailVM.CanUseEqualSplit(amount, original));
     }
 }

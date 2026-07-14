@@ -621,7 +621,7 @@
 
                         <Border
                             Height="0.5"
-                            Margin="4,16"
+                            Margin="4,16,4,4"
                             Background="{StaticResource Brush.Text.Muted}"
                             Opacity="0.5"
                             SnapsToDevicePixels="True" />
@@ -634,13 +634,14 @@
                             <ItemsControl x:Name="SplitRowsItemsControl" ItemsSource="{Binding SplitRows}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <customControls:SpacedUniformGrid Columns="1" VerticalGap="12" />
+                                        <StackPanel />
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Border
                                             Width="720"
+                                            Margin="0,12,0,0"
                                             Padding="12"
                                             Style="{StaticResource CardBorderStyle}">
                                             <StackPanel>
@@ -791,7 +792,7 @@
                                                 <ItemsControl
                                                     Margin="0,0,0,0"
                                                     ItemsSource="{Binding ChildRows}"
-                                                    Visibility="{Binding IsSplit, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                    Visibility="{Binding IsSplit, Converter={StaticResource BoolToVisibilityConverter}}">
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
                                                             <StackPanel Margin="0,0,0,12">
@@ -969,3 +970,4 @@
         </Grid>
     </Border>
 </customControls:BasePopup>
+
