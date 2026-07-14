@@ -10,6 +10,8 @@ public partial class MessageBoxPopup : BasePopup
 {
     private MessageBoxButton _buttons;
 
+    protected override bool ShouldBubbleApplicationClose => false;
+
     public MessageBoxPopup(string message, string title, MessageBoxButton buttons = MessageBoxButton.OK,
         MessageBoxImage icon = MessageBoxImage.None)
     {

@@ -11,6 +11,8 @@ public partial class ToastPopup : BasePopup
     private const int MinimumCloseDelayMilliseconds = 500;
     private const int CloseDelayMillisecondsPerCharacter = 50;
 
+    protected override bool ShouldBubbleApplicationClose => false;
+
     private readonly Func<Task> _work;
     private bool _executionStarted;
     private bool _executionCompleted;

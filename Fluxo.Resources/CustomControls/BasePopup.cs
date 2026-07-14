@@ -119,6 +119,8 @@ public class BasePopup : Window, IPopupHost
     private bool _isClosingForPopupHandoff;
     private bool _hasRoutedOwnerOverlayHide;
     private bool _isPopupOverlayHandoffPending;
+    private Window? _previousApplicationMainWindow;
+    private bool _isApplicationMainWindow;
 
     static BasePopup()
     {
@@ -334,6 +336,8 @@ public class BasePopup : Window, IPopupHost
     {
     }
 
+    protected virtual bool ShouldBubbleApplicationClose => true;
+
     // Keyboard shortcuts
 
     protected override void OnPreviewKeyDown(KeyEventArgs e)
@@ -424,6 +428,7 @@ public class BasePopup : Window, IPopupHost
     {
         _popupHost = Owner as IPopupHost;
         _popupHost?.ShowPopupOverlay();
+        BecomeApplicationMainWindow();
 
         var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(PopupAnimDuration))
         {
@@ -533,12 +538,16 @@ public class BasePopup : Window, IPopupHost
         // Preserve modal dialog results (true/false) by letting WPF finish the close immediately.
         if (DialogResult.HasValue)
         {
+            RestoreApplicationMainWindow();
             RouteOwnerPopupOverlayHide();
             return;
         }
 
         if (_isAnimatingClose)
+        {
+            RestoreApplicationMainWindow();
             return;
+        }
 
         e.Cancel = true;
         _isAnimatingClose = true;
@@ -552,6 +561,29 @@ public class BasePopup : Window, IPopupHost
 
         fadeOut.Completed += (_, _) => Close();
         BeginAnimation(OpacityProperty, fadeOut);
+    }
+
+    private void BecomeApplicationMainWindow()
+    {
+        if (!ShouldBubbleApplicationClose || Application.Current is not { } application ||
+            !application.Dispatcher.CheckAccess() ||
+            ReferenceEquals(application.MainWindow, this))
+            return;
+
+        _previousApplicationMainWindow = application.MainWindow;
+        application.MainWindow = this;
+        _isApplicationMainWindow = true;
+    }
+
+    private void RestoreApplicationMainWindow()
+    {
+        if (!_isApplicationMainWindow || Application.Current is not { } application ||
+            !application.Dispatcher.CheckAccess() ||
+            !ReferenceEquals(application.MainWindow, this))
+            return;
+
+        application.MainWindow = _previousApplicationMainWindow;
+        _isApplicationMainWindow = false;
     }
 
     private void OnClosed(object? sender, EventArgs e)

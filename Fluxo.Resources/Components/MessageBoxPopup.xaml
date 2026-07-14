@@ -7,6 +7,7 @@
     Width="420"
     MinWidth="420"
     MaxWidth="420"
+    ShowCloseButton="False"
     ShowInTaskbar="False">
     <Grid Margin="24,8,24,24">
         <Grid.RowDefinitions>
