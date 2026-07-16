@@ -1977,6 +1977,18 @@ public partial class MainWindow : Window, IPopupHost
         _dialogService.ShowTransactionSplit(popupViewModel, owner);
     }
 
+    public async Task RefreshTransactionPopupAsync(AddNewTransactionVM popupViewModel, TransactionVM transaction)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var appData = scope.ServiceProvider.GetRequiredService<IAppDataService>();
+        var targetTransaction = await TransactionDetailTargetResolver.ResolveAsync(transaction, appData);
+        if (targetTransaction is null)
+            return;
+
+        popupViewModel.InitializeView(targetTransaction);
+        await InitializeTransactionChildrenAsync(popupViewModel, targetTransaction.Id, appData);
+    }
+
     private static async Task InitializeTransactionChildrenAsync(
         AddNewTransactionVM popupViewModel,
         int parentTransactionId,

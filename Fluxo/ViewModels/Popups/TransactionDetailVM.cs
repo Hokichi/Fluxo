@@ -40,9 +40,10 @@ public partial class TransactionDetailVM : ObservableObject
     [ObservableProperty] private bool _isSplitEquallyEnabled;
     [ObservableProperty] private bool _isMoreTagsOpen;
     [ObservableProperty] private bool _hasNegativeSplitRemainder;
+    [ObservableProperty] private decimal _splitTotalAmount;
+    [ObservableProperty] private decimal _splitRemainingAmount;
     [ObservableProperty] private bool _isSaving;
     [ObservableProperty] private TransactionSplitRowVM? _negativeRemainderRow;
-    private bool _isApplyingSplitRemainder;
     private bool _areSplitRowsLoaded;
     private bool _isUpdatingTagCollections;
     private int _visibleTagSlots = DefaultVisibleTagSlots;
@@ -154,8 +155,8 @@ public partial class TransactionDetailVM : ObservableObject
 
     public bool ShowNormalTransactionFields => !IsSplitMode;
     public IEnumerable<TagVM> AllSplitTags => _orderedTags.Where(tag => !tag.IsSystemTag);
-    public bool HasSplitParentRemainder => IsSplitMode && AmountText > 0m;
-    public bool CanSplitEqually => CanUseEqualSplit(AmountText, _savedState.Amount);
+    public bool HasSplitParentRemainder => IsSplitMode && SplitRemainingAmount > 0m;
+    public bool CanSplitEqually => SplitTotalAmount > 0m;
     public bool CanCloseSplitModeWithoutSaving => IsSplitMode && !HasPendingSplitChanges;
     public bool RequiresEmptySplitConfirmationOnClose => false;
 
@@ -191,10 +192,18 @@ public partial class TransactionDetailVM : ObservableObject
         OnPropertyChanged(nameof(HasSplitParentRemainder));
         OnPropertyChanged(nameof(CanSplitEqually));
 
-        if (!IsSplitMode || _isApplyingSplitRemainder)
+        if (!IsSplitMode)
             return;
 
-        UpdateSplitNegativeRemainderState(value, SplitRows.LastOrDefault(row => row.HasAmount));
+        UpdateSplitNegativeRemainderState(SplitRemainingAmount, SplitRows.LastOrDefault(row => row.HasAmount));
+    }
+
+    partial void OnSplitTotalAmountChanged(decimal value)
+    {
+        OnPropertyChanged(nameof(CanSplitEqually));
+        RecalculateSplitRemainder(SplitRows.LastOrDefault(row => row.HasAmount));
+        if (IsSplitEquallyEnabled)
+            ApplyEqualSplitAmounts();
     }
 
     partial void OnSelectedTagChanged(TagVM? value)
@@ -264,6 +273,8 @@ public partial class TransactionDetailVM : ObservableObject
         IsSplitMode = true;
         HasNegativeSplitRemainder = false;
         NegativeRemainderRow = null;
+        SplitTotalAmount = _savedState.Amount;
+        SplitRemainingAmount = _savedState.Amount;
     }
 
     public async Task BeginSplitModeAsync(CancellationToken cancellationToken = default)
@@ -303,6 +314,22 @@ public partial class TransactionDetailVM : ObservableObject
             ApplyEqualSplitAmounts();
         else
             ClearSplitAmounts();
+    }
+
+    [RelayCommand]
+    private void SetSplitMode()
+    {
+        if (SplitRows.Count == 0)
+            AddSplitRow();
+        IsSplitEquallyEnabled = false;
+    }
+
+    [RelayCommand]
+    private void SetSplitEquallyMode()
+    {
+        if (SplitRows.Count == 0)
+            AddSplitRow();
+        IsSplitEquallyEnabled = true;
     }
 
     private void AddSplitRow(TransactionSplitRowVM row)
@@ -438,23 +465,15 @@ public partial class TransactionDetailVM : ObservableObject
 
     public void RecalculateSplitRemainder(TransactionSplitRowVM? changedRow)
     {
-        var remainder = _savedState.Amount - SplitRows.Sum(row => row.AmountText);
-        _isApplyingSplitRemainder = true;
-        try
-        {
-            AmountText = remainder;
-        }
-        finally
-        {
-            _isApplyingSplitRemainder = false;
-        }
+        var remainder = SplitTotalAmount - SplitRows.Sum(row => row.AmountText);
+        SplitRemainingAmount = remainder;
 
         UpdateSplitNegativeRemainderState(remainder, changedRow);
     }
 
     private void ApplyEqualSplitAmounts()
     {
-        ApplyEqualSplitAmounts(SplitRows, _savedState.Amount);
+        ApplyEqualSplitAmounts(SplitRows, SplitTotalAmount);
     }
 
     private void ClearSplitAmounts()
@@ -791,7 +810,7 @@ public partial class TransactionDetailVM : ObservableObject
         inputs = [];
         validationMessage = string.Empty;
 
-        if (HasNegativeSplitRemainder || AmountText < 0m)
+        if (HasNegativeSplitRemainder || SplitTotalAmount <= 0m)
         {
             validationMessage = "Split amounts exceed the original expense amount.";
             return false;
@@ -824,7 +843,7 @@ public partial class TransactionDetailVM : ObservableObject
 
         foreach (var row in SplitRows.Where(row => row.AmountText > 0m))
         {
-            if (row.SelectedTag is null)
+            if (!row.IsSplit && row.SelectedTag is null)
             {
                 validationMessage = "Please choose a tag for each split row.";
                 return false;
@@ -836,11 +855,11 @@ public partial class TransactionDetailVM : ObservableObject
                 row.NameText.Trim(),
                 row.AmountText,
                 row.SelectedExpenseCategory,
-                row.SelectedTag.Id,
+                row.IsSplit ? null : row.SelectedTag!.Id,
                 string.Empty,
                 SelectedDate.Date,
                 row.IsIoU,
-                IsExcludedFromBudget));
+                row.IsExcludedFromBudget));
         }
 
         if (result.Count == 0 && _removedSplitRows.All(row => row.TransactionId is null))
@@ -852,7 +871,7 @@ public partial class TransactionDetailVM : ObservableObject
         var splitRowsPositiveTotal = SplitRows
             .Where(row => row.AmountText > 0m)
             .Sum(row => row.AmountText);
-        if (splitRowsPositiveTotal > _savedState.Amount)
+        if (splitRowsPositiveTotal > SplitTotalAmount)
         {
             validationMessage = "Split amounts exceed the original expense amount.";
             return false;
@@ -879,21 +898,24 @@ public partial class TransactionDetailVM : ObservableObject
             if (account is null)
                 return TransactionDetailSaveResult.Failure("Unable to load this expense source.");
 
-            var splitEntries = new List<(TransactionSplitInput Input, Tag Tag)>();
+            var splitEntries = new List<(TransactionSplitInput Input, Tag? Tag)>();
             foreach (var input in inputs)
             {
-                var tag = await _appData.GetTagByIdAsync(input.TagId);
-                if (tag is null)
-                    return TransactionDetailSaveResult.Failure("Please select a valid tag.");
+                Tag? tag = null;
+                if (input.TagId is { } tagId)
+                {
+                    tag = await _appData.GetTagByIdAsync(tagId);
+                    if (tag is null)
+                        return TransactionDetailSaveResult.Failure("Please select a valid tag.");
+                }
 
                 splitEntries.Add((input, tag));
             }
 
             _ = keepParentExpenseWhenRemainder;
             originalLog.ParentTransactionId = null;
-            ClearParentTransactionCategory(originalLog);
-            originalLog.Tag = null;
-            originalLog.TagId = null;
+            ClearSplitParentMetadata(originalLog);
+            originalLog.Amount = SplitTotalAmount;
             _appData.UpdateTransaction(originalLog);
             var existingChildren = (await LoadChildTransactionEntitiesAsync(CancellationToken.None))
                 .ToDictionary(log => log.Id);
@@ -954,7 +976,7 @@ public partial class TransactionDetailVM : ObservableObject
                     string.Empty,
                     SelectedDate.Date,
                     removedRow.IsIoU,
-                    IsExcludedFromBudget);
+                    removedRow.IsExcludedFromBudget);
                 var beforeSnapshot = TransactionMemorySnapshot.Create(removedChild);
                 ApplySplitInputToExistingChild(removedChild, input, removedTag, account);
                 removedChild.IsForDeletion = true;
@@ -987,7 +1009,7 @@ public partial class TransactionDetailVM : ObservableObject
             {
                 if (parentRow.ChildRows.Any(row => row.AmountText > 0m))
                 {
-                    ClearParentTransactionCategory(parentTransaction);
+                    ClearSplitParentMetadata(parentTransaction);
                     _appData.UpdateTransaction(parentTransaction);
                 }
 
@@ -1007,7 +1029,7 @@ public partial class TransactionDetailVM : ObservableObject
                         string.Empty,
                         SelectedDate.Date,
                         childRow.IsIoU,
-                        IsExcludedFromBudget);
+                        IsNestedRowExcluded(parentRow, childRow));
 
                     if (childRow.TransactionId is { } childId && existingNestedChildren.TryGetValue(childId, out var existingChild))
                     {
@@ -1254,7 +1276,8 @@ public partial class TransactionDetailVM : ObservableObject
             NameText = log.Name,
             SelectedExpenseCategory = log.ExpenseCategory ?? SelectedExpenseCategory,
             SelectedTag = ResolveSplitRowTag(log.Tag),
-            IsIoU = log.IsIoU
+            IsIoU = log.IsIoU,
+            IsExcludedFromBudget = log.IsExcludedFromBudget
         };
     }
 
@@ -1292,6 +1315,16 @@ public partial class TransactionDetailVM : ObservableObject
     internal static void ClearParentTransactionCategory(Transaction transaction) =>
         transaction.ExpenseCategory = null;
 
+    internal static void ClearSplitParentMetadata(Transaction transaction)
+    {
+        ClearParentTransactionCategory(transaction);
+        transaction.Tag = null;
+        transaction.TagId = null;
+    }
+
+    internal static bool IsNestedRowExcluded(TransactionSplitRowVM parent, TransactionSplitRowVM child) =>
+        parent.IsExcludedFromBudget || child.IsExcludedFromBudget || child.IsIoU;
+
     private async Task CascadeParentStateToChildTransactionsAsync(
         Account account,
         bool isExcludedFromBudget,
@@ -1306,7 +1339,7 @@ public partial class TransactionDetailVM : ObservableObject
 
     private static Transaction CreateSplitTransaction(
         TransactionSplitInput input,
-        Tag tag,
+        Tag? tag,
         Account account,
         int parentTransactionId,
         TransactionType type)
@@ -1314,14 +1347,14 @@ public partial class TransactionDetailVM : ObservableObject
         return new Transaction
         {
             Type = type,
-            Name = BuildTransactionName(input.Name, input.Note, tag.Name),
+            Name = BuildTransactionName(input.Name, input.Note, tag?.Name ?? string.Empty),
             Amount = input.Amount,
             OccurredOn = input.Date,
             Notes = input.Note,
-            ExpenseCategory = type == TransactionType.Expense ? input.Category : null,
+            ExpenseCategory = type == TransactionType.Expense && tag is not null ? input.Category : null,
             SourceAccountId = account.Id,
             Account = account,
-            TagId = tag.Id,
+            TagId = tag?.Id,
             Tag = tag,
             ParentTransactionId = parentTransactionId,
             IsIoU = input.IsIoU,
@@ -1333,16 +1366,16 @@ public partial class TransactionDetailVM : ObservableObject
     private static void ApplySplitInputToExistingChild(
         Transaction transaction,
         TransactionSplitInput input,
-        Tag tag,
+        Tag? tag,
         Account account)
     {
-        transaction.Name = BuildTransactionName(input.Name, input.Note, tag.Name);
+        transaction.Name = BuildTransactionName(input.Name, input.Note, tag?.Name ?? string.Empty);
         transaction.Amount = input.Amount;
         transaction.OccurredOn = input.Date;
         transaction.Notes = input.Note;
-        transaction.ExpenseCategory = transaction.Type == TransactionType.Expense ? input.Category : null;
+        transaction.ExpenseCategory = transaction.Type == TransactionType.Expense && tag is not null ? input.Category : null;
         transaction.Tag = tag;
-        transaction.TagId = tag.Id;
+        transaction.TagId = tag?.Id;
         transaction.Account = account;
         transaction.SourceAccountId = account.Id;
         transaction.IsIoU = input.IsIoU;
@@ -1637,7 +1670,7 @@ public partial class TransactionDetailVM : ObservableObject
         string Name,
         decimal Amount,
         ExpenseCategory Category,
-        int TagId,
+        int? TagId,
         string Note,
         DateTime Date,
         bool IsIoU,

@@ -146,6 +146,17 @@ public partial class TransactionPopup : BasePopup
         owner.OpenTransactionSplitPopup(transaction, this);
     }
 
+    internal async Task RefreshViewedTransactionAsync()
+    {
+        if (_viewModel.ViewedTransaction is not { } transaction || Owner is not MainWindow owner)
+            return;
+
+        await owner.RefreshTransactionPopupAsync(_viewModel, transaction);
+        SyncNoteDocumentFromViewModel();
+        RecalculateTagLayout();
+        ConfigureViewModeFocus();
+    }
+
     protected override async void OnDeleteButtonClick()
     {
         if (_viewModel.ViewedTransaction is not { } transaction || Owner is not MainWindow owner ||

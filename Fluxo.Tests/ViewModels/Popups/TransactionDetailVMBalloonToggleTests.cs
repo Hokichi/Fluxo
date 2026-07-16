@@ -134,6 +134,60 @@ public sealed class TransactionDetailVMBalloonToggleTests
     }
 
     [Fact]
+    public void SplitRow_ShowsRemainingAndHidesLeafMetadata()
+    {
+        var row = new TransactionSplitRowVM { AmountText = 100m, IsSplit = true };
+        var child = Assert.Single(row.ChildRows);
+        child.AmountText = 30m;
+
+        row.RecalculateChildRemainder(child);
+
+        Assert.Equal(70m, row.RemainingAmount);
+        Assert.False(row.ShowLeafTags);
+        Assert.False(row.CanSelectCategory);
+    }
+
+    [Fact]
+    public void SplitEqually_UsesDirectChildren_AndSplitClearsThem()
+    {
+        var row = new TransactionSplitRowVM { AmountText = 100m, IsSplit = true };
+        row.AddChildRow();
+
+        row.SetSplitEquallyModeCommand.Execute(null);
+        Assert.Equal([50m, 50m], row.ChildRows.Select(child => child.AmountText));
+
+        row.SetSplitModeCommand.Execute(null);
+        Assert.All(row.ChildRows, child => Assert.Equal(0m, child.AmountText));
+    }
+
+    [Theory]
+    [InlineData(true, false, false, true)]
+    [InlineData(false, true, false, true)]
+    [InlineData(false, false, true, true)]
+    [InlineData(false, false, false, false)]
+    public void NestedBudgetExclusion_UsesParentOwnAndPostedIou(
+        bool parentExcluded, bool childExcluded, bool postedIou, bool expected)
+    {
+        var parent = new TransactionSplitRowVM { IsExcludedFromBudget = parentExcluded };
+        var child = new TransactionSplitRowVM { IsExcludedFromBudget = childExcluded, IsIoU = postedIou };
+
+        Assert.Equal(expected, TransactionDetailVM.IsNestedRowExcluded(parent, child));
+    }
+
+    [Fact]
+    public void ClearSplitParentMetadata_ClearsCategoryAndTag()
+    {
+        var tag = new Tag { Id = 4, Name = "Food" };
+        var transaction = new Transaction { ExpenseCategory = ExpenseCategory.Needs, Tag = tag, TagId = tag.Id };
+
+        TransactionDetailVM.ClearSplitParentMetadata(transaction);
+
+        Assert.Null(transaction.ExpenseCategory);
+        Assert.Null(transaction.Tag);
+        Assert.Null(transaction.TagId);
+    }
+
+    [Fact]
     public void RecalculateNestedSplitRemainders_RefreshesParentAmountChange()
     {
         var parent = new TransactionSplitRowVM { AmountText = 10m, IsSplit = true };
