@@ -53,6 +53,7 @@
             Click="OnMoveToCurrentPeriodButtonClick"
             Content="{Binding MoveToCurrentLabel}"
             Cursor="Hand"
-            Style="{StaticResource MoveToCurrentPeriodButtonStyle}" />
+            Style="{StaticResource MoveToCurrentPeriodButtonStyle}"
+            Visibility="{Binding IsAtCurrentPeriod, Mode=OneWay, Converter={StaticResource BoolToVisibilityInvertedConverter}}" />
     </StackPanel>
 </UserControl>

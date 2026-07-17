@@ -37,11 +37,6 @@ public partial class QuickAddPopup : BasePopup
         OpenSelectedPopup(mainWindow => _ = mainWindow.CheckForUpdatesFromQuickAccessAsync());
     }
 
-    private void OnNewRecurringTransactionClick(object sender, RoutedEventArgs e)
-    {
-        OpenSelectedPopup(mainWindow => mainWindow.OpenRecurringAddNewTransactionPopup());
-    }
-
     private void OnViewAccountsClick(object sender, RoutedEventArgs e)
     {
         OpenSelectedPopup(mainWindow => mainWindow.OpenAccountsListPopup());

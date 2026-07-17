@@ -7,6 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     PopupTitle="Quick Access"
+    SizeToContent="WidthAndHeight"
     mc:Ignorable="d">
 
     <customControls:BasePopup.Resources>
@@ -117,7 +118,7 @@
 
     <customControls:SpacedUniformGrid
         Width="760"
-        Height="508"
+        Height="384"
         Margin="40,6,40,24"
         HorizontalAlignment="Center"
         Columns="3"
@@ -217,6 +218,38 @@
         </Button>
 
         <Button
+            x:Name="OpenSettingsQuickAddButton"
+            Click="OnOpenSettingsClick"
+            Style="{StaticResource QuickAddTileButtonStyle}">
+            <StackPanel VerticalAlignment="Center">
+                <components:Icon
+                    Width="24"
+                    Height="24"
+                    HorizontalAlignment="Center"
+                    Path="{StaticResource Cog}"
+                    Color="{DynamicResource Brush.Mint}" />
+                <TextBlock
+                    Margin="0,12,0,0"
+                    HorizontalAlignment="Center"
+                    FontFamily="{DynamicResource Bold}"
+                    FontSize="13"
+                    Foreground="{DynamicResource Brush.Text.Primary}"
+                    Text="Open Settings"
+                    TextAlignment="Center" />
+                <TextBlock
+                    Margin="0,8,0,0"
+                    HorizontalAlignment="Center"
+                    FontFamily="{DynamicResource Medium}"
+                    FontSize="11"
+                    Foreground="{DynamicResource Brush.Text.Secondary}"
+                    Text="Adjust app preferences."
+                    TextAlignment="Center"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </Button>
+
+
+        <Button
             x:Name="RunSetupWizardQuickAddButton"
             Click="OnRunSetupWizardClick"
             Style="{StaticResource QuickAddTileButtonStyle}">
@@ -233,7 +266,7 @@
                     FontFamily="{DynamicResource Bold}"
                     FontSize="13"
                     Foreground="{DynamicResource Brush.Text.Primary}"
-                    Text="Run Setup Wizard"
+                    Text="Run Quick Setup"
                     TextAlignment="Center" />
                 <TextBlock
                     Margin="0,8,0,0"
@@ -264,7 +297,7 @@
                     FontFamily="{DynamicResource Bold}"
                     FontSize="13"
                     Foreground="{DynamicResource Brush.Text.Primary}"
-                    Text="Check for updates"
+                    Text="Check For Updates"
                     TextAlignment="Center" />
                 <TextBlock
                     Margin="0,8,0,0"
@@ -273,37 +306,6 @@
                     FontSize="11"
                     Foreground="{DynamicResource Brush.Text.Secondary}"
                     Text="Look for a newer version."
-                    TextAlignment="Center"
-                    TextWrapping="Wrap" />
-            </StackPanel>
-        </Button>
-
-        <Button
-            x:Name="NewRecurringTransactionQuickAddButton"
-            Click="OnNewRecurringTransactionClick"
-            Style="{StaticResource LockedDisabledQuickAddTileButtonStyle}">
-            <StackPanel VerticalAlignment="Center">
-                <components:Icon
-                    Width="24"
-                    Height="24"
-                    HorizontalAlignment="Center"
-                    Path="{StaticResource Calendar}"
-                    Color="{DynamicResource Brush.Mint}" />
-                <TextBlock
-                    Margin="0,12,0,0"
-                    HorizontalAlignment="Center"
-                    FontFamily="{DynamicResource Bold}"
-                    FontSize="13"
-                    Foreground="{DynamicResource Brush.Text.Primary}"
-                    Text="New Recurring Transaction"
-                    TextAlignment="Center" />
-                <TextBlock
-                    Margin="0,8,0,0"
-                    HorizontalAlignment="Center"
-                    FontFamily="{DynamicResource Medium}"
-                    FontSize="11"
-                    Foreground="{DynamicResource Brush.Text.Secondary}"
-                    Text="Schedule repeating money flow."
                     TextAlignment="Center"
                     TextWrapping="Wrap" />
             </StackPanel>
@@ -402,35 +404,5 @@
             </StackPanel>
         </Button>
 
-        <Button
-            x:Name="OpenSettingsQuickAddButton"
-            Click="OnOpenSettingsClick"
-            Style="{StaticResource QuickAddTileButtonStyle}">
-            <StackPanel VerticalAlignment="Center">
-                <components:Icon
-                    Width="24"
-                    Height="24"
-                    HorizontalAlignment="Center"
-                    Path="{StaticResource Cog}"
-                    Color="{DynamicResource Brush.Mint}" />
-                <TextBlock
-                    Margin="0,12,0,0"
-                    HorizontalAlignment="Center"
-                    FontFamily="{DynamicResource Bold}"
-                    FontSize="13"
-                    Foreground="{DynamicResource Brush.Text.Primary}"
-                    Text="Open Settings"
-                    TextAlignment="Center" />
-                <TextBlock
-                    Margin="0,8,0,0"
-                    HorizontalAlignment="Center"
-                    FontFamily="{DynamicResource Medium}"
-                    FontSize="11"
-                    Foreground="{DynamicResource Brush.Text.Secondary}"
-                    Text="Adjust app preferences."
-                    TextAlignment="Center"
-                    TextWrapping="Wrap" />
-            </StackPanel>
-        </Button>
     </customControls:SpacedUniformGrid>
 </customControls:BasePopup>
