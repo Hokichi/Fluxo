@@ -30,7 +30,7 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <Border Style="{StaticResource PanelStyle}">
+    <Border Style="{StaticResource CardBorderStyle}">
         <Grid>
 
             <components:RisingFlowBackground Grid.RowSpan="2" AccentBrush="{DynamicResource Color.Mint}" />

@@ -48,7 +48,7 @@
     </UserControl.Resources>
 
     <Grid>
-        <Border Style="{StaticResource PanelStyle}">
+        <Border Style="{StaticResource CardBorderStyle}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />

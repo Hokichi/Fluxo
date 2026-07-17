@@ -30,7 +30,7 @@
     </UserControl.Resources>
 
     <Grid>
-        <Border Style="{StaticResource PanelStyle}">
+        <Border Style="{StaticResource CardBorderStyle}">
             <Grid>
                 <components:RisingFlowBackground Grid.RowSpan="5" AccentBrush="{DynamicResource Color.Mint}" />
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
