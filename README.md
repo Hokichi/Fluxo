@@ -271,94 +271,110 @@ Project releases and issue tracking may be available from the Fluxo GitHub repos
 
 ## Change Log
 
-### v1.0.0:
-Initial Release
+# Changelog
 
-### v1.0.1:
-`Check for updates` implemented
+All notable changes to Fluxo will be documented in this file.
 
-### v1.0.2:
-- Recurring transaction introduced for recurring planning and tracking.
-- Spending and saving expanded to support richer financial records.
-- Overdue cards process directly through Add New Transaction.
+---
 
-### v1.0.3:
-- Hotfix: Installer not running when .NET 10 is not installed
-- Included incomes in search
-- Added a UI and features lock when there's insufficient funds.
+## [1.0.5]
 
-### v1.0.4:
-- Hotfix: Cleaned up redundant files created by build 1.0.3.
-- The installer now supports runtime installation.
-- Improvement in Quick Setup, Account, and Dashboard for better user experience.
-- Incorrect behavior during Quick Setup (Accounts not found) has been addressed.
-- UI improvements.
-
-### v1.0.5:
-
-#### Hotfixes
-- Fixed dialog ownership and focus loss.
-- Fixed tap failures in swipe-reveal controls.
-- Fixed Spending Sources list scrolling.
-- Fixed notification popup placement and behavior.
-- Fixed initial `Add New Transaction` validation.
-- Fixed search bar overlap with the date selector.
-- Fixed saving-goal panel code-behind behavior.
-- Preserved transaction popup view state.
-- Fixed popup close propagation and dismissal behavior.
-
-#### Major Fixes
-- Corrected spending-amount lock conditions and partial UI locking.
-- Fixed incorrect budget allocation and budget calculations.
-- Fixed `Delete All Data` maintenance flow.
-- Stabilized MainWindow page transitions and navigation state.
-- Corrected Ledger filtering, grouping, signed amounts, date ranges, and row behavior.
-- Fixed Add New Transaction name-mode, validation, and tag state handling.
-- Fixed Dashboard placement issues and an application crash.
-- Fixed settings not persisting between operations.
-- Improved startup diagnostics and installer launch reliability.
-
-#### New Features
-- Added user data import/export with append, overwrite, conflict handling, migrations, and restore safety.
-- Added expense splitting with parent/child transaction relationships, backups, Ledger nesting, and detail display.
-- Added Calendar page, filtering, drawer integration, smooth scrolling, Today navigation, and future-date navigation.
-- Added Ledger drawer with transaction projection, income actions, row operations, export, and bulk editing.
-- Added Budget Management state and settings tabs.
+### New Features
+- Data import/export with append, overwrite, and conflict handling.
+- Expense splitting, nested transactions, and split details.
+- Sub-sub-transactions.
+- Calendar view with filtering, smooth scrolling, Today button, and future-date navigation.
+- Ledger drawer, CSV export, bulk editing, and transaction details.
+- Budget Management settings.
+- Budget Reconciliation and Budget Forecast.
+- Allocation periods and recurring categories.
+- Transaction history, history drawer, undo/redo, and revert.
+- Transaction pinning and detail history.
+- Password lock with auto-lock presets.
+- Installment transactions with expiry.
+- Debt/IOU tagging and resolution tools, with posted/unposted IOU modes.
+- Repayment modes, shared repayments, credit-account handling, and custom amounts.
+- Overdue-notification processing directly from transaction popups.
+- Notification snoozing, floating notifications, and update notifications.
+- Linked transactions and reversal.
+- Upcoming Events.
+- Collapsible Dashboard cards.
+- Keyboard shortcuts and a shortcut overview.
 - Expanded Quick Add into Quick Access.
-- Added Upcoming Events panel.
-- Added more keyboard shortcuts and a keyboard-shortcut overview.
-- Added Budget Reconciliation and account reconciliation logging.
-- Added allocation periods and recurring categories.
-- Added transaction history, targeted history entries, history notifications, and history drawer.
-- Added synchronized undo/redo and revert-to-history operations.
-- Added pinned transaction logs and transaction detail history.
-- Added expense detail pin/delete actions.
-- Added password lock and auto-lock presets.
-- Added BNPL support.
-- Added debt/IOU transaction flags, migrations, backups, and resolution settings.
-- Added notification snoozing.
-- Added Budget Forecast.
-- Added BalloonToggle state cycling, popup states, radio buttons, and checkbox controls.
-- Added default account selection.
-- Unified Expense and Income into Transaction persistence, migration, backups, and repository flows.
-- Added repayment transaction modes, shared repayments, credit-account repayment handling, and custom repayment amounts.
-- Added floating notifications, dismissal, update-check notifications, and notification lifecycle handling.
-- Added linked-transaction persistence and reversal.
-- Added posted/unposted IOU modes and posted-balance persistence.
-- Added Ledger transaction detail popup flow, replacing inline editing.
-- Added analytics trend scaling and period grid lines.
-- Added sub-sub-transactions.
-- Added overdue notification processing and in-memory notification evaluation.
+- Analytics trend scaling and grid lines.
+- Default account selection.
 
-#### Improvements
-- Improved Settings, Setup Wizard, account naming, source management, and account selection UI.
-- Added dynamic foreground/text colors, dark-text resources, stronger contrast, and unified XAML surface styling.
-- Improved Dashboard headers, goals, allocation cards, earned totals, overflow handling, and recent-activity sizing.
-- Improved Ledger filters, comboboxes, clear actions, layout, and visual hierarchy.
-- Improved transaction modes, popup layouts, installment expiration, tag visibility, and duplication protection.
-- Improved BalloonControl text, subtext, expansion, hover feedback, and visual states.
-- Improved notification layout, severity colors, wording, sizing, and deferred processing.
-- Added search-bar animation, tag bubbling, and fading scroll behavior.
-- Added Acrylic blur and updated installer UI styling.
-- Renamed user-facing `Spending Source` terminology to `Account` and expense lists to transaction lists.
-- Applied allocation-adjustment logic consistently across the application.
+### Improvements
+- Improved Settings, Setup Wizard, account management, and account selection UI.
+- Improved colors, contrast, borders, and overall visual styling.
+- Improved Dashboard headers, goals, allocation cards, totals, and activity layout.
+- Improved Ledger filters, layout, comboboxes, and clear actions.
+- Improved transaction modes, popup layouts, installments, tags, and duplicate protection.
+- Improved button labels, expansion behavior, hover feedback, and visual states.
+- Improved notification layout, severity colors, wording, and sizing.
+- Added search animation, tag bubbling, and fading scroll edges.
+- Improved transaction-split and popup workflows.
+- Updated installer styling.
+- Renamed `Spending Source` to `Account`.
+- Renamed expense lists to transaction lists.
+- Made budget-allocation behavior consistent across the app.
+
+### Major Fixes
+- Corrected insufficient-funds locks.
+- Fixed budget allocation and calculation errors.
+- Fixed `Delete All Data`.
+- Stabilized page navigation and transitions.
+- Fixed Ledger filters, grouping, amounts, dates, and rows.
+- Fixed transaction naming, validation, and tag restoration.
+- Fixed Dashboard layout issues and crashes.
+- Fixed settings not persisting.
+- Improved installer launch reliability.
+
+### Hotfixes
+- Fixed dialog focus loss.
+- Fixed swipe-reveal tapping.
+- Fixed account-list scrolling.
+- Fixed notification popup placement.
+- Fixed initial transaction validation.
+- Fixed search bar/date selector overlap.
+- Fixed saving-goal panel interactions.
+- Preserved transaction popup state.
+- Fixed popup closing and dismissal.
+
+---
+
+## [1.0.4]
+
+- **Hotfix:** Cleaned up redundant files created by build 1.0.3.
+- The installer now supports runtime installation.
+- Improved Quick Setup, Account, and Dashboard for a better user experience.
+- Fixed incorrect behavior during Quick Setup where accounts were not found.
+- General UI improvements.
+
+---
+
+## [1.0.3]
+
+- **Hotfix:** Installer not running when .NET 10 is not installed.
+- Incomes are now included in search.
+- Added a UI and feature lock for insufficient funds.
+
+---
+
+## [1.0.2]
+
+- Introduced recurring transactions for recurring planning and tracking.
+- Expanded spending and saving to support richer financial records.
+- Overdue cards now process directly through Add New Transaction.
+
+---
+
+## [1.0.1]
+
+- Implemented `Check for updates`.
+
+---
+
+## [1.0.0]
+
+- Initial release.
