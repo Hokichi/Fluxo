@@ -94,7 +94,7 @@ public class BalloonControl : ButtonBase
     // --- IconSize ---
     public static readonly DependencyProperty IconSizeProperty =
         DependencyProperty.Register(nameof(IconSize), typeof(double), typeof(BalloonControl),
-            new PropertyMetadata(24.0, OnLayoutPropertyChanged));
+            new PropertyMetadata(12.0, OnLayoutPropertyChanged));
 
     private Path? _icon;
     private FrameworkElement? _iconSlot;

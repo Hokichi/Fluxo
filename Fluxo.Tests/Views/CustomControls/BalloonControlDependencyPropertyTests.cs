@@ -28,6 +28,12 @@ public sealed class BalloonControlDependencyPropertyTests
     }
 
     [Fact]
+    public void BalloonControl_DefaultsIconSizeTo12()
+    {
+        RunOnStaThread(() => Assert.Equal(12d, new BalloonControl().IconSize));
+    }
+
+    [Fact]
     public void BalloonControl_CalculatesAutoOpenWidth()
     {
         Assert.Equal(96, BalloonControl.CalculateAutoOpenWidth(

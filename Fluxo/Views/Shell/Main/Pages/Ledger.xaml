@@ -1127,23 +1127,21 @@
                 <customControls:BalloonCheckBox
                     Margin="8,0,0,0"
                     HorizontalAlignment="Left"
+                    ButtonIcon="{StaticResource Pen}"
+                    ButtonText="Bulk Edit"
                     CheckedBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
-                    CheckedIcon="{StaticResource Pen}"
-                    CheckedText="Bulk Edit"
                     CornerRadius="8"
                     DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
                     HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
                     IconSize="12"
                     IsChecked="{Binding IsBulkEditEnabled, Mode=TwoWay}"
                     ShouldExpand="True"
-                    UncheckedIcon="{StaticResource Pen}"
-                    UncheckedText="Bulk Edit"
                     Visibility="{Binding IsSelectionModeEnabled, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
                 <customControls:BalloonCheckBox
                     Margin="8,0,0,0"
                     HorizontalAlignment="Left"
+                    ButtonIcon="{StaticResource Delete}"
                     CheckedBackground="{StaticResource Brush.BalloonButton.Background.Destructive}"
-                    CheckedIcon="{StaticResource Delete}"
                     CheckedText="Delete All"
                     Click="OnRemoveSelectedTransactionsClick"
                     CornerRadius="8"
@@ -1153,7 +1151,6 @@
                     IsChecked="{Binding AreAllVisibleTransactionsSelected, Mode=OneWay}"
                     IsEnabled="{Binding HasSelectedVisibleTransactions}"
                     ShouldExpand="True"
-                    UncheckedIcon="{StaticResource Delete}"
                     UncheckedText="Delete Selected"
                     Visibility="{Binding IsSelectionModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
             </StackPanel>
