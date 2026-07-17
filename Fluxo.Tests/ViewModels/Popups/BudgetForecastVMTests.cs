@@ -1,6 +1,8 @@
 using Fluxo.Core.Enums;
 using Fluxo.Core.Entities;
+using Fluxo.Core.Interfaces.Services;
 using Fluxo.ViewModels.Popups;
+using NSubstitute;
 using Xunit;
 
 namespace Fluxo.Tests.ViewModels.Popups;
@@ -32,20 +34,6 @@ public sealed class BudgetForecastVMTests
     }
 
     [Fact]
-    public void CalculateDailyAmount_MultipliesByDaysBetweenTodayAndTarget()
-    {
-        Assert.Equal(300m, BudgetForecastVM.CalculateDailyProjection(100m, 3));
-    }
-
-    [Theory]
-    [InlineData(true, 300)]
-    [InlineData(false, 100)]
-    public void CalculateEventAmount_OnlyDailyEventsMultiplyByDayCount(bool isDaily, decimal expected)
-    {
-        Assert.Equal(expected, BudgetForecastVM.CalculateEventAmount(100m, dayCount: 3, isDaily));
-    }
-
-    [Fact]
     public void CountAllocationPeriods_RoundsUp()
     {
         Assert.Equal(2, BudgetForecastVM.CountAllocationPeriods(dayCount: 12, allocationPeriodDays: 7));
@@ -55,12 +43,6 @@ public sealed class BudgetForecastVMTests
     public void CalculateCategoryBudget_MultipliesBaseAllocationByRoundedPeriodCount()
     {
         Assert.Equal(2_000m, BudgetForecastVM.CalculateCategoryBudget(1_000m, dayCount: 12, allocationPeriodDays: 7));
-    }
-
-    [Fact]
-    public void CalculateInstallmentValidationAmount_AdjustsForAllocationPeriodWeeks()
-    {
-        Assert.Equal(50m, BudgetForecastVM.CalculateInstallmentValidationAmount(400m, installmentCount: 2m, allocationPeriodWeeks: 1m));
     }
 
     [Fact]
@@ -75,6 +57,46 @@ public sealed class BudgetForecastVMTests
         };
 
         Assert.Equal(6_750m, BudgetForecastVM.GetAvailableBalance(account));
+    }
+
+    [Fact]
+    public void PurchaseCategoryRadioButtons_SelectCategory()
+    {
+        var vm = new BudgetForecastVM(Substitute.For<IAppDataService>());
+
+        vm.IsPurchaseWantsCategory = true;
+        Assert.Equal(ExpenseCategory.Wants, vm.SelectedPurchaseCategory);
+
+        vm.IsPurchaseInvestCategory = true;
+        Assert.Equal(ExpenseCategory.Savings, vm.SelectedPurchaseCategory);
+        Assert.False(vm.IsPurchaseWantsCategory);
+        Assert.True(vm.IsPurchaseInvestCategory);
+    }
+
+    [Fact]
+    public void TestTransactionVisibility_DefaultsToHidden()
+    {
+        var vm = new BudgetForecastVM(Substitute.For<IAppDataService>());
+
+        Assert.False(vm.IsTestTransactionVisible);
+    }
+
+    [Fact]
+    public void ForecastBalance_ReportsDirectionAgainstCurrentBalance()
+    {
+        var account = new BudgetForecastAccountRowVM(1, "Cash", 100m);
+
+        account.Balance = 99m;
+        Assert.True(account.IsBalanceDecreased);
+        Assert.False(account.IsBalanceIncreased);
+
+        account.Balance = 101m;
+        Assert.False(account.IsBalanceDecreased);
+        Assert.True(account.IsBalanceIncreased);
+
+        account.Balance = 100m;
+        Assert.False(account.IsBalanceDecreased);
+        Assert.False(account.IsBalanceIncreased);
     }
 
     [Theory]

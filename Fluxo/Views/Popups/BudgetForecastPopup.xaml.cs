@@ -21,14 +21,4 @@ public partial class BudgetForecastPopup : BasePopup
         await _viewModel.LoadAsync();
     }
 
-    private void OnAddEventClick(object sender, RoutedEventArgs e)
-    {
-        _viewModel.AddEvent();
-    }
-
-    private void OnDeleteEventClick(object sender, RoutedEventArgs e)
-    {
-        if ((sender as FrameworkElement)?.DataContext is BudgetForecastEventRowVM row)
-            _viewModel.DeleteEvent(row);
-    }
 }

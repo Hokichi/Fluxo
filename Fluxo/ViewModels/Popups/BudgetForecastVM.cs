@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -18,49 +17,43 @@ public sealed partial class BudgetForecastVM : ObservableObject
     private decimal _baseWants;
     private decimal _baseInvest;
     private int _allocationPeriodDays = 1;
-    private int _nextEventId = 1;
 
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today.AddDays(1);
     [ObservableProperty] private decimal _net;
     [ObservableProperty] private decimal _needs;
     [ObservableProperty] private decimal _wants;
     [ObservableProperty] private decimal _invest;
-    [ObservableProperty] private string _eventNameText = string.Empty;
-    [ObservableProperty] private BudgetForecastAccountRowVM? _selectedDailyExpenseAccount;
-    [ObservableProperty] private BudgetForecastCategoryOption? _selectedDailyExpenseCategory;
-    [ObservableProperty] private BudgetForecastEventTypeOption? _selectedEventType;
-    [ObservableProperty] private string _dailyExpenseAmountText = string.Empty;
+    [ObservableProperty] private bool _isTestTransactionVisible;
     [ObservableProperty] private BudgetForecastAccountRowVM? _selectedPurchaseAccount;
-    [ObservableProperty] private BudgetForecastCategoryOption? _selectedPurchaseCategory;
+    [ObservableProperty] private ExpenseCategory _selectedPurchaseCategory = ExpenseCategory.Needs;
     [ObservableProperty] private string _purchaseAmountText = string.Empty;
-    [ObservableProperty] private bool _isPurchaseInstallment;
-    [ObservableProperty] private decimal _purchaseInstallmentCount = 1m;
     [ObservableProperty] private string _purchaseMessage = string.Empty;
     [ObservableProperty] private string _purchaseMessageBrushKey = "Brush.Text.Muted";
 
     public BudgetForecastVM(IAppDataService appData)
     {
         _appData = appData;
-        Events.CollectionChanged += OnEventsChanged;
     }
 
     public ObservableCollection<BudgetForecastAccountRowVM> Accounts { get; } = [];
     public ObservableCollection<BudgetForecastRecurringRowVM> RecurringTransactions { get; } = [];
-    public ObservableCollection<BudgetForecastEventRowVM> Events { get; } = [];
+    public bool IsPurchaseNeedsCategory
+    {
+        get => SelectedPurchaseCategory == ExpenseCategory.Needs;
+        set { if (value) SelectedPurchaseCategory = ExpenseCategory.Needs; }
+    }
 
-    public IReadOnlyList<BudgetForecastEventTypeOption> EventTypes { get; } =
-    [
-        new("Daily Expense", BudgetForecastEventKind.Expense, IsDaily: true),
-        new("One-time Expense", BudgetForecastEventKind.Expense, IsDaily: false),
-        new("Income", BudgetForecastEventKind.Income, IsDaily: false)
-    ];
+    public bool IsPurchaseWantsCategory
+    {
+        get => SelectedPurchaseCategory == ExpenseCategory.Wants;
+        set { if (value) SelectedPurchaseCategory = ExpenseCategory.Wants; }
+    }
 
-    public IReadOnlyList<BudgetForecastCategoryOption> Categories { get; } =
-    [
-        new("Needs", ExpenseCategory.Needs),
-        new("Wants", ExpenseCategory.Wants),
-        new("Invest", ExpenseCategory.Savings)
-    ];
+    public bool IsPurchaseInvestCategory
+    {
+        get => SelectedPurchaseCategory == ExpenseCategory.Savings;
+        set { if (value) SelectedPurchaseCategory = ExpenseCategory.Savings; }
+    }
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
@@ -89,52 +82,8 @@ public sealed partial class BudgetForecastVM : ObservableObject
 
         ApplyCurrentBudgetRemaining(expenseLogs, accounts);
 
-        SelectedDailyExpenseAccount ??= Accounts.FirstOrDefault();
         SelectedPurchaseAccount ??= Accounts.FirstOrDefault();
-        SelectedEventType ??= EventTypes.FirstOrDefault();
-        SelectedDailyExpenseCategory ??= Categories.FirstOrDefault();
-        SelectedPurchaseCategory ??= Categories.FirstOrDefault();
 
-        Recalculate();
-    }
-
-    public bool IsEventCategoryVisible => SelectedEventType?.Kind != BudgetForecastEventKind.Income;
-    public bool IsPurchaseInstallmentCountVisible => IsPurchaseInstallment;
-
-    public void AddEvent()
-    {
-        if (SelectedDailyExpenseAccount is null ||
-            SelectedEventType is null ||
-            (IsEventCategoryVisible && SelectedDailyExpenseCategory is null) ||
-            !TryParseMoney(DailyExpenseAmountText, out var amount) ||
-            amount <= 0m)
-        {
-            return;
-        }
-
-        var totalAmount = CalculateEventAmount(amount, DayCount, SelectedEventType.IsDaily);
-        if (totalAmount <= 0m)
-            return;
-
-        var eventName = string.IsNullOrWhiteSpace(EventNameText)
-            ? SelectedEventType.Label
-            : EventNameText.Trim();
-
-        Events.Add(new BudgetForecastEventRowVM(
-            _nextEventId++,
-            eventName,
-            totalAmount,
-            SelectedDailyExpenseAccount.Id,
-            SelectedEventType.Kind == BudgetForecastEventKind.Income ? null : SelectedDailyExpenseCategory!.Value,
-            SelectedEventType.Kind));
-        EventNameText = string.Empty;
-        DailyExpenseAmountText = string.Empty;
-        Recalculate();
-    }
-
-    public void DeleteEvent(BudgetForecastEventRowVM row)
-    {
-        Events.Remove(row);
         Recalculate();
     }
 
@@ -159,22 +108,9 @@ public sealed partial class BudgetForecastVM : ObservableObject
             ApplyProjection(
                 balances,
                 recurring.AccountId,
-                recurring.Type == RecurringTransactionType.Income ? BudgetForecastEventKind.Income : BudgetForecastEventKind.Expense,
+                recurring.Type,
                 total,
                 recurring.Category,
-                ref needs,
-                ref wants,
-                ref invest);
-        }
-
-        foreach (var budgetEvent in Events)
-        {
-            ApplyProjection(
-                balances,
-                budgetEvent.AccountId,
-                budgetEvent.Kind,
-                budgetEvent.Amount,
-                budgetEvent.Category,
                 ref needs,
                 ref wants,
                 ref invest);
@@ -216,16 +152,6 @@ public sealed partial class BudgetForecastVM : ObservableObject
         };
     }
 
-    public static decimal CalculateDailyProjection(decimal amount, int dayCount)
-    {
-        return RoundMoney(amount * Math.Max(0, dayCount));
-    }
-
-    public static decimal CalculateEventAmount(decimal amount, int dayCount, bool isDaily)
-    {
-        return isDaily ? CalculateDailyProjection(amount, dayCount) : RoundMoney(amount);
-    }
-
     public static int CountAllocationPeriods(int dayCount, int allocationPeriodDays)
     {
         if (dayCount <= 0 || allocationPeriodDays <= 0)
@@ -237,29 +163,6 @@ public sealed partial class BudgetForecastVM : ObservableObject
     public static decimal CalculateCategoryBudget(decimal baseAllocation, int dayCount, int allocationPeriodDays)
     {
         return RoundMoney(baseAllocation * CountAllocationPeriods(dayCount, allocationPeriodDays));
-    }
-
-    public static decimal CalculateInstallmentValidationAmount(
-        decimal amount,
-        decimal installmentCount,
-        decimal allocationPeriodWeeks)
-    {
-        if (amount <= 0m || installmentCount <= 0m || allocationPeriodWeeks <= 0m)
-            return amount;
-
-        return RoundMoney(amount / installmentCount / (4m / allocationPeriodWeeks));
-    }
-
-    public static decimal GetAllocationPeriodWeeks(AllocationPeriod period)
-    {
-        return period switch
-        {
-            AllocationPeriod.Weekly => 1m,
-            AllocationPeriod.Biweekly => 2m,
-            AllocationPeriod.Quarterly => 12m,
-            AllocationPeriod.Yearly => 52m,
-            _ => 4m
-        };
     }
 
     public static BudgetForecastPurchaseResult BuildPurchaseResult(
@@ -305,30 +208,17 @@ public sealed partial class BudgetForecastVM : ObservableObject
         RefreshPurchaseMessage();
     }
 
-    partial void OnIsPurchaseInstallmentChanged(bool value)
-    {
-        OnPropertyChanged(nameof(IsPurchaseInstallmentCountVisible));
-        RefreshPurchaseMessage();
-    }
-
-    partial void OnPurchaseInstallmentCountChanged(decimal value)
-    {
-        RefreshPurchaseMessage();
-    }
-
     partial void OnSelectedPurchaseAccountChanged(BudgetForecastAccountRowVM? value)
     {
         RefreshPurchaseMessage();
     }
 
-    partial void OnSelectedPurchaseCategoryChanged(BudgetForecastCategoryOption? value)
+    partial void OnSelectedPurchaseCategoryChanged(ExpenseCategory value)
     {
+        OnPropertyChanged(nameof(IsPurchaseNeedsCategory));
+        OnPropertyChanged(nameof(IsPurchaseWantsCategory));
+        OnPropertyChanged(nameof(IsPurchaseInvestCategory));
         RefreshPurchaseMessage();
-    }
-
-    partial void OnSelectedEventTypeChanged(BudgetForecastEventTypeOption? value)
-    {
-        OnPropertyChanged(nameof(IsEventCategoryVisible));
     }
 
     private void ApplyCurrentBudgetRemaining(IReadOnlyList<Transaction> expenseLogs, IReadOnlyList<Account> accounts)
@@ -364,9 +254,9 @@ public sealed partial class BudgetForecastVM : ObservableObject
     private void ApplyProjection(
         IDictionary<int, decimal> balances,
         int accountId,
-        BudgetForecastEventKind kind,
+        RecurringTransactionType type,
         decimal amount,
-        ExpenseCategory? category,
+        ExpenseCategory category,
         ref decimal needs,
         ref decimal wants,
         ref decimal invest)
@@ -374,14 +264,14 @@ public sealed partial class BudgetForecastVM : ObservableObject
         if (!balances.ContainsKey(accountId))
             return;
 
-        if (kind == BudgetForecastEventKind.Income)
+        if (type == RecurringTransactionType.Income)
         {
             balances[accountId] += amount;
             return;
         }
 
         balances[accountId] -= amount;
-        ApplyExpenseToCategory(amount, category ?? ExpenseCategory.Needs, ref needs, ref wants, ref invest);
+        ApplyExpenseToCategory(amount, category, ref needs, ref wants, ref invest);
     }
 
     private static void ApplyExpenseToCategory(
@@ -408,7 +298,6 @@ public sealed partial class BudgetForecastVM : ObservableObject
     private void RefreshPurchaseMessage()
     {
         if (SelectedPurchaseAccount is null ||
-            SelectedPurchaseCategory is null ||
             !TryParseMoney(PurchaseAmountText, out var amount) ||
             amount <= 0m)
         {
@@ -417,18 +306,16 @@ public sealed partial class BudgetForecastVM : ObservableObject
             return;
         }
 
-        var amountToValidate = IsPurchaseInstallment
-            ? CalculateInstallmentValidationAmount(
-                amount,
-                PurchaseInstallmentCount,
-                GetAllocationPeriodWeeks(_allocation.AllocationPeriod))
-            : amount;
-
         var result = BuildPurchaseResult(
-            amountToValidate,
+            amount,
             SelectedPurchaseAccount.Balance,
-            GetCategoryRemaining(SelectedPurchaseCategory.Value),
-            SelectedPurchaseCategory.Label,
+            GetCategoryRemaining(SelectedPurchaseCategory),
+            SelectedPurchaseCategory switch
+            {
+                ExpenseCategory.Wants => "Wants",
+                ExpenseCategory.Savings => "Invest",
+                _ => "Needs"
+            },
             SelectedPurchaseAccount.Name);
         PurchaseMessage = result.Message;
         PurchaseMessageBrushKey = result.BrushKey;
@@ -561,10 +448,6 @@ public sealed partial class BudgetForecastVM : ObservableObject
             Recalculate();
     }
 
-    private void OnEventsChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        Recalculate();
-    }
 }
 
 public sealed partial class BudgetForecastAccountRowVM(
@@ -577,6 +460,14 @@ public sealed partial class BudgetForecastAccountRowVM(
     public int Id { get; } = id;
     public string Name { get; } = name;
     public decimal CurrentBalance { get; } = currentBalance;
+    public bool IsBalanceDecreased => Balance < CurrentBalance;
+    public bool IsBalanceIncreased => Balance > CurrentBalance;
+
+    partial void OnBalanceChanged(decimal value)
+    {
+        OnPropertyChanged(nameof(IsBalanceDecreased));
+        OnPropertyChanged(nameof(IsBalanceIncreased));
+    }
 }
 
 public sealed partial class BudgetForecastRecurringRowVM : ObservableObject
@@ -619,25 +510,4 @@ public sealed partial class BudgetForecastRecurringRowVM : ObservableObject
     public int RecurringTime { get; }
 }
 
-public sealed record BudgetForecastEventRowVM(
-    int Id,
-    string Name,
-    decimal Amount,
-    int AccountId,
-    ExpenseCategory? Category,
-    BudgetForecastEventKind Kind)
-{
-    public decimal SignedAmount => Kind == BudgetForecastEventKind.Income ? Amount : -Amount;
-}
-
-public sealed record BudgetForecastCategoryOption(string Label, ExpenseCategory Value);
-
-public sealed record BudgetForecastEventTypeOption(string Label, BudgetForecastEventKind Kind, bool IsDaily);
-
 public sealed record BudgetForecastPurchaseResult(string Message, string BrushKey);
-
-public enum BudgetForecastEventKind
-{
-    Expense,
-    Income
-}

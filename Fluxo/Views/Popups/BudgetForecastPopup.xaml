@@ -23,13 +23,6 @@
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         </Style>
 
-        <Style x:Key="ForecastTableHeaderStyle" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="{StaticResource Bold}" />
-            <Setter Property="FontSize" Value="10" />
-            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
-            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-        </Style>
-
         <Style x:Key="ForecastCellStyle" TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="FontFamily" Value="{StaticResource Medium}" />
@@ -37,37 +30,30 @@
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         </Style>
-
-        <Style
-            x:Key="ForecastDeleteButtonStyle"
-            BasedOn="{StaticResource {x:Type customControls:BalloonButton}}"
-            TargetType="{x:Type customControls:BalloonButton}">
-            <Setter Property="Width" Value="28" />
-            <Setter Property="Height" Value="28" />
-            <Setter Property="CurveHeight" Value="8" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="IconSize" Value="8" />
-            <Setter Property="ButtonIcon" Value="{StaticResource Close}" />
-            <Setter Property="ButtonText" Value="Delete" />
-            <Setter Property="DefaultBackground" Value="{StaticResource Brush.Background.Surface}" />
-            <Setter Property="HoveredBackground" Value="{StaticResource Brush.Danger}" />
-        </Style>
     </customControls:BasePopup.Resources>
 
-    <Grid Width="1280" Margin="24,0,24,24">
+    <Grid Width="960" Margin="24,0,24,24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="96" />
             <RowDefinition Height="260" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <components:DateSelector
-            Width="190"
-            HorizontalAlignment="Left"
-            SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
+        <Grid>
+            <components:DateSelector
+                Width="190"
+                HorizontalAlignment="Left"
+                SelectedDate="{Binding SelectedDate, Mode=TwoWay}" />
+            <customControls:BalloonCheckBox
+                HorizontalAlignment="Right"
+                ButtonIcon="{StaticResource CashRegister}"
+                ButtonText="Test a transaction"
+                DefaultBackground="{StaticResource Brush.Background.Surface}"
+                IconSize="14"
+                IsChecked="{Binding IsTestTransactionVisible, Mode=TwoWay}"
+                ShouldShowText="True" />
+        </Grid>
 
         <Grid Grid.Row="1" Margin="0,12,0,0">
             <Grid.ColumnDefinitions>
@@ -123,39 +109,18 @@
                 <ColumnDefinition />
                 <ColumnDefinition Width="10" />
                 <ColumnDefinition />
-                <ColumnDefinition Width="10" />
-                <ColumnDefinition />
             </Grid.ColumnDefinitions>
 
             <Border Style="{StaticResource CardBorderStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <TextBlock Style="{StaticResource ForecastLabelStyle}" Text="ACCOUNTS" />
-                    <Grid Grid.Row="1" Margin="0,12,0,8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="96" />
-                            <ColumnDefinition Width="96" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Style="{StaticResource ForecastTableHeaderStyle}" Text="NAME" />
-                        <TextBlock
-                            Grid.Column="1"
-                            HorizontalAlignment="Right"
-                            Style="{StaticResource ForecastTableHeaderStyle}"
-                            Text="CURRENT" />
-                        <TextBlock
-                            Grid.Column="2"
-                            HorizontalAlignment="Right"
-                            Style="{StaticResource ForecastTableHeaderStyle}"
-                            Text="BALANCE" />
-                    </Grid>
                     <customControls:FadingScrollViewer
-                        Grid.Row="2"
-                        Margin="0"
+                        Grid.Row="1"
+                        Margin="0,12,0,0"
                         VerticalScrollBarVisibility="Hidden">
                         <ItemsControl ItemsSource="{Binding Accounts}">
                             <ItemsControl.ItemTemplate>
@@ -175,8 +140,20 @@
                                         <TextBlock
                                             Grid.Column="2"
                                             HorizontalAlignment="Right"
-                                            Style="{StaticResource ForecastCellStyle}"
-                                            Text="{Binding Balance, Converter={StaticResource MoneyDisplayConverter}}" />
+                                            Text="{Binding Balance, Converter={StaticResource MoneyDisplayConverter}}">
+                                            <TextBlock.Style>
+                                                <Style BasedOn="{StaticResource ForecastCellStyle}" TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsBalanceDecreased, Mode=OneWay}" Value="True">
+                                                            <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsBalanceIncreased, Mode=OneWay}" Value="True">
+                                                            <Setter Property="Foreground" Value="{StaticResource Brush.Success}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
                                     </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
@@ -189,47 +166,31 @@
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <TextBlock Style="{StaticResource ForecastLabelStyle}" Text="RECURRING TRANSACTIONS" />
-                    <Grid Grid.Row="1" Margin="0,12,0,8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition />
-                            <ColumnDefinition Width="92" />
-                            <ColumnDefinition Width="64" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Style="{StaticResource ForecastTableHeaderStyle}" Text="NAME" />
-                        <TextBlock
-                            Grid.Column="1"
-                            Style="{StaticResource ForecastTableHeaderStyle}"
-                            Text="AMOUNT" />
-                        <TextBlock
-                            Grid.Column="2"
-                            Style="{StaticResource ForecastTableHeaderStyle}"
-                            Text="INCLUDE" />
-                    </Grid>
                     <customControls:FadingScrollViewer
-                        Grid.Row="2"
-                        Margin="0"
+                        Grid.Row="1"
+                        Margin="0,12,0,0"
                         VerticalScrollBarVisibility="Hidden">
                         <ItemsControl ItemsSource="{Binding RecurringTransactions}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Grid Margin="0,0,0,8">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition />
-                                            <ColumnDefinition Width="92" />
-                                            <ColumnDefinition Width="64" />
+                                            <ColumnDefinition Width="3*" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Style="{StaticResource ForecastCellStyle}" Text="{Binding Name}" />
                                         <TextBlock
                                             Grid.Column="1"
+                                            HorizontalAlignment="Right"
                                             Style="{StaticResource ForecastCellStyle}"
                                             Text="{Binding SignedAmount, Converter={StaticResource MoneyDisplayConverter}}" />
                                         <ToggleButton
                                             Grid.Column="2"
-                                            HorizontalAlignment="Left"
+                                            HorizontalAlignment="Right"
                                             IsChecked="{Binding IsIncluded, Mode=TwoWay}"
                                             Style="{StaticResource ToggleSwitchStyle}" />
                                     </Grid>
@@ -239,203 +200,116 @@
                     </customControls:FadingScrollViewer>
                 </Grid>
             </Border>
+        </Grid>
 
-            <Border Grid.Column="4" Style="{StaticResource CardBorderStyle}">
+        <StackPanel Grid.Row="3" Visibility="{Binding IsTestTransactionVisible, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Border Margin="0,12,0,0" Style="{StaticResource CardBorderStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <TextBlock Style="{StaticResource ForecastLabelStyle}" Text="EVENTS" />
-                    <Grid Grid.Row="1" Margin="0,12,0,8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition />
-                            <ColumnDefinition Width="92" />
-                            <ColumnDefinition Width="36" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Style="{StaticResource ForecastTableHeaderStyle}" Text="NAME" />
-                        <TextBlock
-                            Grid.Column="1"
-                            Style="{StaticResource ForecastTableHeaderStyle}"
-                            Text="AMOUNT" />
-                    </Grid>
-                    <customControls:FadingScrollViewer
-                        Grid.Row="2"
-                        Margin="0"
-                        VerticalScrollBarVisibility="Hidden">
-                        <ItemsControl ItemsSource="{Binding Events}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="0,0,0,8">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition />
-                                            <ColumnDefinition Width="92" />
-                                            <ColumnDefinition Width="36" />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Style="{StaticResource ForecastCellStyle}" Text="{Binding Name}" />
-                                        <TextBlock
-                                            Grid.Column="1"
-                                            Style="{StaticResource ForecastCellStyle}"
-                                            Text="{Binding SignedAmount, Converter={StaticResource MoneyDisplayConverter}}" />
-                                        <customControls:BalloonButton
-                                            Grid.Column="2"
-                                            Click="OnDeleteEventClick"
-                                            Style="{StaticResource ForecastDeleteButtonStyle}" />
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </customControls:FadingScrollViewer>
-                </Grid>
-            </Border>
-        </Grid>
-
-        <Border
-            Grid.Row="3"
-            Margin="0,12,0,0"
-            Style="{StaticResource CardBorderStyle}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="10" />
-                    <ColumnDefinition Width="0.5*" />
-                    <ColumnDefinition Width="10" />
-                    <ColumnDefinition Width="2*" />
-                    <ColumnDefinition Width="10" />
-                    <ColumnDefinition Width="0.5*" />
-                    <ColumnDefinition Width="10" />
-                    <ColumnDefinition Width="0.5*" />
-                    <ColumnDefinition Width="10" />
-                    <ColumnDefinition Width="0" />
-                    <ColumnDefinition Width="10" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBox Style="{StaticResource RoundedTextInputStyle}" Text="{Binding EventNameText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                <ComboBox
-                    Grid.Column="2"
-                    DisplayMemberPath="Name"
-                    ItemsSource="{Binding Accounts}"
-                    SelectedItem="{Binding SelectedDailyExpenseAccount, Mode=TwoWay}"
-                    Style="{StaticResource FluxoComboBoxStyle}" />
-                <customControls:MoneyTextBox
-                    Grid.Column="4"
-                    Style="{StaticResource RoundedMoneyTextInputStyle}"
-                    Text="{Binding DailyExpenseAmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}, ConverterParameter=Comma}"
-                    UseCommaAsGroupSeparator="True" />
-                <ComboBox
-                    Grid.Column="6"
-                    DisplayMemberPath="Label"
-                    ItemsSource="{Binding EventTypes}"
-                    SelectedItem="{Binding SelectedEventType, Mode=TwoWay}"
-                    Style="{StaticResource FluxoComboBoxStyle}" />
-                <ComboBox
-                    Grid.Column="8"
-                    DisplayMemberPath="Label"
-                    ItemsSource="{Binding Categories}"
-                    SelectedItem="{Binding SelectedDailyExpenseCategory, Mode=TwoWay}"
-                    Style="{StaticResource FluxoComboBoxStyle}"
-                    Visibility="{Binding IsEventCategoryVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
-                <customControls:BalloonButton
-                    Grid.Column="12"
-                    HorizontalAlignment="Right"
-                    ButtonIcon="{StaticResource PlusSolid}"
-                    ButtonText="Event"
-                    Click="OnAddEventClick"
-                    CornerRadius="8"
-                    DefaultBackground="{StaticResource Brush.Background.Elevated}"
-                    HoveredBackground="{StaticResource Brush.Mint}"
-                    IconSize="12"
-                    ShouldExpand="True" />
-            </Grid>
-        </Border>
-
-        <Border
-            Grid.Row="4"
-            Margin="0,12,0,0"
-            Style="{StaticResource CardBorderStyle}">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition />
-                        <ColumnDefinition Width="10" />
                         <ColumnDefinition Width="2*" />
                         <ColumnDefinition Width="10" />
-                        <ColumnDefinition />
+                        <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="10" />
-                        <ColumnDefinition Width="38" />
-                        <ColumnDefinition Width="10" />
-                        <ColumnDefinition Width="90" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <ComboBox
-                        DisplayMemberPath="Name"
-                        ItemsSource="{Binding Accounts}"
-                        SelectedItem="{Binding SelectedPurchaseAccount, Mode=TwoWay}"
-                        Style="{StaticResource FluxoComboBoxStyle}" />
-                    <customControls:MoneyTextBox
+                    <TextBlock
+                        Margin="0,0,0,4"
+                        Style="{StaticResource ForecastLabelStyle}"
+                        Text="AMOUNT" />
+                    <TextBlock
                         Grid.Column="2"
+                        Margin="0,0,0,4"
+                        Style="{StaticResource ForecastLabelStyle}"
+                        Text="ACCOUNT" />
+                    <TextBlock
+                        Grid.Column="4"
+                        Margin="0,0,0,4"
+                        Style="{StaticResource ForecastLabelStyle}"
+                        Text="CATEGORY" />
+                    <customControls:MoneyTextBox
+                        Grid.Row="1"
                         Style="{StaticResource RoundedMoneyTextInputStyle}"
                         Text="{Binding PurchaseAmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource MoneyAmountToCanonicalConverter}, ConverterParameter=Comma}"
                         UseCommaAsGroupSeparator="True" />
                     <ComboBox
-                        Grid.Column="4"
-                        DisplayMemberPath="Label"
-                        ItemsSource="{Binding Categories}"
-                        SelectedItem="{Binding SelectedPurchaseCategory, Mode=TwoWay}"
+                        Grid.Row="1"
+                        Grid.Column="2"
+                        DisplayMemberPath="Name"
+                        ItemsSource="{Binding Accounts}"
+                        SelectedItem="{Binding SelectedPurchaseAccount, Mode=TwoWay}"
                         Style="{StaticResource FluxoComboBoxStyle}" />
-                    <customControls:BalloonCheckBox
-                        Grid.Column="6"
-                        ButtonSize="38"
-                        CheckedBackground="{StaticResource Brush.Info}"
-                        CheckedIcon="{StaticResource CreditCardClockOutline}"
-                        CheckedText="Installments"
-                        CornerRadius="12"
-                        DefaultBackground="{StaticResource Brush.Background.Surface}"
-                        IconSize="14"
-                        IsChecked="{Binding IsPurchaseInstallment, Mode=TwoWay}"
-                        ToolTip="Validate installment amount"
-                        UncheckedIcon="{StaticResource CreditCardClockOutline}"
-                        UncheckedText="Installments" />
-                    <customControls:NumericUpDown
-                        Grid.Column="8"
-                        LowerLimit="1"
-                        Step="1"
-                        UpperLimit="60"
-                        Visibility="{Binding IsPurchaseInstallmentCountVisible, Converter={StaticResource BoolToVisibilityConverter}}"
-                        Value="{Binding PurchaseInstallmentCount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <StackPanel
+                        Grid.Row="1"
+                        Grid.Column="4"
+                        Orientation="Horizontal">
+                        <customControls:BalloonRadioButton
+                            ButtonIcon="{StaticResource Home}"
+                            CheckedBackground="{StaticResource Brush.Mint}"
+                            CornerRadius="8"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                            GroupName="BudgetForecastPurchaseCategory"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                            IconSize="12"
+                            IsChecked="{Binding IsPurchaseNeedsCategory, Mode=TwoWay}"
+                            ShouldShowText="True"
+                            UncheckedText="Needs" />
+                        <customControls:BalloonRadioButton
+                            Margin="8,0,0,0"
+                            ButtonIcon="{StaticResource ShoppingBag}"
+                            CheckedBackground="{StaticResource Brush.Mint}"
+                            CornerRadius="8"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                            GroupName="BudgetForecastPurchaseCategory"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                            IconSize="12"
+                            IsChecked="{Binding IsPurchaseWantsCategory, Mode=TwoWay}"
+                            ShouldShowText="True"
+                            UncheckedText="Wants" />
+                        <customControls:BalloonRadioButton
+                            Margin="8,0,0,0"
+                            ButtonIcon="{StaticResource TrendingUp}"
+                            CheckedBackground="{StaticResource Brush.Mint}"
+                            CornerRadius="8"
+                            DefaultBackground="{StaticResource Brush.BalloonButton.Background.Surface}"
+                            GroupName="BudgetForecastPurchaseCategory"
+                            HoveredBackground="{StaticResource Brush.BalloonButton.Background.Surface.Hovered}"
+                            IconSize="12"
+                            IsChecked="{Binding IsPurchaseInvestCategory, Mode=TwoWay}"
+                            ShouldShowText="True"
+                            UncheckedText="Invest" />
+                    </StackPanel>
                 </Grid>
-            </Grid>
-        </Border>
-        <TextBlock
-            Grid.Row="5"
-            Margin="0,10,0,0"
-            FontFamily="{StaticResource Medium}"
-            FontSize="12"
-            Text="{Binding PurchaseMessage}"
-            TextWrapping="Wrap">
-            <TextBlock.Style>
-                <Style TargetType="TextBlock">
-                    <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding PurchaseMessageBrushKey}" Value="Brush.Success">
-                            <Setter Property="Foreground" Value="{StaticResource Brush.Success}" />
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding PurchaseMessageBrushKey}" Value="Brush.Warning">
-                            <Setter Property="Foreground" Value="{StaticResource Brush.Warning}" />
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding PurchaseMessageBrushKey}" Value="Brush.Danger">
-                            <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding PurchaseMessage}" Value="">
-                            <Setter Property="Visibility" Value="Collapsed" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </TextBlock.Style>
-        </TextBlock>
+            </Border>
+            <TextBlock
+                Margin="0,10,0,0"
+                FontFamily="{StaticResource Medium}"
+                FontSize="12"
+                Text="{Binding PurchaseMessage}"
+                TextWrapping="Wrap">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding PurchaseMessageBrushKey}" Value="Brush.Success">
+                                <Setter Property="Foreground" Value="{StaticResource Brush.Success}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding PurchaseMessageBrushKey}" Value="Brush.Warning">
+                                <Setter Property="Foreground" Value="{StaticResource Brush.Warning}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding PurchaseMessageBrushKey}" Value="Brush.Danger">
+                                <Setter Property="Foreground" Value="{StaticResource Brush.Danger}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding PurchaseMessage}" Value="">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </StackPanel>
     </Grid>
 </customControls:BasePopup>
