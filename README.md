@@ -2,379 +2,348 @@
   <img src="docs/images/fluxo-logo.png" alt="Fluxo logo placeholder" width="160">
 </p>
 
-Fluxo is a Windows personal finance app for keeping everyday money decisions visible. It helps you track spending, manage accounts, plan around recurring expenses, monitor saving goals, and stay aware of upcoming payments or budget pressure from one desktop dashboard.
+# Fluxo
 
-![Fluxo dashboard screenshot placeholder](docs/images/fluxo-dashboard-overview.png)
+Fluxo is a local-first Windows personal finance app. Track accounts, record transactions, plan budgets, monitor goals, and review upcoming money events from one desktop workspace.
 
----
+> **Screenshot placeholder:** Dashboard overview.
 
-- [Why Use Fluxo?](#why-use-fluxo)
-- [Getting Started](#getting-started)
-- [Dashboard Overview](#dashboard-overview)
-- [Adding Transactions](#adding-transactions)
-- [Managing Accounts](#managing-accounts)
-- [Budgeting With Needs, Wants, and Savings](#budgeting-with-needs-wants-and-savings)
-- [Saving Goals](#saving-goals)
-- [Notifications and Reminders](#notifications-and-reminders)
-- [Analytics](#analytics)
-- [Settings](#settings)
-- [Tray and Startup Behavior](#tray-and-startup-behavior)
-- [Updates](#updates)
-- [Your Data and Privacy](#your-data-and-privacy)
-- [Troubleshooting](#troubleshooting)
-	- [Fluxo opens in the tray](#fluxo-opens-in-the-tray)
-	- [Fluxo does not open](#fluxo-does-not-open)
-	- [Update check fails](#update-check-fails)
-	- [Installer says Fluxo is already installed](#installer-says-fluxo-is-already-installed)
-	- [Data looks missing after reinstall](#data-looks-missing-after-reinstall)
-	- [Notifications do not appear](#notifications-do-not-appear)
-- [Support](#support)
-- [Change Log](#change-log)
+Current release: **1.0.5**
 
----
+## Features
 
-## Why Use Fluxo?
+### Setup and navigation
 
-Fluxo is built for people who want a practical view of where their money is going without turning budgeting into a spreadsheet project. The app centers your finances around accounts, quick transaction entry, budget categories, reminders, and local-first storage.
+- Guided Quick Setup for identity, preferences, accounts, budget allocation, recurring transactions, goals, and notifications.
+- Quick Access for common creation, planning, account, settings, data, and update actions.
+- Dashboard, Analytics, Calendar, and Ledger pages.
+- Keyboard shortcuts with an in-app Hotkeys overview.
 
-With Fluxo, you can:
+### Accounts and money movement
 
-- Track cash, checking, credit, and saving accounts.
-- Record expenses, income, and saving goal contributions.
-- Split spending into Needs, Wants, and Savings/Invest categories.
-- Review spending by date range, account, tag, and category.
-- Watch saving goals progress toward a target amount and deadline.
-- Receive startup-evaluated cards for overdue payments, recurring work, goals, and budget pressure.
-- Keep your financial data local on your Windows device.
+- Cash, checking, credit, and saving accounts.
+- Account balances, credit limits, spent credit, minimum payments, due dates, interest rates, default selection, pinning, and enable/disable state.
+- Expenses, incomes, goal contributions, transfers, repayments, and budget reconciliation.
+- Account reconciliation with optional reconciliation transaction logging.
 
-## Getting Started
+### Transactions and organization
 
-When Fluxo opens for the first time, it guides you through setup so the dashboard has enough information to be useful right away.
+- Tags, notes, Needs/Wants/Invest categories, budget exclusion, and pinned transactions.
+- Split transactions with nested child transactions.
+- Recurring transactions and installment transactions with end dates.
+- Linked transactions, reversal, transaction history, debt/IOU flags, posted and unposted IOUs, and repayment modes.
 
-![Fluxo setup wizard screenshot placeholder](docs/images/fluxo-setup-wizard.png)
+### Views and analysis
 
-1. Install and open Fluxo.
-2. Enter the display name you want Fluxo to use.
-3. Add your accounts, such as cash, checking accounts, credit cards, or savings.
-4. Choose your budget allocation percentages for Needs, Wants, and Savings/Invest.
-5. Add fixed expenses that repeat monthly.
-6. Add saving goals with target amounts and deadlines.
-7. Choose which financial reminders you want enabled.
-8. Finish setup and start from the dashboard.
+- Dashboard period views: daily, weekly, monthly, allocation period, and all-time.
+- Calendar date navigation with expenses, incomes, goal deadlines, recurring transactions, and payment totals.
+- Ledger search, date ranges, filters, grouping, amount sorting, nested rows, transaction details, CSV export, bulk editing, and deletion.
+- Analytics for income, expenses, net value, trends, category ratios, top tags, and goals created in a selected period.
 
-You can change these choices later from Settings.
+### Budgeting and planning
 
-## Dashboard Overview
+- Needs, Wants, and Invest allocation percentages.
+- Weekly, biweekly, monthly, quarterly, and yearly allocation periods.
+- Spending limits, period starts, rollover policies, and overspend policies.
+- Planning Report for testing income, expenses, recurring items, and allocation changes.
+- Budget Forecast for projecting balances and budget usage with recurring items and planned purchases.
 
-The dashboard is the main workspace in Fluxo. It combines your budget, spending activity, accounts, notifications, and goals into one view.
+### Goals and recurring activity
 
-The dashboard includes:
+- Saving goals with target amounts, current amounts, deadlines, progress, visibility, and reminder state.
+- Goal contributions and recurring goal updates.
+- Upcoming Events panel for future payments, recurring activity, and goal deadlines.
 
-- **Date controls** for reviewing today, another period, or all-time activity.
-- **Budget allocation** for Needs, Wants, and Savings/Invest.
-- **Account cards** that show balances, credit usage, and account differences for the selected period.
-- **Transaction buckets** that group spending by category.
-- **Tag and account filters** for narrowing down the visible transactions.
-- **Daily allowance and total spent** summaries.
-- **Saving goal carousel** for active goals.
-- **Notification panel** for reminders and action items.
-- **Analytics access** for deeper spending and income review.
+### Notifications and history
 
-## Adding Transactions
+- Startup cards for overdue payments, overdue recurring transactions, overdue goals, budget thresholds, low balances, high credit usage, and daily allowance warnings.
+- Process actions for overdue items, session-only clearing, floating notifications, and 24-hour snoozing.
+- Session history with undo, redo, revert-to-history, and transaction/account history details.
 
-Use Quick Access when you want to open common Fluxo actions immediately.
+### Data, privacy, and Windows integration
 
-![Fluxo quick access screenshot placeholder](docs/images/fluxo-quick-add.png)
+- Local SQLite storage with no cloud sync or bank-connection service.
+- JSON data backup and restore with entity selection, append, overwrite, and conflict decisions.
+- Automatic startup database copies with three-day retention.
+- Windows startup registration, system-tray operation, close-to-tray behavior, UI password lock, and auto-lock presets.
+- GitHub release checks and installer downloads.
 
-Quick Access includes common creation, setup, update, planning, account, and settings actions.
+## Getting started
 
-- **Expense**: money spent from an account, assigned to a category and tag.
-- **Income**: money added to a cash, checking, or saving account.
-- **Goal contribution**: money moved toward a saving goal.
+1. Install Fluxo from the [latest GitHub release](https://github.com/Hokichi/Fluxo/releases/latest).
+2. Open Fluxo. The installer checks for the .NET 10 Windows Desktop Runtime and can install it when missing.
+3. Complete Quick Setup.
+4. Open Quick Access or New Transaction to start recording activity.
 
-For each entry, Fluxo lets you choose the account, amount, date, category, tag, goal, and notes where relevant. After saving, Fluxo updates balances, budget totals, notifications, and goal progress.
+> **Screenshot placeholder:** Quick Setup wizard.
 
-## Managing Accounts
+Quick Setup can be run again from Settings. Add at least one account before entering account-backed activity or adjusting budget allocation.
 
-Accounts are the money pools Fluxo uses to calculate your budget and transaction impact.
+## Major features
 
-Fluxo supports:
+### Quick Setup and Quick Access
 
-- **Cash** for physical money or cash-like balances.
-- **Checking** for everyday bank accounts.
-- **Credit** for credit cards with account limits and due dates.
-- **Saving** for savings accounts or reserved funds.
+Quick Setup configures the initial display name, preferences, accounts, allocation percentages, recurring transactions, saving goals, and notification settings.
 
-Accounts can have balances, account limits, spent amounts, due dates, visibility settings, and enabled states. Credit accounts behave differently from cash or checking accounts: expenses increase the spent amount, while payments reduce it.
+Quick Access opens common actions:
 
-## Budgeting With Needs, Wants, and Savings
+- New Account.
+- New Transaction.
+- New Saving Goal.
+- Open Settings.
+- Run Quick Setup.
+- Check for Updates.
+- View Accounts.
+- Planning Report.
+- Budget Forecast.
 
-Fluxo organizes spending into three budget categories:
+> **Screenshot placeholder:** Quick Access panel.
 
-- **Needs**: essential spending such as groceries, bills, transport, rent, or utilities.
-- **Wants**: optional spending such as entertainment, dining out, hobbies, or shopping.
-- **Savings/Invest**: saving goal activity and money set aside for future use.
+### Dashboard
 
-Your allocation percentages determine how much of your available money is reserved for each category. As you add expenses, Fluxo compares category spending against those available amounts and shows remaining budget, usage percentages, and threshold warnings.
+Dashboard combines period totals, daily allowance, budget allocation, account cards, transaction activity, saving goals, notifications, and Upcoming Events.
 
-Filters help you review spending by:
+Use the period controls to move through daily, weekly, monthly, allocation-period, and all-time views. Account cards can show balances, credit usage, and account-level differences. Collapsible cards keep the main workspace compact.
 
-- Date range.
-- Account.
-- Expense tag.
-- Budget category.
+### Accounts and reconciliation
 
-## Saving Goals
+Create Cash, Checking, Credit, or Saving accounts. Credit accounts support account limits, spent credit, minimum payments, due dates, interest rates, and a source account for deductions.
 
-Saving goals help you track progress toward a target amount.
+Account detail supports balance or spent-credit editing, transfers, pinning, deletion, history, and report generation. Reconciliation can set a current balance or spent-credit amount and optionally log the difference as a Budget Reconciliation transaction.
 
-A goal can include:
+### Transactions, transfers, and repayments
 
-- Name.
-- Target amount.
-- Current amount.
-- Deadline.
-- Active or hidden state.
+New Transaction records expenses or incomes. Depending on the mode, it can also create goal contributions, recurring items, installments, repayments, debt/IOU entries, or split transactions.
 
-When you add a goal contribution, Fluxo records the transaction, updates the goal's current amount, and adjusts the selected account. An incomplete goal past its deadline can appear as an overdue card at startup.
+Transaction details support accounts, amounts, dates, categories, tags, notes, goals, budget exclusion, pinning, linked transactions, reversal, and child transactions. Transfer Funds moves money between accounts without requiring a manual pair of entries.
 
-## Notifications and Reminders
+### Recurring transactions and installments
 
-Fluxo evaluates current data and settings during startup. Cards stay in memory for that app session; Clear All clears only current cards, while Snooze All suppresses cards for 24 hours.
+Recurring transactions support expenses, income, and goal updates on weekly, biweekly, or monthly schedules. Each item can have an account, category, tag, goal, budget-exclusion state, enabled state, and end date.
 
-Notifications can include:
+Installments use recurring timing and an end date to stop the series. Related recurring entries allow overdue items to be processed from Notifications.
 
-- Overdue credit payments.
-- Overdue recurring transactions.
-- Overdue saving goals.
-- Budget categories near or past their warning threshold.
-- Low cash or checking balances.
-- High credit usage.
-- Daily allowance warnings.
+### Saving goals
 
-Overdue payment, goal, and recurring cards expose Process. Fluxo uses Add New Transaction to save each item and move to the next one.
+Goals track a name, target amount, current amount, deadline, visibility, and reminder state. A goal contribution updates both the goal and its source account. Goal updates can be created as one-time or recurring activity.
 
-## Analytics
+### Budget management
 
-Analytics gives you a more detailed view of money movement over a selected period.
+Budget Management divides activity into **Needs**, **Wants**, and **Invest**. Configure:
 
-![Fluxo analytics screenshot placeholder](docs/images/fluxo-analytics.png)
+- Allocation percentages.
+- Spending limit.
+- Weekly, biweekly, monthly, quarterly, or yearly allocation period.
+- Period start.
+- Rollover: Ignore, Matching, or Pooled.
+- Overspend: Ignore, Soft Debt, or Hard Stop.
 
-Fluxo can summarize:
+Transactions can be excluded from budget calculations. Split transactions are represented as nested activity while budget totals avoid double-counting parent and child rows.
 
-- Total income.
-- Total expenses.
-- Income and expenses over time.
-- Spending by Needs, Wants, and Savings/Invest.
-- Top spending tags.
-- Goals created during the selected period.
+### Planning Report and Budget Forecast
 
-Use analytics when you want to understand patterns instead of only entering transactions.
+Planning Report models income and expenses, including selected recurring items, then shows balance, allocations, usage, and overflow for Needs, Wants, and Invest.
 
-## Settings
+Budget Forecast models account balances and budget usage over a selected period. Include or exclude recurring items and test planned purchases before recording them.
 
-Settings lets you adjust Fluxo after setup.
+### Calendar and Upcoming Events
 
-![Fluxo settings screenshot placeholder](docs/images/fluxo-settings.png)
+Calendar provides a month grid with previous-month, next-month, and Today navigation. Select any date to review expenses, incomes, goal deadlines, recurring transactions, spent totals, earned totals, goals due, and payments due.
 
-Settings areas include:
+Upcoming Events shows future payments, recurring activity, and goal deadlines from the Dashboard.
 
-- **Personalization**: display name and app behavior preferences.
-- **Accounts**: account details, visibility, due dates, balances, and account types.
-- **Fixed expenses**: recurring monthly expenses.
-- **Saving goals**: targets, deadlines, hidden goals, and disabled goal reminders.
-- **Tags**: labels and colors for expense organization.
-- **Budget**: Needs, Wants, and Savings/Invest percentages.
-- **Notifications**: reminder types and warning thresholds.
-- **About**: app version and update checks.
+### Ledger
 
-## Tray and Startup Behavior
+Ledger supports:
 
-![Fluxo tray screenshot placeholder](docs/images/fluxo-tray.png)
+- Search and date-range selection.
+- Type, account, category, and tag filters.
+- Grouping by date, tag, account, type, or category.
+- Ascending or descending amount sorting.
+- Parent/child transaction expansion.
+- Transaction detail and delete actions.
+- Selection mode, bulk account/tag edits, and bulk deletion.
+- CSV export.
 
-Fluxo can run from the Windows system tray so it stays nearby without taking space on the taskbar.
+### Analytics
 
-Depending on your settings, Fluxo can:
+Analytics accepts a date range of up to 31 days and can show expenses, incomes, or both. It reports total income, total expense, net value, period trends, Needs/Wants/Invest ratios, top spending tags, and goals created in the selected period.
 
-- Start with Windows.
-- Open directly to the tray.
-- Minimize to the tray when closed.
-- Be reopened, restarted, or exited from the tray menu.
+### Notifications
 
-If Fluxo appears to close but the tray icon remains, it may be using the minimize-to-tray close behavior.
+Notifications are evaluated from current local data and enabled settings. Cards can identify overdue credit payments, overdue recurring transactions, overdue saving goals, budget thresholds, low account balances, high credit usage, and daily allowance warnings.
 
-## Updates
+Process actions open the relevant transaction workflow. Clear All removes current cards from the session. Snooze suppresses notification evaluation for 24 hours. Notification types and warning thresholds are configurable.
 
-Fluxo can check for newer releases from the project's GitHub releases.
+### History and reversible actions
 
-When an update is available, Fluxo can download the installer and launch it. The app may close during the update process so the installer can replace the existing files.
+Fluxo records session actions for transactions, accounts, and related changes. Use the History drawer to inspect actions, undo or redo the latest eligible action, or revert to an earlier point in the session.
 
-If update checks fail, check your internet connection and try again later.
+Transaction and account details also expose their own history where available. Reversal and linked-transaction actions preserve the relationship between related money movements.
 
-## Your Data and Privacy
+### Data management and backups
 
-Fluxo stores financial data locally on your Windows device.
+Open **Settings > Data Backup/Restore** or press `Ctrl+Shift+B`.
 
-The local database is stored at:
+JSON backup entities can include accounts, expenses, incomes, tags, goals, recurring transactions, and user settings.
+
+- **Backup:** create a JSON file from selected entities.
+- **Append:** add selected backup data and choose Replace, Append, or Ignore for conflicts.
+- **Overwrite:** replace selected data.
+
+Default user-backup folder:
+
+```text
+%LocalAppData%\fluxo\user_backups
+```
+
+After first-run setup, Fluxo also copies the SQLite database at startup to `%LocalAppData%\fluxo\backup`. Automatic startup copies older than three days are pruned.
+
+### Settings, lock, tray, and updates
+
+Settings covers personalization, notifications, security, accounts, recurring transactions, goals, tags, budget management, debt/IOUs, data management, setup, and configuration.
+
+Configuration can run Fluxo with Windows, choose Exit or Minimize to tray when closing, reset settings, delete all data, show the installed version, and check for updates.
+
+UI locking supports a password and auto-lock after 30 seconds, 1 minute, 3 minutes, 5 minutes, 10 minutes, or a custom interval. Locking protects the app window; it does not encrypt the database file.
+
+The system tray can reopen, restart, or exit Fluxo.
+
+> **Screenshot placeholder:** System-tray menu.
+
+## Privacy and storage
+
+Fluxo stores financial data locally in SQLite. It has no cloud sync or bank-connection service.
+
+Database path:
 
 ```text
 %LocalAppData%\fluxo\fluxo.db
 ```
 
-Fluxo also creates startup backups under:
+Keep a JSON backup before moving to another Windows installation or deleting the Fluxo data folder.
 
-```text
-%LocalAppData%\fluxo\backup
+## Keyboard shortcuts
+
+Open **Hotkeys** or press `Ctrl+/` for the complete list.
+
+| Shortcut | Action |
+| --- | --- |
+| `Ctrl+1` / `Ctrl+2` / `Ctrl+3` / `Ctrl+4` | Dashboard / Analytics / Calendar / Ledger |
+| `Ctrl+F` | Search |
+| `Ctrl+Q` | Quick Access |
+| `Ctrl+N` | New transaction |
+| `Ctrl+Shift+N` | New recurring transaction |
+| `Ctrl+Z` / `Ctrl+Y` | Undo / redo |
+| `Ctrl+H` | Toggle History |
+| `Ctrl+Shift+L` | Lock Fluxo |
+| `Ctrl+E` | Export Ledger |
+| `Ctrl+Shift+B` | Open Data Management |
+| `Ctrl+P` / `Ctrl+Shift+P` | Planning Report / Budget Forecast |
+
+## Build and test
+
+Requirements: Windows x64 and the .NET 10 SDK.
+
+```powershell
+dotnet restore Fluxo.slnx
+dotnet build Fluxo\Fluxo.csproj -c Release
+dotnet test Fluxo.Tests\Fluxo.Tests.csproj -c Release
 ```
 
-Backups are kept for a short period and older backup files are pruned automatically. If you are moving to a new device or reinstalling Windows, back up the `%LocalAppData%\fluxo` folder first.
-
-The current app is local-first. No cloud sync is described by Fluxo's current behavior.
+Installer projects use WiX Toolset SDK 7 and publish the Windows x64 application payload through the solution.
 
 ## Troubleshooting
 
+### Fluxo starts but no window appears
+
+Fluxo allows one running instance. Check the Windows notification area and open the existing Fluxo window from the tray. If no window or tray icon appears, close any stale Fluxo process and start Fluxo again.
+
 ### Fluxo opens in the tray
 
-Check the Windows tray area for the Fluxo icon. Open the tray menu to show the app, restart it, or exit it.
+Open the tray menu and choose Open Fluxo. To change close behavior, select **Settings > Configuration > When closing Fluxo > Exit**.
 
-### Fluxo does not open
+### The tray icon is not visible
 
-Try launching Fluxo again from the Start menu or installation folder. If it still does not open, restart Windows and try again.
+Check the Windows hidden-icons menu and Windows taskbar notification-area settings. Fluxo may still be running even when the icon is hidden.
 
-### Update check fails
+### Setup wizard does not finish
 
-Make sure your internet connection is available. Fluxo uses GitHub release information to check for updates, so network restrictions that block GitHub can prevent update checks.
+Complete the required name, account, and budget fields. If an optional recurring transaction or saving goal is invalid, remove it from the wizard and add it later from Settings.
 
-### Installer says Fluxo is already installed
+### Dashboard actions are locked
 
-Use the installer maintenance options if available, or uninstall the existing version before installing again.
+Add or enable an account with enough available balance. Fluxo can hide or disable spending actions when no usable account is available or when the UI is locked.
 
-### Data looks missing after reinstall
+### Account balance or credit usage looks wrong
 
-Fluxo stores data under `%LocalAppData%\fluxo`. If that folder was removed during cleanup, the app may start with a fresh database. Check the backup folder if it still exists.
+Check the account type. Cash, Checking, and Saving use Balance; Credit uses Spent Amount and Account Limit. Review transfers, repayments, reconciliation entries, and deleted or budget-excluded transactions.
+
+### Reconciliation changed the budget
+
+If reconciliation logging was enabled, Fluxo creates a Budget Reconciliation transaction for the difference. Inspect that transaction in Ledger or transaction history.
+
+### A recurring transaction is missing
+
+Check that it is enabled, its schedule date is valid, and its end date has not passed. Confirm the assigned account and goal still exist. Recurring items can be disabled or edited from **Settings > Recurring Transactions**.
+
+### An installment continues longer than expected
+
+Check the installment recurring period and end date. Installments stop when their configured end date is reached.
+
+### A goal contribution cannot be saved
+
+Select a valid goal and source account. Goal updates can use Cash or Checking accounts; credit and saving accounts are not eligible goal-update sources.
+
+### Budget totals do not match expectations
+
+Check the selected allocation period, category, rollover policy, overspend policy, budget-excluded state, and split parent/child structure. Excluded transactions do not count toward budget totals, and split activity is not counted twice.
+
+### Ledger shows no transactions
+
+Clear Ledger filters with `Ctrl+Shift+R`, widen the date range, check the selected type/account/category/tag filters, or use **View all transactions**.
+
+### Calendar shows no item for a date
+
+Select the date again and confirm the item type. Calendar separates expenses, incomes, goal deadlines, and recurring transactions into different lists.
+
+### Imported backup is rejected
+
+Use a Fluxo JSON backup created by the current backup flow. Confirm the file is valid JSON and that it was not edited into an unsupported schema version. Start restore again from **Settings > Data Backup/Restore**.
+
+### Imported data is incomplete
+
+Enable the required entity types. Accounts are a dependency for account-backed expenses, incomes, and recurring transactions. In Append mode, review each conflict and choose Replace, Append, or Ignore.
 
 ### Notifications do not appear
 
-Open Settings and confirm that the relevant notification type is enabled. Some reminders only appear when the matching account, due date, threshold, or saving goal condition applies.
+Check notification settings, notification snooze state, and the matching account, due date, recurring item, goal, balance, credit usage, or budget threshold. Some notifications only appear when their condition is met.
+
+### Update check fails
+
+Allow Fluxo to reach GitHub release services and try again. The update check needs network access and a release containing a Fluxo installer asset.
+
+### Installer cannot start Fluxo
+
+Run the installer again with network access so it can install or verify the .NET 10 Windows Desktop Runtime. Close any running Fluxo instance before retrying.
+
+### Data appears missing after reinstall
+
+Check `%LocalAppData%\fluxo`, including `fluxo.db`, `backup`, and `user_backups`. Reinstalling Fluxo does not replace the database unless the data folder is removed. Restore a JSON backup if needed.
+
+### Build or test reports a file-in-use error
+
+Close Fluxo and any test process, then rerun the command. A running executable can prevent the build or test output from being replaced.
 
 ## Support
 
-If you report a problem, include:
+Report issues at the [Fluxo GitHub repository](https://github.com/Hokichi/Fluxo/issues). Include Fluxo version, Windows version, reproduction steps, and relevant screenshots or logs.
 
-- Fluxo version.
-- Windows version.
-- What you were doing when the problem happened.
-- Any screenshots that help explain the issue.
-- Whether the app was running normally, from startup, from the tray, or during an update.
+## Release history
 
-Project releases and issue tracking may be available from the Fluxo GitHub repository.
-
-## Change Log
-
-# Changelog
-
-All notable changes to Fluxo will be documented in this file.
-
----
-
-## [1.0.5]
-
-### New Features
-- Data import/export with append, overwrite, and conflict handling.
-- Expense splitting, nested transactions, and split details.
-- Sub-sub-transactions.
-- Calendar view with filtering, smooth scrolling, Today button, and future-date navigation.
-- Ledger drawer, CSV export, bulk editing, and transaction details.
-- Budget Management settings.
-- Budget Reconciliation and Budget Forecast.
-- Allocation periods and recurring categories.
-- Transaction history, history drawer, undo/redo, and revert.
-- Transaction pinning and detail history.
-- Password lock with auto-lock presets.
-- Installment transactions with expiry.
-- Debt/IOU tagging and resolution tools, with posted/unposted IOU modes.
-- Repayment modes, shared repayments, credit-account handling, and custom amounts.
-- Overdue-notification processing directly from transaction popups.
-- Notification snoozing, floating notifications, and update notifications.
-- Linked transactions and reversal.
-- Upcoming Events.
-- Collapsible Dashboard cards.
-- Keyboard shortcuts and a shortcut overview.
-- Expanded Quick Add into Quick Access.
-- Analytics trend scaling and grid lines.
-- Default account selection.
-
-### Improvements
-- Improved Settings, Setup Wizard, account management, and account selection UI.
-- Improved colors, contrast, borders, and overall visual styling.
-- Improved Dashboard headers, goals, allocation cards, totals, and activity layout.
-- Improved Ledger filters, layout, comboboxes, and clear actions.
-- Improved transaction modes, popup layouts, installments, tags, and duplicate protection.
-- Improved button labels, expansion behavior, hover feedback, and visual states.
-- Improved notification layout, severity colors, wording, and sizing.
-- Added search animation, tag bubbling, and fading scroll edges.
-- Improved transaction-split and popup workflows.
-- Updated installer styling.
-- Renamed `Spending Source` to `Account`.
-- Renamed expense lists to transaction lists.
-- Made budget-allocation behavior consistent across the app.
-
-### Major Fixes
-- Corrected insufficient-funds locks.
-- Fixed budget allocation and calculation errors.
-- Fixed `Delete All Data`.
-- Stabilized page navigation and transitions.
-- Fixed Ledger filters, grouping, amounts, dates, and rows.
-- Fixed transaction naming, validation, and tag restoration.
-- Fixed Dashboard layout issues and crashes.
-- Fixed settings not persisting.
-- Improved installer launch reliability.
-
-### Hotfixes
-- Fixed dialog focus loss.
-- Fixed swipe-reveal tapping.
-- Fixed account-list scrolling.
-- Fixed notification popup placement.
-- Fixed initial transaction validation.
-- Fixed search bar/date selector overlap.
-- Fixed saving-goal panel interactions.
-- Preserved transaction popup state.
-- Fixed popup closing and dismissal.
-
----
-
-## [1.0.4]
-
-- **Hotfix:** Cleaned up redundant files created by build 1.0.3.
-- The installer now supports runtime installation.
-- Improved Quick Setup, Account, and Dashboard for a better user experience.
-- Fixed incorrect behavior during Quick Setup where accounts were not found.
-- General UI improvements.
-
----
-
-## [1.0.3]
-
-- **Hotfix:** Installer not running when .NET 10 is not installed.
-- Incomes are now included in search.
-- Added a UI and feature lock for insufficient funds.
-
----
-
-## [1.0.2]
-
-- Introduced recurring transactions for recurring planning and tracking.
-- Expanded spending and saving to support richer financial records.
-- Overdue cards now process directly through Add New Transaction.
-
----
-
-## [1.0.1]
-
-- Implemented `Check for updates`.
-
----
-
-## [1.0.0]
-
-- Initial release.
+- **1.0.5** - Current release. Adds Calendar, Ledger tools, data management, transaction splitting, budget planning and forecasting, history actions, locking, installments, debt/IOUs, notifications, tray behavior, shortcuts, linked transactions, and related UI improvements and fixes.
+- **1.0.4** - Runtime-aware installer and Quick Setup, account, and dashboard improvements.
+- **1.0.3** - Installer fix, income search, and insufficient-funds protection.
+- **1.0.2** - Recurring transactions and expanded spending/saving records.
+- **1.0.1** - Update checks.
+- **1.0.0** - Initial release.
