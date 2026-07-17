@@ -41,7 +41,7 @@ public partial class BudgetAllocationPanel : UserControl
 
     private void OnEmptyExpenseActionClick(object sender, RoutedEventArgs e)
     {
-        if (sender is not ExpensesList { EmptyActionParameter: ExpenseCategory category })
+        if (sender is not TransactionsList { EmptyActionParameter: ExpenseCategory category })
             return;
 
         if (Window.GetWindow(this) is not MainWindow mainWindow)

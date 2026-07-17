@@ -3,12 +3,12 @@ using Xunit;
 
 namespace Fluxo.Tests.Views.Components;
 
-public sealed class ExpensesListEmptyActionTests
+public sealed class TransactionsListEmptyActionTests
 {
     [Fact]
-    public void ExpensesList_ReplacesEmptyTextWithDashedActionButton()
+    public void TransactionsList_ReplacesEmptyTextWithDashedActionButton()
     {
-        var xaml = File.ReadAllText(ResolveExpensesListXamlPath());
+        var xaml = File.ReadAllText(ResolveTransactionsListXamlPath());
 
         Assert.DoesNotContain("No entry found", xaml);
         Assert.Contains("Content=\"{Binding EmptyActionText", xaml);
@@ -21,9 +21,9 @@ public sealed class ExpensesListEmptyActionTests
     }
 
     [Fact]
-    public void ExpensesListCodeBehind_ExposesEmptyActionContract()
+    public void TransactionsListCodeBehind_ExposesEmptyActionContract()
     {
-        var source = File.ReadAllText(ResolveExpensesListCodeBehindPath());
+        var source = File.ReadAllText(ResolveTransactionsListCodeBehindPath());
 
         Assert.Contains("EmptyActionTextProperty", source);
         Assert.Contains("EmptyActionParameterProperty", source);
@@ -34,10 +34,10 @@ public sealed class ExpensesListEmptyActionTests
     }
 
     [Fact]
-    public void ExpensesList_UsesRecentActivityAndAmountHeaders()
+    public void TransactionsList_UsesRecentActivityAndAmountHeaders()
     {
-        var xaml = File.ReadAllText(ResolveExpensesListXamlPath());
-        var source = File.ReadAllText(ResolveExpensesListCodeBehindPath());
+        var xaml = File.ReadAllText(ResolveTransactionsListXamlPath());
+        var source = File.ReadAllText(ResolveTransactionsListCodeBehindPath());
 
         Assert.Contains("Text=\"RECENT ACTIVITIES\"", xaml);
         Assert.Contains("Foreground=\"{Binding DotColor", xaml);
@@ -50,9 +50,9 @@ public sealed class ExpensesListEmptyActionTests
     }
 
     [Fact]
-    public void ExpensesList_ItemsUseTransparentBackgroundAndTagColorStrip()
+    public void TransactionsList_ItemsUseTransparentBackgroundAndTagColorStrip()
     {
-        var xaml = File.ReadAllText(ResolveExpensesListXamlPath());
+        var xaml = File.ReadAllText(ResolveTransactionsListXamlPath());
 
         Assert.Contains("Background=\"Transparent\"", xaml);
         Assert.Contains("Background=\"{Binding TagHexCode", xaml);
@@ -60,11 +60,11 @@ public sealed class ExpensesListEmptyActionTests
         Assert.Contains("Background=\"{StaticResource Brush.Background.Hover}\"", xaml);
     }
 
-    private static string ResolveExpensesListXamlPath() =>
-        ResolveRepositoryFile("Fluxo.Resources", "Components", "ExpensesList.xaml");
+    private static string ResolveTransactionsListXamlPath() =>
+        ResolveRepositoryFile("Fluxo.Resources", "Components", "TransactionsList.xaml");
 
-    private static string ResolveExpensesListCodeBehindPath() =>
-        ResolveRepositoryFile("Fluxo.Resources", "Components", "ExpensesList.xaml.cs");
+    private static string ResolveTransactionsListCodeBehindPath() =>
+        ResolveRepositoryFile("Fluxo.Resources", "Components", "TransactionsList.xaml.cs");
 
     private static string ResolveRepositoryFile(params string[] relativeSegments)
     {

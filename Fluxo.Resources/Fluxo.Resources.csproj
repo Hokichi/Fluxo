@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Components\ExpensesList.xaml.cs">
+    <Compile Update="Components\TransactionsList.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Components\Account.xaml.cs">

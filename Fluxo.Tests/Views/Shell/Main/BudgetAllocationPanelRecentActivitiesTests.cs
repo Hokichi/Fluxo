@@ -6,7 +6,7 @@ namespace Fluxo.Tests.Views.Shell.Main;
 public sealed class BudgetAllocationPanelRecentActivitiesTests
 {
     [Fact]
-    public void ExpensesList_UsesRestoredAndMaximizedHardCaps()
+    public void TransactionsList_UsesRestoredAndMaximizedHardCaps()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File(
             "Fluxo", "Views", "Shell", "Main", "Sections", "BudgetAllocationPanel.xaml"));

@@ -12,57 +12,57 @@ using Fluxo.Resources.Resources.Messages;
 namespace Fluxo.Resources.Components;
 
 /// <summary>
-///     Interaction logic for ExpensesList.xaml
+///     Interaction logic for TransactionsList.xaml
 /// </summary>
-public partial class ExpensesList : UserControl
+public partial class TransactionsList : UserControl
 {
     public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(
-        nameof(Title), typeof(string), typeof(ExpensesList), new PropertyMetadata(default(string)));
+        nameof(Title), typeof(string), typeof(TransactionsList), new PropertyMetadata(default(string)));
 
     public static readonly DependencyProperty ItemsSourceProperty = DependencyProperty.Register(
-        nameof(ItemsSource), typeof(ICollectionView), typeof(ExpensesList),
+        nameof(ItemsSource), typeof(ICollectionView), typeof(TransactionsList),
         new PropertyMetadata(default(ICollectionView), OnItemsSourceChanged));
 
     public static readonly DependencyProperty MaxVisibleItemsProperty = DependencyProperty.Register(
-        nameof(MaxVisibleItems), typeof(int), typeof(ExpensesList),
+        nameof(MaxVisibleItems), typeof(int), typeof(TransactionsList),
         new PropertyMetadata(int.MaxValue, OnMaxVisibleItemsChanged));
 
     private static readonly DependencyPropertyKey VisibleItemsSourcePropertyKey =
         DependencyProperty.RegisterReadOnly(
-            nameof(VisibleItemsSource), typeof(IEnumerable), typeof(ExpensesList),
+            nameof(VisibleItemsSource), typeof(IEnumerable), typeof(TransactionsList),
             new PropertyMetadata(Array.Empty<object>()));
 
     public static readonly DependencyProperty VisibleItemsSourceProperty =
         VisibleItemsSourcePropertyKey.DependencyProperty;
 
     public static readonly DependencyProperty IsListEmptyProperty = DependencyProperty.Register(
-        nameof(IsListEmpty), typeof(bool), typeof(ExpensesList), new PropertyMetadata(default(bool)));
+        nameof(IsListEmpty), typeof(bool), typeof(TransactionsList), new PropertyMetadata(default(bool)));
 
     public static readonly DependencyProperty IsEmptyActionVisibleProperty = DependencyProperty.Register(
-        nameof(IsEmptyActionVisible), typeof(bool), typeof(ExpensesList), new PropertyMetadata(true));
+        nameof(IsEmptyActionVisible), typeof(bool), typeof(TransactionsList), new PropertyMetadata(true));
 
     public static readonly DependencyProperty EmptyActionTextProperty = DependencyProperty.Register(
-        nameof(EmptyActionText), typeof(string), typeof(ExpensesList), new PropertyMetadata("Add"));
+        nameof(EmptyActionText), typeof(string), typeof(TransactionsList), new PropertyMetadata("Add"));
 
     public static readonly DependencyProperty EmptyActionParameterProperty = DependencyProperty.Register(
-        nameof(EmptyActionParameter), typeof(object), typeof(ExpensesList), new PropertyMetadata(default(object)));
+        nameof(EmptyActionParameter), typeof(object), typeof(TransactionsList), new PropertyMetadata(default(object)));
 
     public static readonly DependencyProperty DotColorProperty = DependencyProperty.Register(
-        nameof(DotColor), typeof(Brush), typeof(ExpensesList), new PropertyMetadata(null));
+        nameof(DotColor), typeof(Brush), typeof(TransactionsList), new PropertyMetadata(null));
 
     public static readonly DependencyProperty DeleteCommandProperty = DependencyProperty.Register(
-        nameof(DeleteCommand), typeof(ICommand), typeof(ExpensesList), new PropertyMetadata(default(ICommand)));
+        nameof(DeleteCommand), typeof(ICommand), typeof(TransactionsList), new PropertyMetadata(default(ICommand)));
 
     public static readonly DependencyProperty LoadMoreCommandProperty = DependencyProperty.Register(
-        nameof(LoadMoreCommand), typeof(ICommand), typeof(ExpensesList), new PropertyMetadata(default(ICommand)));
+        nameof(LoadMoreCommand), typeof(ICommand), typeof(TransactionsList), new PropertyMetadata(default(ICommand)));
 
     public static readonly DependencyProperty HasMoreItemsProperty = DependencyProperty.Register(
-        nameof(HasMoreItems), typeof(bool), typeof(ExpensesList), new PropertyMetadata(default(bool)));
+        nameof(HasMoreItems), typeof(bool), typeof(TransactionsList), new PropertyMetadata(default(bool)));
 
     public static readonly DependencyProperty IsLoadingProperty = DependencyProperty.Register(
-        nameof(IsLoading), typeof(bool), typeof(ExpensesList), new PropertyMetadata(default(bool)));
+        nameof(IsLoading), typeof(bool), typeof(TransactionsList), new PropertyMetadata(default(bool)));
 
-    public ExpensesList()
+    public TransactionsList()
     {
         InitializeComponent();
     }
@@ -188,7 +188,7 @@ public partial class ExpensesList : UserControl
 
     private static void OnItemsSourceChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
     {
-        var control = (ExpensesList)dependencyObject;
+        var control = (TransactionsList)dependencyObject;
 
         if (e.OldValue is ICollectionView oldView)
             oldView.CollectionChanged -= control.OnItemsSourceCollectionChanged;
@@ -201,7 +201,7 @@ public partial class ExpensesList : UserControl
 
     private static void OnMaxVisibleItemsChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
     {
-        ((ExpensesList)dependencyObject).RefreshVisibleItems();
+        ((TransactionsList)dependencyObject).RefreshVisibleItems();
     }
 
     private void OnItemsSourceCollectionChanged(object? sender,
@@ -220,7 +220,7 @@ public partial class ExpensesList : UserControl
         return items?.Cast<object>().Take(Math.Max(0, limit)).ToArray() ?? [];
     }
 
-    private void OnExpenseListPreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    private void OnTransactionsListPreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
         if (sender is not DependencyObject source)
             return;

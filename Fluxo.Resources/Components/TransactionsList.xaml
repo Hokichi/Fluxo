@@ -1,5 +1,5 @@
 <UserControl
-    x:Class="Fluxo.Resources.Components.ExpensesList"
+    x:Class="Fluxo.Resources.Components.TransactionsList"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:behaviors="clr-namespace:Fluxo.Resources.Behaviors"
@@ -12,13 +12,13 @@
     mc:Ignorable="d">
 
     <UserControl.Resources>
-        <Style x:Key="ExpenseListHeaderText" TargetType="TextBlock">
+        <Style x:Key="TransactionsListHeaderText" TargetType="TextBlock">
             <Setter Property="FontFamily" Value="{StaticResource Bold}" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
         </Style>
 
-        <Style x:Key="ExpenseListViewItemStyle" TargetType="ListViewItem">
+        <Style x:Key="TransactionsListViewItemStyle" TargetType="ListViewItem">
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0,0,0,12" />
             <Setter Property="Background" Value="Transparent" />
@@ -34,7 +34,7 @@
             </Setter>
         </Style>
 
-        <DataTemplate x:Key="ExpenseListItemTemplate">
+        <DataTemplate x:Key="TransactionsListItemTemplate">
             <customControls:SwipeRevealContainer>
                 <customControls:SwipeRevealContainer.LeftContent>
                     <customControls:BalloonButton
@@ -281,7 +281,7 @@
             VerticalAlignment="Center"
             FontFamily="{StaticResource ExtraBold}"
             FontSize="14"
-            Foreground="{Binding DotColor, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
+            Foreground="{Binding DotColor, RelativeSource={RelativeSource AncestorType={x:Type local:TransactionsList}}}"
             Text="RECENT ACTIVITIES" />
 
         <customControls:BalloonButton
@@ -310,11 +310,11 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Style="{StaticResource ExpenseListHeaderText}" Text="ITEM" />
+                <TextBlock Style="{StaticResource TransactionsListHeaderText}" Text="ITEM" />
                 <TextBlock
                     Grid.Column="1"
                     HorizontalAlignment="Right"
-                    Style="{StaticResource ExpenseListHeaderText}"
+                    Style="{StaticResource TransactionsListHeaderText}"
                     Text="AMOUNT" />
             </Grid>
 
@@ -336,8 +336,8 @@
                             <Style.Triggers>
                                 <MultiDataTrigger>
                                     <MultiDataTrigger.Conditions>
-                                        <Condition Binding="{Binding IsListEmpty, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}" Value="True" />
-                                        <Condition Binding="{Binding IsEmptyActionVisible, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}" Value="True" />
+                                        <Condition Binding="{Binding IsListEmpty, RelativeSource={RelativeSource AncestorType={x:Type local:TransactionsList}}}" Value="True" />
+                                        <Condition Binding="{Binding IsEmptyActionVisible, RelativeSource={RelativeSource AncestorType={x:Type local:TransactionsList}}}" Value="True" />
                                     </MultiDataTrigger.Conditions>
                                     <Setter Property="Visibility" Value="Visible" />
                                 </MultiDataTrigger>
@@ -347,7 +347,7 @@
                     <Button
                         Width="184"
                         Click="OnEmptyActionButtonClick"
-                        Content="{Binding EmptyActionText, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
+                        Content="{Binding EmptyActionText, RelativeSource={RelativeSource AncestorType={x:Type local:TransactionsList}}}"
                         Style="{StaticResource AccountAddButtonStyle}" />
                 </StackPanel>
                 <TextBlock
@@ -356,15 +356,15 @@
                     FontFamily="{StaticResource Bold}"
                     FontSize="14"
                     Foreground="{StaticResource Brush.Text.Muted}"
-                    Text="{Binding EmptyActionText, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}">
+                    Text="{Binding EmptyActionText, RelativeSource={RelativeSource AncestorType={x:Type local:TransactionsList}}}">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
                             <Setter Property="Visibility" Value="Collapsed" />
                             <Style.Triggers>
                                 <MultiDataTrigger>
                                     <MultiDataTrigger.Conditions>
-                                        <Condition Binding="{Binding IsListEmpty, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}" Value="True" />
-                                        <Condition Binding="{Binding IsEmptyActionVisible, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}" Value="False" />
+                                        <Condition Binding="{Binding IsListEmpty, RelativeSource={RelativeSource AncestorType={x:Type local:TransactionsList}}}" Value="True" />
+                                        <Condition Binding="{Binding IsEmptyActionVisible, RelativeSource={RelativeSource AncestorType={x:Type local:TransactionsList}}}" Value="False" />
                                     </MultiDataTrigger.Conditions>
                                     <Setter Property="Visibility" Value="Visible" />
                                 </MultiDataTrigger>
@@ -445,18 +445,18 @@
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         HorizontalContentAlignment="Stretch"
-                        behaviors:ScrollOnDemandBehavior.HasMoreItems="{Binding HasMoreItems, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
+                        behaviors:ScrollOnDemandBehavior.HasMoreItems="{Binding HasMoreItems, RelativeSource={RelativeSource AncestorType={x:Type local:TransactionsList}}}"
                         behaviors:ScrollOnDemandBehavior.IsEnabled="True"
-                        behaviors:ScrollOnDemandBehavior.IsLoading="{Binding IsLoading, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
-                        behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding LoadMoreCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
+                        behaviors:ScrollOnDemandBehavior.IsLoading="{Binding IsLoading, RelativeSource={RelativeSource AncestorType={x:Type local:TransactionsList}}}"
+                        behaviors:ScrollOnDemandBehavior.LoadMoreCommand="{Binding LoadMoreCommand, RelativeSource={RelativeSource AncestorType={x:Type local:TransactionsList}}}"
                         Background="Transparent"
                         BorderBrush="Transparent"
                         BorderThickness="0"
                         ClipToBounds="True"
-                        ItemContainerStyle="{StaticResource ExpenseListViewItemStyle}"
-                        ItemTemplate="{StaticResource ExpenseListItemTemplate}"
-                        ItemsSource="{Binding VisibleItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:ExpensesList}}}"
-                        PreviewMouseWheel="OnExpenseListPreviewMouseWheel"
+                        ItemContainerStyle="{StaticResource TransactionsListViewItemStyle}"
+                        ItemTemplate="{StaticResource TransactionsListItemTemplate}"
+                        ItemsSource="{Binding VisibleItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:TransactionsList}}}"
+                        PreviewMouseWheel="OnTransactionsListPreviewMouseWheel"
                         ScrollViewer.CanContentScroll="False"
                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                         ScrollViewer.VerticalScrollBarVisibility="Disabled" />

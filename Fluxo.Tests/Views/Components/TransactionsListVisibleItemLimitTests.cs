@@ -3,7 +3,7 @@ using Xunit;
 
 namespace Fluxo.Tests.Views.Components;
 
-public sealed class ExpensesListVisibleItemLimitTests
+public sealed class TransactionsListVisibleItemLimitTests
 {
     [Theory]
     [InlineData(5)]
@@ -12,7 +12,7 @@ public sealed class ExpensesListVisibleItemLimitTests
     {
         var source = Enumerable.Range(1, 10).Cast<object>().ToList();
 
-        var result = ExpensesList.LimitItems(source, limit).Cast<int>().ToList();
+        var result = TransactionsList.LimitItems(source, limit).Cast<int>().ToList();
 
         Assert.Equal(Enumerable.Range(1, limit), result);
         Assert.Equal(10, source.Count);

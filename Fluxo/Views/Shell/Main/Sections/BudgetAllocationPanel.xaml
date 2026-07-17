@@ -30,7 +30,7 @@
             </Setter>
         </Style>
 
-        <Style x:Key="BudgetAllocationExpensesListStyle" TargetType="components:ExpensesList">
+        <Style x:Key="BudgetAllocationTransactionsListStyle" TargetType="components:TransactionsList">
             <Setter Property="IsEmptyActionVisible" Value="True" />
             <Setter Property="MaxVisibleItems" Value="5" />
             <Style.Triggers>
@@ -188,7 +188,7 @@
         </StackPanel>
 
         <Grid Grid.Row="2">
-            <components:ExpensesList
+            <components:TransactionsList
                 Title="NEEDS"
                 DeleteCommand="{Binding DeleteExpenseLogCommand}"
                 DotColor="{StaticResource Brush.Category.Needs}"
@@ -196,7 +196,7 @@
                 IsEmptyActionVisible="False"
                 IsListEmpty="{Binding IsTransactionsEmpty}"
                 ItemsSource="{Binding Transactions}"
-                Style="{StaticResource BudgetAllocationExpensesListStyle}" />
+                Style="{StaticResource BudgetAllocationTransactionsListStyle}" />
         </Grid>
     </Grid>
 </UserControl>

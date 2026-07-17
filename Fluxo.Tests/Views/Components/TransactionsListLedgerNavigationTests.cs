@@ -6,7 +6,7 @@ using Xunit;
 
 namespace Fluxo.Tests.Views.Components;
 
-public sealed class ExpensesListLedgerNavigationTests
+public sealed class TransactionsListLedgerNavigationTests
 {
     [Fact]
     public void RequestLedgerNavigation_SendsMessage()
@@ -16,7 +16,7 @@ public sealed class ExpensesListLedgerNavigationTests
         var received = false;
         messenger.Register<NavigateToLedgerRequestedMessage>(recipient, (_, _) => received = true);
 
-        ExpensesList.RequestLedgerNavigation(messenger);
+        TransactionsList.RequestLedgerNavigation(messenger);
 
         Assert.True(received);
     }
@@ -25,7 +25,7 @@ public sealed class ExpensesListLedgerNavigationTests
     public void ViewInLedgerButton_UsesMessengerHandler()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File(
-            "Fluxo.Resources", "Components", "ExpensesList.xaml"));
+            "Fluxo.Resources", "Components", "TransactionsList.xaml"));
 
         Assert.Contains("ButtonText=\"View in Ledger\"", xaml);
         Assert.Contains("Click=\"OnViewInLedgerButtonClick\"", xaml);

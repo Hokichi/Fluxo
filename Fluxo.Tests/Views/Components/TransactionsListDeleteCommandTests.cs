@@ -6,16 +6,16 @@ using Xunit;
 
 namespace Fluxo.Tests.Views.Components;
 
-public sealed class ExpensesListDeleteCommandTests
+public sealed class TransactionsListDeleteCommandTests
 {
     [Fact]
     public void DeleteButtonClick_ExecutesConfiguredCommandWithRow()
     {
         var xaml = File.ReadAllText(RepositoryPaths.File(
-            "Fluxo.Resources", "Components", "ExpensesList.xaml"));
+            "Fluxo.Resources", "Components", "TransactionsList.xaml"));
         var row = new object();
         var command = new RecordingCommand();
-        var executeDelete = typeof(ExpensesList).GetMethod(
+        var executeDelete = typeof(TransactionsList).GetMethod(
             "ExecuteDelete",
             BindingFlags.Static | BindingFlags.NonPublic);
 
