@@ -293,3 +293,72 @@ Initial Release
 - Improvement in Quick Setup, Account, and Dashboard for better user experience.
 - Incorrect behavior during Quick Setup (Accounts not found) has been addressed.
 - UI improvements.
+
+### v1.0.5:
+
+#### Hotfixes
+- Fixed dialog ownership and focus loss.
+- Fixed tap failures in swipe-reveal controls.
+- Fixed Spending Sources list scrolling.
+- Fixed notification popup placement and behavior.
+- Fixed initial `Add New Transaction` validation.
+- Fixed search bar overlap with the date selector.
+- Fixed saving-goal panel code-behind behavior.
+- Preserved transaction popup view state.
+- Fixed popup close propagation and dismissal behavior.
+
+#### Major Fixes
+- Corrected spending-amount lock conditions and partial UI locking.
+- Fixed incorrect budget allocation and budget calculations.
+- Fixed `Delete All Data` maintenance flow.
+- Stabilized MainWindow page transitions and navigation state.
+- Corrected Ledger filtering, grouping, signed amounts, date ranges, and row behavior.
+- Fixed Add New Transaction name-mode, validation, and tag state handling.
+- Fixed Dashboard placement issues and an application crash.
+- Fixed settings not persisting between operations.
+- Improved startup diagnostics and installer launch reliability.
+
+#### New Features
+- Added user data import/export with append, overwrite, conflict handling, migrations, and restore safety.
+- Added expense splitting with parent/child transaction relationships, backups, Ledger nesting, and detail display.
+- Added Calendar page, filtering, drawer integration, smooth scrolling, Today navigation, and future-date navigation.
+- Added Ledger drawer with transaction projection, income actions, row operations, export, and bulk editing.
+- Added Budget Management state and settings tabs.
+- Expanded Quick Add into Quick Access.
+- Added Upcoming Events panel.
+- Added more keyboard shortcuts and a keyboard-shortcut overview.
+- Added Budget Reconciliation and account reconciliation logging.
+- Added allocation periods and recurring categories.
+- Added transaction history, targeted history entries, history notifications, and history drawer.
+- Added synchronized undo/redo and revert-to-history operations.
+- Added pinned transaction logs and transaction detail history.
+- Added expense detail pin/delete actions.
+- Added password lock and auto-lock presets.
+- Added BNPL support.
+- Added debt/IOU transaction flags, migrations, backups, and resolution settings.
+- Added notification snoozing.
+- Added Budget Forecast.
+- Added BalloonToggle state cycling, popup states, radio buttons, and checkbox controls.
+- Added default account selection.
+- Unified Expense and Income into Transaction persistence, migration, backups, and repository flows.
+- Added repayment transaction modes, shared repayments, credit-account repayment handling, and custom repayment amounts.
+- Added floating notifications, dismissal, update-check notifications, and notification lifecycle handling.
+- Added linked-transaction persistence and reversal.
+- Added posted/unposted IOU modes and posted-balance persistence.
+- Added Ledger transaction detail popup flow, replacing inline editing.
+- Added analytics trend scaling and period grid lines.
+- Added sub-sub-transactions.
+- Added overdue notification processing and in-memory notification evaluation.
+
+#### Improvements
+- Improved Settings, Setup Wizard, account naming, source management, and account selection UI.
+- Added dynamic foreground/text colors, dark-text resources, stronger contrast, and unified XAML surface styling.
+- Improved Dashboard headers, goals, allocation cards, earned totals, overflow handling, and recent-activity sizing.
+- Improved Ledger filters, comboboxes, clear actions, layout, and visual hierarchy.
+- Improved transaction modes, popup layouts, installment expiration, tag visibility, and duplication protection.
+- Improved BalloonControl text, subtext, expansion, hover feedback, and visual states.
+- Improved notification layout, severity colors, wording, sizing, and deferred processing.
+- Added search-bar animation, tag bubbling, and fading scroll behavior.
+- Added Acrylic blur and updated installer UI styling.
+- Renamed user-facing `Spending Source` terminology to `Account` and expense lists to transaction lists.
+- Applied allocation-adjustment logic consistently across the application.

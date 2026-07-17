@@ -5,15 +5,17 @@
     <InstallerPlatform>x64</InstallerPlatform>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <OutputName>Fluxo.Installer</OutputName>
-    <FluxoMsiVersion Condition="'$(FluxoMsiVersion)' == ''">1.0.4</FluxoMsiVersion>
-    <FluxoAppOutputDir>$(MSBuildThisFileDirectory)..\Fluxo\bin\$(Configuration)\net10.0-windows\win-x64\</FluxoAppOutputDir>
-    <DefineConstants>$(DefineConstants);FluxoMsiVersion=$(FluxoMsiVersion);FluxoAppOutputDir=$(FluxoAppOutputDir)</DefineConstants>
+    <FluxoMsiVersion Condition="'$(FluxoMsiVersion)' == ''">1.0.5</FluxoMsiVersion>
+    <FluxoAppRuntimeIdentifier>win-$(InstallerPlatform)</FluxoAppRuntimeIdentifier>
+    <FluxoAppPayloadDir>$(MSBuildProjectDirectory)\obj\$(Configuration)\app-payload\$(FluxoAppRuntimeIdentifier)\</FluxoAppPayloadDir>
+    <DefineConstants>$(DefineConstants);FluxoMsiVersion=$(FluxoMsiVersion);FluxoAppPayloadDir=$(FluxoAppPayloadDir)</DefineConstants>
   </PropertyGroup>
 
-  <Target Name="BuildFluxoApplicationForInstaller" BeforeTargets="BeforeBuild">
+  <Target Name="PublishFluxoApplicationForInstaller" BeforeTargets="BeforeBuild">
+    <RemoveDir Directories="$(FluxoAppPayloadDir)" />
     <MSBuild
       Projects="..\Fluxo\Fluxo.csproj"
-      Targets="Restore;Build"
-      Properties="Configuration=$(Configuration);RuntimeIdentifier=win-x64;SelfContained=false" />
+      Targets="Restore;Publish"
+      Properties="Configuration=$(Configuration);RuntimeIdentifier=$(FluxoAppRuntimeIdentifier);SelfContained=false;PublishSelfContained=false;PublishSingleFile=false;PublishDir=$(FluxoAppPayloadDir)" />
   </Target>
 </Project>

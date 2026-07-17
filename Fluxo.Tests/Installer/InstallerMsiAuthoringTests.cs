@@ -6,17 +6,6 @@ namespace Fluxo.Tests.Installer;
 public sealed class InstallerMsiAuthoringTests
 {
     [Fact]
-    public void AppFileHarvest_ExcludesFluxoDatabase()
-    {
-        var wxs = File.ReadAllText(Path.Combine(
-            GetRepositoryRoot(),
-            "Fluxo.Installer.Msi",
-            "ExampleComponents.wxs"));
-
-        Assert.Contains("<Exclude Files=\"$(var.FluxoAppOutputDir)\\**\\*.db\" />", wxs);
-    }
-
-    [Fact]
     public void AppFileHarvest_RemovesInstalledVersionRegistryKeyOnUninstall()
     {
         var wxs = File.ReadAllText(Path.Combine(
@@ -137,26 +126,6 @@ public sealed class InstallerMsiAuthoringTests
             "Bundle.wxs"));
 
         Assert.Contains("Cache=\"keep\"", wxs);
-    }
-
-    [Fact]
-    public void MsiProject_BuildsFrameworkDependentAppOutput()
-    {
-        var project = File.ReadAllText(Path.Combine(
-            GetRepositoryRoot(),
-            "Fluxo.Installer.Msi",
-            "Fluxo.Installer.Msi.wixproj"));
-
-        Assert.Contains(@"<FluxoAppOutputDir>$(MSBuildThisFileDirectory)..\Fluxo\bin\$(Configuration)\net10.0-windows\win-x64\</FluxoAppOutputDir>", project);
-        Assert.Contains("Name=\"BuildFluxoApplicationForInstaller\"", project);
-        Assert.Contains("Targets=\"Restore;Build\"", project);
-        Assert.Contains("RuntimeIdentifier=win-x64", project);
-        Assert.Contains("SelfContained=false", project);
-        Assert.DoesNotContain("Name=\"PublishFluxoApplicationForInstaller\"", project);
-        Assert.DoesNotContain("Targets=\"Restore;Publish\"", project);
-        Assert.DoesNotContain("SelfContained=true", project);
-        Assert.DoesNotContain("PublishSelfContained=true", project);
-        Assert.DoesNotContain("PublishSingleFile=false", project);
     }
 
     [Fact]

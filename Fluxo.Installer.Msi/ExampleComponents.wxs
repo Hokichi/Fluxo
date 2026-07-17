@@ -1,15 +1,15 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Fragment>
     <ComponentGroup Id="FluxoAppFiles" Directory="INSTALLFOLDER">
-      <Files Include="$(var.FluxoAppOutputDir)\*">
-        <Exclude Files="$(var.FluxoAppOutputDir)\*.db" />
-        <Exclude Files="$(var.FluxoAppOutputDir)\*.log" />
-        <Exclude Files="$(var.FluxoAppOutputDir)\logs\**" />
+      <Files Include="$(var.FluxoAppPayloadDir)\*">
+        <Exclude Files="$(var.FluxoAppPayloadDir)\*.db" />
+        <Exclude Files="$(var.FluxoAppPayloadDir)\*.log" />
+        <Exclude Files="$(var.FluxoAppPayloadDir)\logs\**" />
       </Files>
-      <Files Include="$(var.FluxoAppOutputDir)\**">
-        <Exclude Files="$(var.FluxoAppOutputDir)\*" />
-        <Exclude Files="$(var.FluxoAppOutputDir)\**\*.db" />
-        <Exclude Files="$(var.FluxoAppOutputDir)\**\*.log" />
+      <Files Include="$(var.FluxoAppPayloadDir)\**">
+        <Exclude Files="$(var.FluxoAppPayloadDir)\*" />
+        <Exclude Files="$(var.FluxoAppPayloadDir)\**\*.db" />
+        <Exclude Files="$(var.FluxoAppPayloadDir)\**\*.log" />
       </Files>
       <!-- HKLM cleanup on uninstall: deferred CustomAction in Package.wxs (WiX v4 omits RemoveRegistryKeys). -->
       <Component

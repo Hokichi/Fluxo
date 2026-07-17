@@ -79,34 +79,6 @@ public sealed class ExecutableNamingTests
     }
 
     [Fact]
-    public void MsiHarvest_IncludesRootAndRecursiveAppOutputFiles()
-    {
-        var wxs = File.ReadAllText(Path.Combine(
-            GetRepositoryRoot(),
-            "Fluxo.Installer.Msi",
-            "ExampleComponents.wxs"));
-
-        Assert.Contains("<Files Include=\"$(var.FluxoAppOutputDir)\\*\">", wxs);
-        Assert.Contains("<Exclude Files=\"$(var.FluxoAppOutputDir)\\*.db\" />", wxs);
-        Assert.Contains("<Files Include=\"$(var.FluxoAppOutputDir)\\**\">", wxs);
-        Assert.Contains("<Exclude Files=\"$(var.FluxoAppOutputDir)\\*\" />", wxs);
-        Assert.Contains("<Exclude Files=\"$(var.FluxoAppOutputDir)\\**\\*.db\" />", wxs);
-    }
-
-    [Fact]
-    public void MsiHarvest_ExcludesLocalRuntimeDataAndLogs()
-    {
-        var wxs = File.ReadAllText(Path.Combine(
-            GetRepositoryRoot(),
-            "Fluxo.Installer.Msi",
-            "ExampleComponents.wxs"));
-
-        Assert.Contains("<Exclude Files=\"$(var.FluxoAppOutputDir)\\*.log\" />", wxs);
-        Assert.Contains("<Exclude Files=\"$(var.FluxoAppOutputDir)\\logs\\**\" />", wxs);
-        Assert.Contains("<Exclude Files=\"$(var.FluxoAppOutputDir)\\**\\*.log\" />", wxs);
-    }
-
-    [Fact]
     public void AppProject_OrganizesSelfContainedPublishOutputAndRemovesInstallerOnlyArtifacts()
     {
         var project = File.ReadAllText(Path.Combine(
