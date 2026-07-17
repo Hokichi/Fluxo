@@ -545,7 +545,7 @@
         <Setter Property="Height" Value="40" />
         <Setter Property="MinWidth" Value="120" />
         <Setter Property="Padding" Value="18,0" />
-        <Setter Property="Background" Value="{StaticResource Brush.Background.Surface}" />
+        <Setter Property="Background" Value="{StaticResource Brush.Background.Elevated}" />
         <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Subtle}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Cursor" Value="Hand" />
