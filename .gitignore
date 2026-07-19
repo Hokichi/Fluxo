@@ -369,6 +369,7 @@ MigrationBackup/
 .codex/
 .idea/
 .superpowers/*
+.planning/
 docs/superpowers/
 docs/*.md
 
